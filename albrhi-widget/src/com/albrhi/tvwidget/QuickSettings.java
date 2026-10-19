@@ -24,39 +24,39 @@ import static com.albrhi.tvwidget.WidgetView.*;
 final class QuickSettings {
     private QuickSettings() { }
 
-    static void show(Context c) { show(c, null); }
+    static void show(Context c) { show(c, null, null); }
 
     /** @param onClose runs when the whole sheet is closed (not when it just moves to "more"). */
-    static void show(final Context c, final Runnable onClose) {
+    static void show(final Context c, final View anchor, final Runnable onClose) {
         final float dn = c.getResources().getDisplayMetrics().density;
         Health.Info hi = Health.read(c);
         int paired = RemoteServer.get(c).pairedCount();
         List<Sheet.Item> items = Sheet.list();
-        items.add(Sheet.Item.of("الصورة", R.drawable.ic_picture, open(c, Settings.ACTION_DISPLAY_SETTINGS)).sub("السطوع والألوان ووضع الصورة"));
-        items.add(Sheet.Item.of("الصوت", R.drawable.ic_sound, open(c, Settings.ACTION_SOUND_SETTINGS)).sub("المخرج ومستوى الصوت والمؤثرات"));
-        items.add(Sheet.Item.of("الشبكة والإنترنت", R.drawable.ic_wifi, open(c, Settings.ACTION_WIFI_SETTINGS)).sub(networkSummary(c)));
+        items.add(Sheet.Item.of("الصورة", R.drawable.ic_picture, open(c, Settings.ACTION_DISPLAY_SETTINGS)));
+        items.add(Sheet.Item.of("الصوت", R.drawable.ic_sound, open(c, Settings.ACTION_SOUND_SETTINGS)));
+        items.add(Sheet.Item.of("الشبكة والإنترنت", R.drawable.ic_wifi, open(c, Settings.ACTION_WIFI_SETTINGS)).value(networkSummary(c)));
         items.add(Sheet.Item.of("ربط الجوال", R.drawable.ic_phone, new Runnable() { public void run() { RemoteDialog.show(c); } })
-                .sub(paired == 0 ? "اربط جوالك للتحكم والتثبيت" : paired + (paired == 1 ? " جهاز مرتبط" : " أجهزة مرتبطة")));
-        items.add(Sheet.Item.of("كل الإعدادات", R.drawable.ic_gear, open(c, Settings.ACTION_SETTINGS)).sub("إعدادات التلفزيون الكاملة"));
-        items.add(Sheet.Item.of("المزيد", R.drawable.ic_more, new Runnable() { public void run() { Sheet.chained = true; more(c, onClose); } })
-                .sub("المباريات والأدوات وشاشة الطوارئ"));
+                .value(paired == 0 ? "غير مربوط" : paired + (paired == 1 ? " جهاز" : " أجهزة")));
+        items.add(Sheet.Item.of("كل الإعدادات", R.drawable.ic_gear, open(c, Settings.ACTION_SETTINGS)));
+        items.add(Sheet.Item.of("المزيد", R.drawable.ic_more, new Runnable() { public void run() { Sheet.chained = true; more(c, anchor, onClose); } }));
 
         LinearLayout meters = new LinearLayout(c);
-        meters.setOrientation(LinearLayout.VERTICAL);
-        meters.addView(Sheet.meter(c, "الرام", "\u2066" + hi.ramFreeMb + " MB\u2069  ·  \u2066" + hi.ramFreePct + "%\u2069 متاحة", 100 - hi.ramFreePct, dn));
-        View st = Sheet.meter(c, "التخزين", "\u2066" + String.format(java.util.Locale.US, "%.1f", hi.storageFreeMb / 1024.0) + " GB\u2069 حرة",
+        meters.setOrientation(LinearLayout.HORIZONTAL);
+        meters.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        View ram = Sheet.meter(c, "الرام", hi.ramFreePct + "% متاحة", 100 - hi.ramFreePct, dn);
+        View st = Sheet.meter(c, "التخزين", "\u2066" + String.format(java.util.Locale.US, "%.0f", hi.storageFreeMb / 1024.0) + " GB\u2069 حرة",
                 100 - hi.storageFreePct, dn);
-        LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(-1, -2);
-        sp.topMargin = Math.round(6 * dn);
+        meters.addView(ram, new LinearLayout.LayoutParams(0, -2, 1f));
+        LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(0, -2, 1f);
+        sp.setMarginStart(Math.round(18 * dn));
         meters.addView(st, sp);
 
-        long now = System.currentTimeMillis();
-        Sheet.show(c, "إعدادات سريعة", fmt("EEEE", GREG, now) + "  ·  " + fmt("h:mm a", GREG, now), R.drawable.ic_gear, items, meters, onClose);
+        Dropdown.show(c, anchor, null, null, items, meters, 380, onClose);
     }
 
-    private static void more(final Context c, final Runnable onClose) {
+    private static void more(final Context c, final View anchor, final Runnable onClose) {
         List<Sheet.Item> items = Sheet.list();
-        items.add(Sheet.Item.of("القائمة المختصرة", R.drawable.ic_back, new Runnable() { public void run() { Sheet.chained = true; show(c, onClose); } })
+        items.add(Sheet.Item.of("القائمة المختصرة", R.drawable.ic_back, new Runnable() { public void run() { Sheet.chained = true; show(c, anchor, onClose); } })
                 .sub("الرجوع للخيارات الأساسية"));
         items.add(Sheet.Item.header("المباريات"));
         items.add(Sheet.Item.of("تحديث المباريات الآن", R.drawable.ic_refresh, new Runnable() { public void run() {
@@ -77,7 +77,7 @@ final class QuickSettings {
             CrashGuard.simulate(c);
             c.startActivity(new Intent(c, HomeActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP));
         } }).sub("للتأكد من خطة الإنقاذ فقط").danger());
-        Sheet.show(c, "المزيد", "أدوات وصيانة", R.drawable.ic_more, null, items, null, onClose, 400);
+        Dropdown.show(c, anchor, "المزيد", "أدوات وصيانة", items, null, 420, onClose);
     }
 
     private static String networkSummary(Context c) {

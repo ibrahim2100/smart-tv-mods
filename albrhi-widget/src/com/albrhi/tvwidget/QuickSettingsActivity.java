@@ -10,7 +10,7 @@ import android.os.Bundle;
 public class QuickSettingsActivity extends Activity {
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
-        QuickSettings.show(this, new Runnable() { public void run() { finish(); } });
+        QuickSettings.show(this, null, new Runnable() { public void run() { finish(); } });
     }
 
     @Override protected void onStop() {

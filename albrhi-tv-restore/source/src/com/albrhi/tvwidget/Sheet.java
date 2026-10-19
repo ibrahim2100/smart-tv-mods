@@ -43,7 +43,7 @@ final class Sheet {
 
     static final class Item {
         final String title;
-        String subtitle;
+        String subtitle, value;
         int icon;
         Runnable action;
         boolean danger, header;
@@ -64,6 +64,9 @@ final class Sheet {
         }
 
         Item sub(String s) { subtitle = s; return this; }
+
+        /** A short live value shown at the far end of the row (e.g. the Wi-Fi name). */
+        Item value(String s) { value = s; return this; }
 
         Item danger() { danger = true; return this; }
     }
@@ -212,7 +215,7 @@ final class Sheet {
         sv.addView(list);
         DisplayMetrics dm = c.getResources().getDisplayMetrics();
         int maxList = dm.heightPixels - Math.round((footer == null ? 130 : 196) * dn);
-        panel.addView(new CappedScroll(c, sv, maxList), new LinearLayout.LayoutParams(-1, -2));
+        panel.addView(new Capped(c, sv, maxList), new LinearLayout.LayoutParams(-1, -2));
 
         if (footer != null) {
             LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1, -2);
@@ -312,11 +315,11 @@ final class Sheet {
     }
 
     /** Holds the scrolling list and caps its height; the list is measured at its natural size first. */
-    private static final class CappedScroll extends LinearLayout {
+    static final class Capped extends LinearLayout {
         private final int max;
         private final ScrollView sv;
 
-        CappedScroll(Context c, ScrollView sv, int max) {
+        Capped(Context c, ScrollView sv, int max) {
             super(c);
             this.max = max;
             this.sv = sv;

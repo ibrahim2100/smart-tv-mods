@@ -29,7 +29,7 @@ final class MatchesDialog {
 
     private static final int GOOD = 0xFF34C759, BAD = 0xFFFF453A, DRAW = 0xFFFFB020;
 
-    static void show(final Context c) {
+    static void show(final Context c, final View anchor) {
         final float dn = c.getResources().getDisplayMetrics().density;
         final Dialog d = new Dialog(c);
         d.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -37,8 +37,8 @@ final class MatchesDialog {
         final LinearLayout root = new LinearLayout(c);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-        root.setBackground(round(0xFF0B1226, 22, dn, 0x33FFFFFF));
-        root.setPadding(px(22, dn), px(16, dn), px(22, dn), px(16, dn));
+        root.setBackground(glass(dn));
+        root.setPadding(px(20, dn), px(12, dn), px(20, dn), px(12, dn));
 
         // ---- header: title + updated-at on one side, buttons on the other
         LinearLayout head = new LinearLayout(c);
@@ -65,7 +65,7 @@ final class MatchesDialog {
         sv.setClipToPadding(false);
         sv.addView(body);
         LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(-1, px(330, dn));
-        sp.topMargin = px(10, dn);
+        sp.topMargin = px(6, dn);
         root.addView(sv, sp);
 
         final Runnable rebuild = new Runnable() {
@@ -94,15 +94,51 @@ final class MatchesDialog {
             public void onDismiss(android.content.DialogInterface x) { Fixtures.listeners.remove(rebuild); }
         });
 
+        // the sheet opens under its button, so the list gets whatever height is left below it
+        {
+            android.util.DisplayMetrics dm0 = c.getResources().getDisplayMetrics();
+            int top = 60 * (int) dn;
+            if (anchor != null && anchor.isAttachedToWindow()) {
+                int[] l0 = new int[2];
+                anchor.getLocationOnScreen(l0);
+                top = l0[1] + anchor.getHeight() + px(10, dn);
+            }
+            int free = dm0.heightPixels - top - px(92, dn);       // header + paddings
+            ((LinearLayout.LayoutParams) sv.getLayoutParams()).height = Math.max(px(160, dn), Math.min(px(330, dn), free));
+        }
         d.setContentView(root, new LinearLayout.LayoutParams(px(720, dn), -2));
         Window w = d.getWindow();
         if (w != null) {
             w.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            w.setDimAmount(0.7f);
+            w.setDimAmount(0.6f);
             w.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-            w.setLayout(px(720, dn), WindowManager.LayoutParams.WRAP_CONTENT);
+            android.util.DisplayMetrics dm = c.getResources().getDisplayMetrics();
+            int ww = px(720, dn), x, y;
+            if (anchor != null && anchor.isAttachedToWindow()) {
+                int[] loc = new int[2];
+                anchor.getLocationOnScreen(loc);
+                x = Math.max(px(20, dn), Math.min(dm.widthPixels - ww - px(20, dn), loc[0] + anchor.getWidth() / 2 - ww / 2));
+                y = loc[1] + anchor.getHeight() + px(10, dn);
+            } else {
+                x = (dm.widthPixels - ww) / 2;
+                y = px(60, dn);
+            }
+            WindowManager.LayoutParams lp = w.getAttributes();
+            lp.gravity = android.view.Gravity.TOP | android.view.Gravity.LEFT;
+            lp.x = x;
+            lp.y = y;
+            lp.width = ww;
+            lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
+            w.setAttributes(lp);
         }
         d.show();
+        root.setPivotX(px(360, dn));
+        root.setPivotY(0f);
+        root.setAlpha(0f);
+        root.setScaleX(0.92f);
+        root.setScaleY(0.92f);
+        root.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(240)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f)).start();
         close.requestFocus();
     }
 
@@ -135,7 +171,7 @@ final class MatchesDialog {
         LinearLayout card = new LinearLayout(c);
         card.setOrientation(LinearLayout.VERTICAL);
         card.setBackground(round(0xFF121B38, 18, dn, soon ? GOLD : 0x22FFFFFF, soon ? 2 : 1));
-        card.setPadding(px(18, dn), px(12, dn), px(18, dn), px(14, dn));
+        card.setPadding(px(16, dn), px(8, dn), px(16, dn), px(10, dn));
 
         LinearLayout top = new LinearLayout(c);
         TextView lbl = text(c, "المباراة القادمة", 13, GOLD, true);
@@ -156,7 +192,7 @@ final class MatchesDialog {
         center.setOrientation(LinearLayout.VERTICAL);
         center.setGravity(Gravity.CENTER_HORIZONTAL);
         TextView day = text(c, m.postponed ? "" : dayLabel(m.start), 14, MUTED, false);
-        TextView time = text(c, m.postponed ? "—" : fmt("h:mm a", GREG, m.start), 28, GOLD, true);
+        TextView time = text(c, m.postponed ? "—" : fmt("h:mm a", GREG, m.start), 24, GOLD, true);
         day.setGravity(Gravity.CENTER);
         time.setGravity(Gravity.CENTER);
         center.addView(day);
@@ -164,16 +200,8 @@ final class MatchesDialog {
         mid.addView(center, new LinearLayout.LayoutParams(px(150, dn), -2));
         mid.addView(side(c, m.awayBadge, m.away, false, dn), new LinearLayout.LayoutParams(0, -2, 1f));
         LinearLayout.LayoutParams mp = new LinearLayout.LayoutParams(-1, -2);
-        mp.topMargin = px(6, dn);
+        mp.topMargin = px(2, dn);
         card.addView(mid, mp);
-        if (m.venue != null && m.venue.length() > 0) {
-            TextView v = text(c, "الملعب: " + m.venue, 12, MUTED, false);
-            v.setGravity(Gravity.CENTER);
-            v.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
-            LinearLayout.LayoutParams vp = new LinearLayout.LayoutParams(-1, -2);
-            vp.topMargin = px(6, dn);
-            card.addView(v, vp);
-        }
         return card;
     }
 
@@ -181,17 +209,17 @@ final class MatchesDialog {
         LinearLayout s = new LinearLayout(c);
         s.setGravity(Gravity.CENTER_VERTICAL);
         ImageView b = badge(c, Fixtures.badge(badgeUrl));
-        TextView n = text(c, Fixtures.ar(name), 20, WHITE, true);
+        TextView n = text(c, Fixtures.ar(name), 18, WHITE, true);
         LinearLayout.LayoutParams np = new LinearLayout.LayoutParams(0, -2, 1f);
         if (first) {            // home team on the right: badge at the outer edge
-            s.addView(b, new LinearLayout.LayoutParams(px(58, dn), px(58, dn)));
+            s.addView(b, new LinearLayout.LayoutParams(px(44, dn), px(44, dn)));
             np.setMarginStart(px(10, dn));
             s.addView(n, np);
         } else {
             np.setMarginEnd(px(10, dn));
             n.setGravity(Gravity.END);
             s.addView(n, np);
-            s.addView(b, new LinearLayout.LayoutParams(px(58, dn), px(58, dn)));
+            s.addView(b, new LinearLayout.LayoutParams(px(44, dn), px(44, dn)));
         }
         return s;
     }
@@ -329,6 +357,13 @@ final class MatchesDialog {
 
     // ---- small helpers ----------------------------------------------------------------------
 
+    private static GradientDrawable glass(float dn) {
+        GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{0xFA1D2742, 0xFA121A2E});
+        g.setCornerRadius(26 * dn);
+        g.setStroke(Math.max(1, Math.round(dn)), 0x33FFFFFF);
+        return g;
+    }
+
     private static int px(float dp, float dn) { return Math.round(dp * dn); }
 
     private static GradientDrawable round(int color, float r, float dn, int stroke) {
@@ -367,7 +402,7 @@ final class MatchesDialog {
         b.setGravity(Gravity.CENTER);
         b.setFocusable(true);
         b.setClickable(true);
-        b.setPadding(0, px(9, dn), 0, px(9, dn));
+        b.setPadding(0, px(6, dn), 0, px(6, dn));
         final GradientDrawable idle = round(color, 10, dn, 0);
         final GradientDrawable on = round(color, 10, dn, 0xFFFFFFFF, 2.5f);
         b.setBackground(idle);

@@ -160,7 +160,8 @@ final class StatusBar extends LinearLayout {
         mc.addView(mt, wrap());
         LinearLayout.LayoutParams ml = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         ml.setMarginEnd(px(12));
-        addView(focusable(mc, new Runnable() { public void run() { matchesMenu(); } }), ml);
+        matchView = focusable(mc, new Runnable() { public void run() { matchesMenu(); } });
+        addView(matchView, ml);
 
         // quick settings
         LinearLayout gear = new LinearLayout(getContext());
@@ -178,7 +179,8 @@ final class StatusBar extends LinearLayout {
         gear.addView(gt, gp);
         LinearLayout.LayoutParams gl = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         gl.setMarginEnd(px(12));
-        addView(focusable(gear, new Runnable() { public void run() { quickSettings(); } }), gl);
+        gearView = focusable(gear, new Runnable() { public void run() { quickSettings(); } });
+        addView(gearView, gl);
 
         hdmiBox = new LinearLayout(getContext());
         hdmiBox.setLayoutDirection(LAYOUT_DIRECTION_LTR);
@@ -243,7 +245,8 @@ final class StatusBar extends LinearLayout {
         return new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
     }
 
-    private void matchesMenu() { MatchesDialog.show(getContext()); }
+    private View matchView;
+    private void matchesMenu() { MatchesDialog.show(getContext(), matchView); }
 
     private void openGoogleTvPage() {
         try {
@@ -252,7 +255,8 @@ final class StatusBar extends LinearLayout {
         } catch (Throwable t) { openSettings(Settings.ACTION_SETTINGS); }
     }
 
-    private void quickSettings() { QuickSettings.show(getContext()); }
+    private View gearView;
+    private void quickSettings() { QuickSettings.show(getContext(), gearView, null); }
 
     // ---- HDMI -------------------------------------------------------------------------------
 
@@ -309,6 +313,8 @@ final class StatusBar extends LinearLayout {
         return "HDMI " + n;
     }
 
+    private View lastHdmiChip;
+
     private void renameMenu(final TvInputInfo info, final int n) {
         final String[] presets = {"PS5", "PS4", "Xbox", "ريسيفر", "Apple TV", "Fire TV", "Chromecast", "Switch", "لابتوب", "كاميرا"};
         java.util.List<Sheet.Item> items = Sheet.list();
@@ -317,7 +323,7 @@ final class StatusBar extends LinearLayout {
         }
         items.add(Sheet.Item.of("الاسم الافتراضي", R.drawable.ic_refresh, new Runnable() { public void run() { saveName(info.getId(), null); } })
                 .sub("HDMI " + n));
-        Sheet.show(getContext(), "سمّ هذا المدخل", "HDMI " + n, R.drawable.ic_tv, items, null, null);
+        Dropdown.show(getContext(), lastHdmiChip, "سمّ هذا المدخل", "HDMI " + n, items, null, 340, null);
     }
 
     private void saveName(String id, String name) {
@@ -370,7 +376,7 @@ final class StatusBar extends LinearLayout {
             @Override public void onClick(View v) { switchTo(info.getId()); }
         });
         f.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override public boolean onLongClick(View v) { renameMenu(info, n); return true; }
+            @Override public boolean onLongClick(View v) { lastHdmiChip = v; renameMenu(info, n); return true; }
         });
         return f;
     }
