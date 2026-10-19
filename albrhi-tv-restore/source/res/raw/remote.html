@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Albrhi TV</title>
+<style>
+  :root{--bg:#060a18;--card:#0f1730;--card2:#16204a;--text:#f4f6fb;--muted:#9aa5c0;--gold:#edbb00;--garnet:#a50044;--blue:#004d98;--good:#34c759;--bad:#ff453a}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 -apple-system,system-ui,"Segoe UI",Tahoma,sans-serif;
+       padding:max(16px,env(safe-area-inset-top)) 16px 40px;min-height:100vh;
+       background-image:repeating-linear-gradient(90deg,rgba(165,0,68,.12) 0 38px,rgba(0,77,152,.12) 38px 76px)}
+  .wrap{max-width:560px;margin:0 auto}
+  h1{font-size:22px;margin:8px 0 2px}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+  .bar{height:3px;border-radius:2px;background:linear-gradient(90deg,var(--garnet),var(--blue));margin:10px 0 16px}
+  .card{background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;margin-bottom:14px}
+  .card h2{margin:0 0 10px;font-size:15px;color:var(--gold)}
+  input[type=text],input[type=search],input[type=tel],input[type=url]{width:100%;background:var(--card2);border:1px solid rgba(255,255,255,.1);color:var(--text);
+      border-radius:12px;padding:13px 14px;font-size:17px;outline:none}
+  input:focus{border-color:var(--gold)}
+  button,.btn{background:var(--blue);color:#fff;border:0;border-radius:12px;padding:13px 16px;font-size:16px;font-weight:600;cursor:pointer;width:100%;margin-top:10px;display:block;text-align:center}
+  button.ghost{background:var(--card2)} button.danger{background:#8e2a24} button.small{width:auto;padding:8px 12px;font-size:14px;margin:0}
+  button:disabled{opacity:.5}
+  .row{display:flex;gap:8px;align-items:center}
+  .pin{font-size:30px;text-align:center;letter-spacing:10px;direction:ltr}
+  .kv{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:14px}
+  .kv span:first-child{color:var(--muted)}
+  .status{padding:10px 12px;border-radius:12px;background:var(--card2);font-size:14px;margin-top:10px}
+  .bar2{height:8px;background:var(--card2);border-radius:4px;overflow:hidden;margin-top:10px}.bar2>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--garnet),var(--blue))}
+  .app{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+  .app b{display:block;font-size:15px}.app small{color:var(--muted);direction:ltr;display:block;font-size:12px}
+  .tag{font-size:11px;color:var(--muted);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:1px 6px;margin-inline-start:6px}
+  .err{color:var(--bad);font-size:14px;margin-top:8px;min-height:20px}
+  [hidden]{display:none!important}
+  input[type=file]{display:none}
+  .pad{display:grid;grid-template-columns:repeat(3,1fr);grid-template-areas:". up ." "left ok right" ". down .";gap:8px;margin:10px 0;direction:ltr}
+  .pad button{margin:0;padding:16px 0;font-size:20px;background:var(--card2)} .pad .ok{background:var(--blue)}
+  .pad .up{grid-area:up}.pad .left{grid-area:left}.pad .ok{grid-area:ok}.pad .right{grid-area:right}.pad .down{grid-area:down}
+  .krow{display:flex;gap:8px}.krow button{margin-top:8px;padding:12px 4px;font-size:15px}
+</style>
+</head>
+<body><div class="wrap">
+  <h1>Albrhi TV</h1><div class="sub" id="tvname">تحكّم بالتلفزيون من جوالك</div><div class="bar"></div>
+
+  <div id="pairBox" class="card" hidden>
+    <h2>ربط هذا الجهاز</h2>
+    <div class="sub">على التلفزيون: <b>الإعدادات ← ربط الجوال</b> وبيطلع لك رمز من 6 أرقام.</div>
+    <input id="pin" class="pin" type="tel" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="off">
+    <button id="pairBtn">ربط</button>
+    <div class="err" id="pairErr"></div>
+  </div>
+
+  <div id="main" hidden>
+    <div class="card" id="infoCard"><h2>التلفزيون</h2><div id="info"></div></div>
+
+    <div class="card">
+      <h2>تثبيت تطبيق</h2>
+      <label class="btn" for="file" id="pick">اختيار ملف APK من الجوال</label>
+      <input id="file" type="file" accept=".apk,application/vnd.android.package-archive">
+      <div class="bar2" id="prog" hidden><i></i></div>
+      <div class="sub" style="margin-top:14px">أو من رابط مباشر:</div>
+      <input id="url" type="url" placeholder="https://…/app.apk" dir="ltr">
+      <button id="urlBtn" class="ghost">تثبيت من الرابط</button>
+      <div class="status" id="status">جاهز</div>
+      <div class="err" id="msg"></div>
+    </div>
+
+    <div class="card">
+      <h2>الريموت</h2>
+      <div class="sub" id="ctlNote"></div>
+      <div class="pad">
+        <button data-k="up" class="up">▲</button><button data-k="left" class="left">◀</button><button data-k="ok" class="ok">OK</button>
+        <button data-k="right" class="right">▶</button><button data-k="down" class="down">▼</button>
+      </div>
+      <div class="krow"><button class="ghost" data-k="back">رجوع</button><button class="ghost" data-k="home">الرئيسية</button><button class="ghost" data-k="recents">التطبيقات</button></div>
+      <div class="krow"><button class="ghost" data-k="voldown">صوت −</button><button class="ghost" data-k="mute">كتم</button><button class="ghost" data-k="volup">صوت +</button></div>
+      <div class="krow"><button class="ghost" data-k="prev">⏮</button><button class="ghost" data-k="playpause">⏯</button><button class="ghost" data-k="next">⏭</button></div>
+      <div class="krow"><button class="danger" id="sleep">إطفاء الشاشة</button><button class="ghost" id="wake">إيقاظ</button></div>
+      <div class="sub" style="margin-top:14px">اكتب نص للتلفزيون (حط المؤشر على خانة الكتابة أول):</div>
+      <input id="txt" type="text"><button id="txtBtn" class="ghost">إرسال النص</button>
+      <div class="sub" style="margin-top:14px">تشغيل رابط فيديو على التلفزيون:</div>
+      <input id="vurl" type="url" dir="ltr" placeholder="https://…/video.mp4"><button id="vurlBtn" class="ghost">تشغيل</button>
+      <div class="err" id="ctlMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>التطبيقات</h2>
+      <input id="q" type="search" placeholder="ابحث في التطبيقات…">
+      <div id="apps"></div>
+    </div>
+    <button class="ghost" id="logout">فصل هذا الجهاز</button>
+  </div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+let token=localStorage.getItem('albrhi_token')||'', apps=[];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function api(path,opt={}){
+  opt.headers=Object.assign({'X-Token':token},opt.headers||{});
+  const r=await fetch(path,opt);
+  if(r.status===401){logout(true);throw new Error('401')}
+  return r.json();
+}
+function logout(silent){localStorage.removeItem('albrhi_token');token='';render();if(!silent)return}
+function render(){
+  $('#pairBox').hidden=!!token; $('#main').hidden=!token;
+  if(token) load();
+}
+async function pair(){
+  $('#pairErr').textContent='';
+  const r=await fetch('/api/pair',{method:'POST',body:JSON.stringify({pin:$('#pin').value,name:(navigator.userAgent.match(/\(([^)]+)\)/)||[,'جوال'])[1].slice(0,40)})});
+  const j=await r.json();
+  if(j.ok){token=j.token;localStorage.setItem('albrhi_token',token);$('#pin').value='';render()}
+  else $('#pairErr').textContent=j.error||'ما تم الربط';
+}
+function fmtMb(m){return m>=1024?(m/1024).toFixed(1)+' GB':m+' MB'}
+async function load(){
+  try{
+    const i=await api('/api/info');
+    $('#tvname').textContent=i.name+' · '+i.model;
+    $('#info').innerHTML=[['العنوان',i.ip],['أندرويد',i.android],['الرام المتاحة',fmtMb(i.ramFreeMb)+' / '+fmtMb(i.ramTotalMb)],
+      ['التخزين الحر',fmtMb(i.storageFreeMb)+' / '+fmtMb(i.storageTotalMb)],['مدة التشغيل',Math.floor(i.uptimeMin/60)+'h '+i.uptimeMin%60+'m']]
+      .map(x=>`<div class="kv"><span>${x[0]}</span><span dir="ltr">${esc(x[1])}</span></div>`).join('');
+    apps=await api('/api/apps'); drawApps(); loadControl();
+  }catch(e){}
+}
+function drawApps(){
+  const q=$('#q').value.trim().toLowerCase();
+  $('#apps').innerHTML=apps.filter(a=>!q||a.label.toLowerCase().includes(q)||a.pkg.includes(q)).map(a=>
+    `<div class="app"><div><b>${esc(a.label)}${a.system?'<span class="tag">نظام</span>':''}${a.hidden?'<span class="tag">مخفي</span>':''}</b><small>${esc(a.pkg)}</small></div>
+     <div class="row"><button class="small" data-open="${esc(a.pkg)}">فتح</button>${a.system?'':`<button class="small danger" data-del="${esc(a.pkg)}">حذف</button>`}</div></div>`).join('')||'<div class="sub">لا شيء</div>';
+}
+$('#apps').addEventListener('click',async e=>{
+  const o=e.target.dataset.open,d=e.target.dataset.del;
+  if(o){const j=await api('/api/launch',{method:'POST',body:JSON.stringify({pkg:o})});$('#msg').textContent=j.ok?'':(j.error||'')}
+  if(d&&confirm('حذف التطبيق؟ بتحتاج تأكد على التلفزيون.')){const j=await api('/api/uninstall',{method:'POST',body:JSON.stringify({pkg:d})});$('#msg').textContent=j.message||j.error||''}
+});
+$('#q').addEventListener('input',drawApps);
+
+$('#file').addEventListener('change',()=>{
+  const f=$('#file').files[0]; if(!f)return;
+  $('#msg').textContent='';$('#prog').hidden=false;$('#prog i').style.width='0';
+  const x=new XMLHttpRequest();
+  x.open('POST','/api/install?name='+encodeURIComponent(f.name));
+  x.setRequestHeader('X-Token',token);
+  x.upload.onprogress=e=>{if(e.lengthComputable)$('#prog i').style.width=(100*e.loaded/e.total)+'%'};
+  x.onload=()=>{let j={};try{j=JSON.parse(x.responseText)}catch(_){}
+    $('#msg').textContent=j.message||j.error||'تم الإرسال';$('#prog').hidden=true;$('#file').value='';if(x.status===401)logout(true)};
+  x.onerror=()=>{$('#msg').textContent='انقطع الاتصال';$('#prog').hidden=true};
+  x.send(f);
+});
+$('#urlBtn').addEventListener('click',async()=>{
+  const u=$('#url').value.trim(); if(!u)return;
+  $('#msg').textContent='جاري التنزيل على التلفزيون…';$('#urlBtn').disabled=true;
+  try{const j=await api('/api/install-url',{method:'POST',body:JSON.stringify({url:u})});$('#msg').textContent=j.message||j.error||''}catch(e){}
+  $('#urlBtn').disabled=false;
+});
+async function post(path,body){return api(path,{method:'POST',body:JSON.stringify(body||{})})}
+document.addEventListener('click',async e=>{
+  const k=e.target.dataset&&e.target.dataset.k; if(!k)return;
+  try{const j=await post('/api/key',{key:k});$('#ctlMsg').textContent=j.ok?'':(j.error||'ما تنفّذ (قد ما يدعمه التطبيق المفتوح)')}catch(_){}
+});
+$('#sleep').addEventListener('click',async()=>{try{const j=await post('/api/power',{action:'sleep'});$('#ctlMsg').textContent=j.ok?'':(j.error||'ما انطفت')}catch(_){}});
+$('#wake').addEventListener('click',async()=>{try{await post('/api/power',{action:'wake'})}catch(_){}});
+$('#txtBtn').addEventListener('click',async()=>{try{const j=await post('/api/text',{text:$('#txt').value});$('#ctlMsg').textContent=j.ok?'':(j.message||j.error||'')}catch(_){}});
+$('#vurlBtn').addEventListener('click',async()=>{const u=$('#vurl').value.trim();if(!u)return;try{const j=await post('/api/open-url',{url:u});$('#ctlMsg').textContent=j.ok?'':(j.error||'')}catch(_){}});
+async function loadControl(){try{const c=await api('/api/control');$('#ctlNote').textContent=c.ready?'':'خدمة التحكم غير مفعّلة على التلفزيون (شغّل restore.sh)'}catch(_){}}
+$('#pairBtn').addEventListener('click',pair);
+$('#pin').addEventListener('keydown',e=>{if(e.key==='Enter')pair()});
+$('#logout').addEventListener('click',()=>logout());
+setInterval(async()=>{ if(!token)return; try{const s=await api('/api/status');$('#status').textContent=s.status; if(/^تم/.test(s.status))load()}catch(e){} },2000);
+render();
+</script></body></html>

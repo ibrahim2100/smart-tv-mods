@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Albrhi Widget</string>
+    <string name="service_label">Albrhi Home Widget</string>
+    <string name="service_desc">يعرض الساعة والتاريخ ومباريات برشلونة فوق الشاشة الرئيسية. لا يقرأ أي بيانات.</string>
+    <string name="dream_label">Albrhi Barca</string>
+    <string name="home_label">Albrhi Home</string>
+    <string name="control_label">Albrhi Remote Control</string>
+    <string name="control_desc">يسمح للجوال المرتبط بتحريك التركيز والضغط على OK والرجوع والكتابة على التلفزيون. لا يقرأ ولا يخزّن أي شي من الشاشة.</string>
+</resources>

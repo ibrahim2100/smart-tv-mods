@@ -1,0 +1,10 @@
+# build output and local-only files
+albrhi-widget/build/
+albrhi-widget/*.apk
+albrhi-widget/*.idsig
+albrhi-tv-restore/*.apk
+albrhi-tv-restore/backups/
+# signing keys never go into version control
+*.keystore
+*.jks
+.claude/settings.local.json
