@@ -413,7 +413,7 @@ public class HomeActivity extends Activity {
             head.setTypeface(Typeface.DEFAULT_BOLD);
             head.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
             LinearLayout.LayoutParams hp = new LinearLayout.LayoutParams(-2, -2);
-            hp.setMargins(px(9), px(4), 0, px(8));
+            hp.setMargins(px(9), px(4), 0, px(16));
             grid.addView(head, hp);
             addRows(tools);
         }
