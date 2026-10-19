@@ -74,7 +74,7 @@ final class WidgetView extends LinearLayout {
         TextView t = new TextView(getContext());
         t.setTextSize(TypedValue.COMPLEX_UNIT_SP, sp * s);
         t.setTextColor(color);
-        if (bold) t.setTypeface(Typeface.DEFAULT_BOLD);
+        if (bold) t.setTypeface(Fonts.bold);
         t.setIncludeFontPadding(false);
         t.setSingleLine(true);
         t.setEllipsize(TextUtils.TruncateAt.END);
@@ -110,7 +110,7 @@ final class WidgetView extends LinearLayout {
         clockRow.setGravity(Gravity.BOTTOM);
         clockRow.setLayoutDirection(LAYOUT_DIRECTION_LTR);
         clock = tv(full ? 60 : 40, WHITE, true);
-        clock.setTypeface(Typeface.create("sans-serif-light", full ? Typeface.NORMAL : Typeface.BOLD));
+        clock.setTypeface((full ? Fonts.medium : Fonts.bold));
         ampm = tv(16, GOLD, true);
         clockRow.addView(clock);
         LinearLayout.LayoutParams ap = lp(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);

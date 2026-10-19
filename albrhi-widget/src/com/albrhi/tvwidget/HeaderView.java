@@ -68,7 +68,7 @@ final class HeaderView extends LinearLayout {
         TextView t = new TextView(getContext());
         t.setTextSize(TypedValue.COMPLEX_UNIT_SP, sp);
         t.setTextColor(color);
-        if (bold) t.setTypeface(Typeface.DEFAULT_BOLD);
+        if (bold) t.setTypeface(Fonts.bold);
         t.setIncludeFontPadding(false);
         t.setSingleLine(true);
         t.setEllipsize(TextUtils.TruncateAt.END);
@@ -106,8 +106,8 @@ final class HeaderView extends LinearLayout {
         LinearLayout clockRow = new LinearLayout(getContext());
         clockRow.setLayoutDirection(LAYOUT_DIRECTION_LTR);
         clockRow.setGravity(Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
-        clock = tv(46, WHITE, true);
-        clock.setTypeface(Typeface.create("sans-serif-light", Typeface.BOLD));
+        clock = tv(42, WHITE, true);
+        clock.setTypeface(Fonts.bold);
         ampm = tv(16, GOLD, true);
         clockRow.addView(clock);
         LinearLayout.LayoutParams ap = wrap();

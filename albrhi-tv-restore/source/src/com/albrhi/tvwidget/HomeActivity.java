@@ -110,7 +110,7 @@ public class HomeActivity extends Activity {
         LinearLayout col = new LinearLayout(this);
         col.setOrientation(LinearLayout.VERTICAL);
         col.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-        col.setPadding(px(48), px(16), px(48), px(8));
+        col.setPadding(px(48), px(12), px(48), px(6));
 
         header = new HeaderView(this);
         col.addView(header, new LinearLayout.LayoutParams(-1, -2));
@@ -120,8 +120,8 @@ public class HomeActivity extends Activity {
         g.setCornerRadius(px(2));
         bar.setBackground(g);
         LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(-1, px(3));
-        bp.topMargin = px(10);
-        bp.bottomMargin = px(8);
+        bp.topMargin = px(7);
+        bp.bottomMargin = px(6);
         col.addView(bar, bp);
 
         status = new StatusBar(this);
@@ -135,7 +135,7 @@ public class HomeActivity extends Activity {
         cap.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
         View accent = new View(this);
         accent.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{GARNET, BLUE}));
-        LinearLayout.LayoutParams acp = new LinearLayout.LayoutParams(px(5), px(40));
+        LinearLayout.LayoutParams acp = new LinearLayout.LayoutParams(px(5), px(36));
         acp.setMarginEnd(px(14));
         cap.addView(accent, acp);
         LinearLayout box = new LinearLayout(this);
@@ -143,9 +143,9 @@ public class HomeActivity extends Activity {
         capBox = box;
         capName = new TextView(this);
         capName.setTextColor(0xFFFFFFFF);
-        capName.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
-        capName.setTextSize(TypedValue.COMPLEX_UNIT_SP, 28);
-        capName.setLetterSpacing(0.01f);
+        capName.setTypeface(Fonts.bold);
+        capName.setTextSize(TypedValue.COMPLEX_UNIT_SP, 26);
+        capName.setLetterSpacing(0f);
         capName.setSingleLine(true);
         capName.setEllipsize(TextUtils.TruncateAt.END);
         capName.setIncludeFontPadding(false);
@@ -163,11 +163,9 @@ public class HomeActivity extends Activity {
         csp.topMargin = px(3);
         box.addView(capSub, csp);
         cap.addView(box, new LinearLayout.LayoutParams(0, -2, 1f));
-        cap.addView(keyHint("OK", "فتح"), hintLp());
-        cap.addView(keyHint("OK مطوّل", "خيارات"), hintLp());
         LinearLayout.LayoutParams cpp = new LinearLayout.LayoutParams(-1, -2);
-        cpp.topMargin = px(6);
-        cpp.bottomMargin = px(2);
+        cpp.topMargin = px(2);
+        cpp.bottomMargin = px(0);
         col.addView(cap, cpp);
 
         scroll = new ScrollView(this);
@@ -236,7 +234,7 @@ public class HomeActivity extends Activity {
         TextView t = new TextView(this);
         t.setText("الواجهة تعطّلت عدة مرات");
         t.setTextColor(GOLD);
-        t.setTypeface(Typeface.DEFAULT_BOLD);
+        t.setTypeface(Fonts.bold);
         t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 28);
         t.setGravity(Gravity.CENTER);
         col.addView(t);
@@ -262,7 +260,7 @@ public class HomeActivity extends Activity {
         final TextView b = new TextView(this);
         b.setText(text);
         b.setTextColor(0xFFFFFFFF);
-        b.setTypeface(Typeface.DEFAULT_BOLD);
+        b.setTypeface(Fonts.bold);
         b.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
         b.setGravity(Gravity.CENTER);
         b.setFocusable(true);
@@ -428,7 +426,7 @@ public class HomeActivity extends Activity {
             TextView head = new TextView(this);
             head.setText("أدوات التلفزيون");
             head.setTextColor(MUTED);
-            head.setTypeface(Typeface.DEFAULT_BOLD);
+            head.setTypeface(Fonts.bold);
             head.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
             LinearLayout.LayoutParams hp = new LinearLayout.LayoutParams(-2, -2);
             hp.setMargins(px(9), px(4), 0, px(16));
@@ -459,14 +457,14 @@ public class HomeActivity extends Activity {
         final boolean special = HIDDEN.equals(a.pkg);
         final boolean dim = !special && hidden.contains(a.pkg);
         final boolean isMoving = moving && a.pkg.equals(movingPkg);
-        final int w = px(122), h = px(69);
+        final int w = px(117), h = px(66);
 
         LinearLayout cell = new LinearLayout(this);
         cell.setOrientation(LinearLayout.VERTICAL);
         cell.setGravity(Gravity.CENTER_HORIZONTAL);
         cell.setClipChildren(false);
         LinearLayout.LayoutParams cl = new LinearLayout.LayoutParams(-2, -2);
-        cl.setMargins(px(9), px(5), px(9), px(5));
+        cl.setMargins(px(9), px(4), px(9), px(4));
         cell.setLayoutParams(cl);
 
         final FrameLayout t = new FrameLayout(this);
@@ -488,7 +486,7 @@ public class HomeActivity extends Activity {
             TextView g = new TextView(this);
             g.setText(showHidden ? "رجوع" : hidden.size() + " مخفية");
             g.setTextColor(0xFFFFFFFF);
-            g.setTypeface(Typeface.DEFAULT_BOLD);
+            g.setTypeface(Fonts.bold);
             g.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17);
             g.setGravity(Gravity.CENTER);
             t.addView(g, new FrameLayout.LayoutParams(-1, -1));
@@ -569,40 +567,6 @@ public class HomeActivity extends Activity {
     private void fadeCaptionSoon() {
         ui.removeCallbacks(capFade);
         ui.postDelayed(capFade, 90);
-    }
-
-    private View keyHint(String key, String text) {
-        LinearLayout h = new LinearLayout(this);
-        h.setGravity(Gravity.CENTER_VERTICAL);
-        h.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-        TextView k = new TextView(this);
-        k.setText(key);
-        k.setTextColor(0xFFDCE6FF);
-        k.setTypeface(Typeface.DEFAULT_BOLD);
-        k.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        k.setIncludeFontPadding(false);
-        k.setPadding(px(9), px(4), px(9), px(5));
-        GradientDrawable kb = new GradientDrawable();
-        kb.setColor(0x22FFFFFF);
-        kb.setCornerRadius(px(8));
-        kb.setStroke(Math.max(1, px(1)), 0x44FFFFFF);
-        k.setBackground(kb);
-        TextView t = new TextView(this);
-        t.setText(text);
-        t.setTextColor(MUTED);
-        t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        t.setIncludeFontPadding(false);
-        LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(-2, -2);
-        tp.setMarginStart(px(7));
-        h.addView(k);
-        h.addView(t, tp);
-        return h;
-    }
-
-    private LinearLayout.LayoutParams hintLp() {
-        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-2, -2);
-        p.setMarginStart(px(18));
-        return p;
     }
 
     // ---- menu / move / rename / hide / uninstall --------------------------------------------

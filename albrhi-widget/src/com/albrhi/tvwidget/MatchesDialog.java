@@ -348,7 +348,7 @@ final class MatchesDialog {
         t.setText(s);
         t.setTextColor(color);
         t.setTextSize(TypedValue.COMPLEX_UNIT_SP, sp);
-        if (bold) t.setTypeface(Typeface.DEFAULT_BOLD);
+        if (bold) t.setTypeface(Fonts.bold);
         t.setIncludeFontPadding(false);
         t.setSingleLine(true);
         t.setEllipsize(TextUtils.TruncateAt.END);

@@ -91,7 +91,7 @@ final class Sheet {
         t.setText(s);
         t.setTextColor(color);
         t.setTextSize(TypedValue.COMPLEX_UNIT_SP, sp);
-        if (bold) t.setTypeface(Typeface.DEFAULT_BOLD);
+        if (bold) t.setTypeface(Fonts.bold);
         t.setIncludeFontPadding(false);
         t.setTextDirection(View.TEXT_DIRECTION_RTL);                // Latin names (Apple TV) still line up on the right edge
         t.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
@@ -201,7 +201,7 @@ final class Sheet {
             }
             View row = row(c, it, dn, d);
             LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-1, -2);
-            rp.topMargin = Math.round(4 * dn);
+            rp.topMargin = Math.round(3 * dn);
             list.addView(row, rp);
             if (first == null) first = row;
         }
@@ -211,7 +211,7 @@ final class Sheet {
         sv.setPadding(0, Math.round(2 * dn), 0, Math.round(2 * dn));
         sv.addView(list);
         DisplayMetrics dm = c.getResources().getDisplayMetrics();
-        int maxList = dm.heightPixels - Math.round((footer == null ? 130 : 190) * dn);
+        int maxList = dm.heightPixels - Math.round((footer == null ? 130 : 196) * dn);
         panel.addView(new CappedScroll(c, sv, maxList), new LinearLayout.LayoutParams(-1, -2));
 
         if (footer != null) {
@@ -248,8 +248,8 @@ final class Sheet {
         r.setGravity(Gravity.CENTER_VERTICAL);
         r.setFocusable(true);
         r.setClickable(true);
-        r.setMinimumHeight(Math.round(50 * dn));
-        r.setPadding(Math.round(10 * dn), Math.round(5 * dn), Math.round(14 * dn), Math.round(5 * dn));
+        r.setMinimumHeight(Math.round(46 * dn));
+        r.setPadding(Math.round(10 * dn), Math.round(3 * dn), Math.round(14 * dn), Math.round(3 * dn));
         final int accentA = it.danger ? DANGER_A : FOCUS_A, accentB = it.danger ? DANGER_B : FOCUS_B;
         final GradientDrawable idle = round(0x14FFFFFF, 18 * dn);
         final GradientDrawable on = new GradientDrawable(GradientDrawable.Orientation.RIGHT_LEFT, new int[]{accentA, accentB});
@@ -267,7 +267,7 @@ final class Sheet {
         int pad = Math.round(9 * dn);
         icon.setPadding(pad, pad, pad, pad);
         circle.addView(icon, new FrameLayout.LayoutParams(-1, -1));
-        r.addView(circle, new LinearLayout.LayoutParams(Math.round(38 * dn), Math.round(38 * dn)));
+        r.addView(circle, new LinearLayout.LayoutParams(Math.round(36 * dn), Math.round(36 * dn)));
 
         LinearLayout col = new LinearLayout(c);
         col.setOrientation(LinearLayout.VERTICAL);

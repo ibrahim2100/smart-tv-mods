@@ -152,7 +152,7 @@ final class ContextMenu {
         TextView pill = new TextView(act);
         pill.setText(title);
         pill.setTextColor(0xFFFFFFFF);
-        pill.setTypeface(Typeface.DEFAULT_BOLD);
+        pill.setTypeface(Fonts.bold);
         pill.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
         pill.setSingleLine(true);
         pill.setEllipsize(TextUtils.TruncateAt.END);
@@ -233,7 +233,7 @@ final class ContextMenu {
         final TextView t = new TextView(act);
         t.setText(it.title);
         t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17.5f);
-        t.setTypeface(Typeface.DEFAULT_BOLD);
+        t.setTypeface(Fonts.bold);
         t.setSingleLine(true);
         t.setEllipsize(TextUtils.TruncateAt.END);
         t.setTextDirection(View.TEXT_DIRECTION_RTL);

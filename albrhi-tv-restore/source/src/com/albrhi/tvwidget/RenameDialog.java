@@ -42,7 +42,7 @@ final class RenameDialog {
         TextView t = new TextView(c);
         t.setText("اسم جديد للتطبيق");
         t.setTextColor(GOLD);
-        t.setTypeface(Typeface.DEFAULT_BOLD);
+        t.setTypeface(Fonts.bold);
         t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
         box.addView(t);
 
@@ -104,7 +104,7 @@ final class RenameDialog {
         final TextView b = new TextView(c);
         b.setText(s);
         b.setTextColor(WHITE);
-        b.setTypeface(Typeface.DEFAULT_BOLD);
+        b.setTypeface(Fonts.bold);
         b.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         b.setGravity(Gravity.CENTER);
         b.setFocusable(true);

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Every dialog and activity gets IBM Plex Sans Arabic as its default font -->
+    <style name="AlbrhiDialog" parent="@android:style/Theme.DeviceDefault.Dialog.NoActionBar">
+        <item name="android:fontFamily">@font/plex</item>
+    </style>
+    <style name="AlbrhiTheme" parent="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen">
+        <item name="android:fontFamily">@font/plex</item>
+        <item name="android:dialogTheme">@style/AlbrhiDialog</item>
+    </style>
+    <style name="AlbrhiTheme.Translucent" parent="@android:style/Theme.Translucent.NoTitleBar">
+        <item name="android:fontFamily">@font/plex</item>
+        <item name="android:dialogTheme">@style/AlbrhiDialog</item>
+    </style>
+</resources>
