@@ -156,6 +156,7 @@ public class HomeActivity extends Activity {
 
     @Override protected void onNewIntent(Intent i) {
         super.onNewIntent(i);
+        if (CrashGuard.tripped(this)) { recreate(); return; }
         // Home pressed again: jump back to the top
         lastFocusPkg = null;
         scroll.fullScroll(View.FOCUS_UP);
@@ -503,25 +504,25 @@ public class HomeActivity extends Activity {
 
     private void appMenu(final App a) {
         final boolean isHidden = hidden.contains(a.pkg);
-        String[] labels = {
-                "نقل التطبيق",
-                "إعادة تسمية",
-                isHidden ? "إظهاره في الشاشة" : "إخفاؤه من الشاشة",
-                a.system ? "معلومات التطبيق (تعطيل)" : Menu.DANGER + "حذف التطبيق",
-                "إلغاء"};
-        Runnable[] actions = {
-                new Runnable() { public void run() { startMove(a); } },
-                new Runnable() { public void run() { rename(a); } },
+        java.util.List<Sheet.Item> items = Sheet.list();
+        items.add(Sheet.Item.of("نقل التطبيق", R.drawable.ic_move, new Runnable() { public void run() { startMove(a); } }).sub("حرّكه بالأسهم ثم OK"));
+        items.add(Sheet.Item.of("إعادة تسمية", R.drawable.ic_edit, new Runnable() { public void run() { rename(a); } }).sub("اسم يظهر تحت الأيقونة"));
+        items.add(Sheet.Item.of(isHidden ? "إظهاره في الشاشة" : "إخفاؤه من الشاشة", isHidden ? R.drawable.ic_eye : R.drawable.ic_eye_off,
                 new Runnable() { public void run() {
                     if (hidden.contains(a.pkg)) hidden.remove(a.pkg); else hidden.add(a.pkg);
                     saveHidden();
                     if (hidden.isEmpty()) showHidden = false;
                     lastFocusPkg = null;
                     fill();
-                } },
-                new Runnable() { public void run() { if (a.system) appDetails(a.pkg); else uninstall(a.pkg); } },
-                null};
-        Menu.show(this, nameOf(a), labels, actions);
+                } }).sub(isHidden ? "يرجع لشبكة التطبيقات" : "يروح لبطاقة «المخفية»"));
+        if (a.system) {
+            items.add(Sheet.Item.of("معلومات التطبيق", R.drawable.ic_info, new Runnable() { public void run() { appDetails(a.pkg); } })
+                    .sub("تعطيل أو إدارة الصلاحيات"));
+        } else {
+            items.add(Sheet.Item.of("حذف التطبيق", R.drawable.ic_trash, new Runnable() { public void run() { uninstall(a.pkg); } })
+                    .sub("يحتاج تأكيدك بعدها").danger());
+        }
+        Sheet.show(this, nameOf(a), a.system ? "تطبيق نظام" : "تطبيق", 0, a.banner != null ? a.banner : a.icon, items, null, null, 380);
     }
 
     private void rename(final App a) {

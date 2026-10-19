@@ -252,27 +252,7 @@ final class StatusBar extends LinearLayout {
         } catch (Throwable t) { openSettings(Settings.ACTION_SETTINGS); }
     }
 
-    private void quickSettings() {
-        Health.Info hi = Health.read(getContext());
-        String[] labels = {"تحديث المباريات الآن", "تجربة تنبيه المباراة", "ربط الجوال والتثبيت عن بعد", "الشبكة والإنترنت", "الصورة", "الصوت", "التطبيقات", "الموقع (لإظهار اسم الشبكة)",
-                "الكيبورد", "إمكانية الوصول", "كل الإعدادات", "رجوع لواجهة Google TV الأصلية", "تجربة شاشة الطوارئ", Health.summary(hi)};
-        Runnable[] actions = {new Runnable() { public void run() {
-                    android.widget.Toast.makeText(getContext(), "جاري تحديث المباريات…", android.widget.Toast.LENGTH_SHORT).show();
-                    Fixtures.refresh(getContext(), true);
-                } }, new Runnable() { public void run() { AppService.testAlert(getContext()); } },
-                new Runnable() { public void run() { RemoteDialog.show(getContext()); } },
-                open(Settings.ACTION_WIFI_SETTINGS), open(Settings.ACTION_DISPLAY_SETTINGS),
-                open(Settings.ACTION_SOUND_SETTINGS), open(Settings.ACTION_APPLICATION_SETTINGS),
-                open(Settings.ACTION_LOCATION_SOURCE_SETTINGS), open(Settings.ACTION_INPUT_METHOD_SETTINGS),
-                open(Settings.ACTION_ACCESSIBILITY_SETTINGS), open(Settings.ACTION_SETTINGS),
-                new Runnable() { public void run() { openGoogleTvPage(); } },
-                new Runnable() { public void run() {
-                    CrashGuard.simulate(getContext());
-                    getContext().startActivity(new Intent(getContext(), HomeActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP));
-                    if (getContext() instanceof android.app.Activity) ((android.app.Activity) getContext()).recreate();
-                } }, null};
-        Menu.show(getContext(), "إعدادات سريعة", labels, actions);
-    }
+    private void quickSettings() { QuickSettings.show(getContext()); }
 
     // ---- HDMI -------------------------------------------------------------------------------
 
@@ -331,16 +311,13 @@ final class StatusBar extends LinearLayout {
 
     private void renameMenu(final TvInputInfo info, final int n) {
         final String[] presets = {"PS5", "PS4", "Xbox", "ريسيفر", "Apple TV", "Fire TV", "Chromecast", "Switch", "لابتوب", "كاميرا"};
-        String[] labels = new String[presets.length + 1];
-        Runnable[] actions = new Runnable[presets.length + 1];
-        for (int k = 0; k < presets.length; k++) {
-            final String name = presets[k];
-            labels[k] = name;
-            actions[k] = new Runnable() { public void run() { saveName(info.getId(), name); } };
+        java.util.List<Sheet.Item> items = Sheet.list();
+        for (final String name : presets) {
+            items.add(Sheet.Item.of(name, R.drawable.ic_tv, new Runnable() { public void run() { saveName(info.getId(), name); } }));
         }
-        labels[presets.length] = "الاسم الافتراضي";
-        actions[presets.length] = new Runnable() { public void run() { saveName(info.getId(), null); } };
-        Menu.show(getContext(), "سمّ هذا المدخل (HDMI " + n + ")", labels, actions);
+        items.add(Sheet.Item.of("الاسم الافتراضي", R.drawable.ic_refresh, new Runnable() { public void run() { saveName(info.getId(), null); } })
+                .sub("HDMI " + n));
+        Sheet.show(getContext(), "سمّ هذا المدخل", "HDMI " + n, R.drawable.ic_tv, items, null, null);
     }
 
     private void saveName(String id, String name) {

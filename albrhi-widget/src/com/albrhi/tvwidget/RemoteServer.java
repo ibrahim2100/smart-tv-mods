@@ -407,6 +407,9 @@ final class RemoteServer {
         if ("volup".equals(k)) am.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI);
         else if ("voldown".equals(k)) am.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI);
         else if ("mute".equals(k)) am.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_TOGGLE_MUTE, AudioManager.FLAG_SHOW_UI);
+        else if ("settings".equals(k)) {          // the short settings menu, over whatever is on screen
+            ctx.startActivity(new Intent(ctx, QuickSettingsActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP));
+        }
         else if ("playpause".equals(k)) media(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
         else if ("play".equals(k)) media(KeyEvent.KEYCODE_MEDIA_PLAY);
         else if ("pause".equals(k)) media(KeyEvent.KEYCODE_MEDIA_PAUSE);

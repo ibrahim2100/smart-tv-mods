@@ -1,7 +1,9 @@
 package com.albrhi.tvwidget;
 
 import android.accessibilityservice.AccessibilityService;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -29,6 +31,25 @@ public class ControlService extends AccessibilityService {
     }
 
     @Override public void onAccessibilityEvent(AccessibilityEvent e) { }
+
+    /**
+     * The remote's Settings (gear) button opens our short settings menu instead of the TV's full Settings app.
+     * Every other key is passed on untouched (we only look at its code).
+     */
+    @Override protected boolean onKeyEvent(KeyEvent e) {
+        int k = e.getKeyCode();
+        // The Haier remote's gear button sends KEYCODE_NOTIFICATION (83); other remotes send KEYCODE_SETTINGS.
+        if (k == KeyEvent.KEYCODE_SETTINGS || k == KeyEvent.KEYCODE_NOTIFICATION) {
+            if (e.getAction() == KeyEvent.ACTION_UP) {
+                try {
+                    startActivity(new Intent(this, QuickSettingsActivity.class)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP));
+                } catch (Throwable ignored) { }
+            }
+            return true;
+        }
+        return false;
+    }
 
     @Override public void onInterrupt() { }
 

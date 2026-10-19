@@ -87,6 +87,14 @@
         </activity>
 
         <activity
+            android:name=".QuickSettingsActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:launchMode="singleTask"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <activity
             android:name=".PreviewActivity"
             android:exported="true"
             android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen" />
