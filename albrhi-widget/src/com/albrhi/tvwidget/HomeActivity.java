@@ -51,6 +51,7 @@ import static com.albrhi.tvwidget.WidgetView.*;
  */
 public class HomeActivity extends Activity {
     private static final int COLUMNS = 6;
+    private static final int LABEL_SLOT = 28;     // dp of empty space above every tile row, where the name pops up
     private static final String HIDDEN = "__hidden";
     /** First-run order, until you move something yourself. */
     private static final List<String> PRESET = Arrays.asList(
@@ -74,6 +75,11 @@ public class HomeActivity extends Activity {
     private HeaderView header;
     private StatusBar status;
     private ScrollView scroll;
+    private FrameLayout rootView;
+    private LinearLayout contentCol;
+    private ContextMenu ctxMenu;
+    private TextView focusLabel;
+    private View labelTile;      // the tile whose name is showing
     private LinearLayout grid;
     private float dn;
     private boolean loading, showHidden, moving;
@@ -133,6 +139,32 @@ public class HomeActivity extends Activity {
         col.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
 
         root.addView(col, new FrameLayout.LayoutParams(-1, -1));
+        rootView = root;
+        contentCol = col;
+        ctxMenu = new ContextMenu(this, root, col);
+
+        // the app's name floats above whichever tile has the focus (the tiles themselves carry no text)
+        focusLabel = new TextView(this);
+        focusLabel.setTextColor(0xFFFFFFFF);
+        focusLabel.setTypeface(Typeface.DEFAULT_BOLD);
+        focusLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+        focusLabel.setSingleLine(true);
+        focusLabel.setEllipsize(TextUtils.TruncateAt.END);
+        focusLabel.setIncludeFontPadding(false);
+        focusLabel.setTextDirection(View.TEXT_DIRECTION_RTL);
+        focusLabel.setPadding(px(15), px(6), px(15), px(7));
+        GradientDrawable lb = new GradientDrawable();
+        lb.setColor(0xF2141C33);
+        lb.setCornerRadius(px(20));
+        lb.setStroke(Math.max(1, px(1)), 0x33FFFFFF);
+        focusLabel.setBackground(lb);
+        focusLabel.setElevation(px(14));
+        focusLabel.setAlpha(0f);
+        focusLabel.setMaxWidth(px(320));
+        root.addView(focusLabel, new FrameLayout.LayoutParams(-2, -2));
+        scroll.setOnScrollChangeListener(new View.OnScrollChangeListener() {
+            @Override public void onScrollChange(View v, int x, int y, int ox, int oy) { placeLabel(); }
+        });
         setContentView(root);
     }
 
@@ -148,6 +180,7 @@ public class HomeActivity extends Activity {
     @Override protected void onPause() {
         ui.removeCallbacks(calm);
         if (header == null) { super.onPause(); return; }
+        if (ctxMenu != null) ctxMenu.dismissNow();
         if (moving) endMove(true);
         header.stop();
         status.stop();
@@ -164,6 +197,7 @@ public class HomeActivity extends Activity {
     }
 
     @Override public void onBackPressed() {
+        if (ctxMenu != null && ctxMenu.isOpen()) { ctxMenu.close(null); return; }
         if (moving) { endMove(true); return; }
         if (showHidden) { showHidden = false; fill(); return; }
         /* this is the home screen */
@@ -361,6 +395,8 @@ public class HomeActivity extends Activity {
 
         grid.removeAllViews();
         tiles.clear();
+        labelTile = null;
+        if (focusLabel != null) { focusLabel.animate().cancel(); focusLabel.setAlpha(0f); }
         List<App> mine = group(false);
         if (hidden.size() > 0) {
             App t = new App();
@@ -377,7 +413,7 @@ public class HomeActivity extends Activity {
             head.setTypeface(Typeface.DEFAULT_BOLD);
             head.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
             LinearLayout.LayoutParams hp = new LinearLayout.LayoutParams(-2, -2);
-            hp.setMargins(px(9), px(10), 0, px(0));
+            hp.setMargins(px(9), px(4), 0, px(8));
             grid.addView(head, hp);
             addRows(tools);
         }
@@ -412,8 +448,9 @@ public class HomeActivity extends Activity {
         cell.setGravity(Gravity.CENTER_HORIZONTAL);
         cell.setClipChildren(false);
         LinearLayout.LayoutParams cl = new LinearLayout.LayoutParams(-2, -2);
-        cl.setMargins(px(9), px(8), px(9), px(3));
+        cl.setMargins(px(9), px(0), px(9), px(5));
         cell.setLayoutParams(cl);
+        cell.addView(new View(this), new LinearLayout.LayoutParams(1, px(LABEL_SLOT)));   // room for the floating name
 
         final FrameLayout t = new FrameLayout(this);
         t.setFocusable(true);
@@ -460,17 +497,6 @@ public class HomeActivity extends Activity {
         if (isMoving) { t.setScaleX(1.15f); t.setScaleY(1.15f); t.setElevation(px(12)); }
         cell.addView(t, new LinearLayout.LayoutParams(w, h));
 
-        final TextView label = new TextView(this);
-        label.setText(special ? a.label : nameOf(a));
-        label.setTextColor(isMoving ? GOLD : MUTED);
-        label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        label.setSingleLine(true);
-        label.setEllipsize(TextUtils.TruncateAt.END);
-        label.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(w, -2);
-        lp.topMargin = px(5);
-        cell.addView(label, lp);
-
         t.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override public void onFocusChange(View v, boolean f) {
                 if (f) lastFocusPkg = a.pkg;
@@ -478,7 +504,7 @@ public class HomeActivity extends Activity {
                 t.animate().scaleX(f ? 1.1f : 1f).scaleY(f ? 1.1f : 1f).setDuration(120).start();
                 t.setElevation(f ? px(10) : 0);
                 ring.setAlpha(f ? 255 : 0);
-                label.setTextColor(f ? GOLD : MUTED);
+                if (f) showLabel(t, special ? a.label : nameOf(a)); else hideLabel(t);
             }
         });
         t.setOnClickListener(new View.OnClickListener() {
@@ -500,29 +526,80 @@ public class HomeActivity extends Activity {
         return cell;
     }
 
+    // ---- the floating name ------------------------------------------------------------------
+
+    private void showLabel(View tile, String name) {
+        labelTile = tile;
+        focusLabel.setText(name);
+        focusLabel.animate().cancel();
+        placeLabel();
+        ui.postDelayed(new Runnable() { public void run() { if (labelTile != null) placeLabel(); } }, 90);   // after a rebuilt grid has been laid out
+        focusLabel.animate().alpha(1f).setDuration(140).start();
+    }
+
+    private void hideLabel(View tile) {
+        if (labelTile != tile) return;
+        labelTile = null;
+        focusLabel.animate().cancel();
+        focusLabel.animate().alpha(0f).setDuration(100).start();
+    }
+
+    /** Centres the name above the focused tile, kept inside the screen. */
+    private void placeLabel() {
+        final View t = labelTile;
+        if (t == null || rootView == null || !t.isLaidOut() || t.getWidth() == 0) return;
+        focusLabel.measure(View.MeasureSpec.makeMeasureSpec(px(320), View.MeasureSpec.AT_MOST), View.MeasureSpec.UNSPECIFIED);
+        int[] a = new int[2], r = new int[2];
+        t.getLocationInWindow(a);
+        rootView.getLocationInWindow(r);
+        float cx = a[0] - r[0] + t.getWidth() / 2f;
+        float x = cx - focusLabel.getMeasuredWidth() / 2f;
+        x = Math.max(px(24), Math.min(rootView.getWidth() - px(24) - focusLabel.getMeasuredWidth(), x));
+        float y = a[1] - r[1] - focusLabel.getMeasuredHeight() - px(4) - t.getHeight() * 0.04f;
+        focusLabel.setTranslationX(x);
+        focusLabel.setTranslationY(y);
+    }
+
     // ---- menu / move / rename / hide / uninstall --------------------------------------------
 
     private void appMenu(final App a) {
         final boolean isHidden = hidden.contains(a.pkg);
+        final View tile = tiles.get(a.pkg);
+        if (tile == null) return;
         java.util.List<Sheet.Item> items = Sheet.list();
-        items.add(Sheet.Item.of("نقل التطبيق", R.drawable.ic_move, new Runnable() { public void run() { startMove(a); } }).sub("حرّكه بالأسهم ثم OK"));
-        items.add(Sheet.Item.of("إعادة تسمية", R.drawable.ic_edit, new Runnable() { public void run() { rename(a); } }).sub("اسم يظهر تحت الأيقونة"));
-        items.add(Sheet.Item.of(isHidden ? "إظهاره في الشاشة" : "إخفاؤه من الشاشة", isHidden ? R.drawable.ic_eye : R.drawable.ic_eye_off,
+        items.add(Sheet.Item.of("نقل", R.drawable.ic_move, new Runnable() { public void run() { startMove(a); } }));
+        items.add(Sheet.Item.of("إعادة تسمية", R.drawable.ic_edit, new Runnable() { public void run() { rename(a); } }));
+        items.add(Sheet.Item.of(isHidden ? "إظهار" : "إخفاء", isHidden ? R.drawable.ic_eye : R.drawable.ic_eye_off,
                 new Runnable() { public void run() {
                     if (hidden.contains(a.pkg)) hidden.remove(a.pkg); else hidden.add(a.pkg);
                     saveHidden();
                     if (hidden.isEmpty()) showHidden = false;
                     lastFocusPkg = null;
                     fill();
-                } }).sub(isHidden ? "يرجع لشبكة التطبيقات" : "يروح لبطاقة «المخفية»"));
+                } }));
         if (a.system) {
-            items.add(Sheet.Item.of("معلومات التطبيق", R.drawable.ic_info, new Runnable() { public void run() { appDetails(a.pkg); } })
-                    .sub("تعطيل أو إدارة الصلاحيات"));
+            items.add(Sheet.Item.of("معلومات التطبيق", R.drawable.ic_info, new Runnable() { public void run() { appDetails(a.pkg); } }));
         } else {
-            items.add(Sheet.Item.of("حذف التطبيق", R.drawable.ic_trash, new Runnable() { public void run() { uninstall(a.pkg); } })
-                    .sub("يحتاج تأكيدك بعدها").danger());
+            items.add(Sheet.Item.of("حذف", R.drawable.ic_trash, new Runnable() { public void run() { uninstall(a.pkg); } }).danger());
         }
-        Sheet.show(this, nameOf(a), a.system ? "تطبيق نظام" : "تطبيق", 0, a.banner != null ? a.banner : a.icon, items, null, null, 380);
+        // the lifted copy of the tile
+        ImageView iv = new ImageView(this);
+        if (a.banner != null && a.banner.getConstantState() != null) {
+            iv.setImageDrawable(a.banner.getConstantState().newDrawable().mutate());
+            iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        } else {
+            iv.setImageDrawable(a.icon);
+            iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            iv.setPadding(px(14), px(9), px(14), px(9));
+        }
+        focusLabel.animate().cancel();
+        focusLabel.setAlpha(0f);                                   // the menu has its own header
+        ctxMenu.show(tile, iv, nameOf(a), items, new Runnable() {
+            public void run() {
+                View t = tiles.get(a.pkg);
+                if (t != null) t.requestFocus();
+            }
+        });
     }
 
     private void rename(final App a) {
