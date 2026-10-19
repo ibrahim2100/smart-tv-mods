@@ -51,7 +51,7 @@ import static com.albrhi.tvwidget.WidgetView.*;
  */
 public class HomeActivity extends Activity {
     private static final int COLUMNS = 6;
-    private static final int LABEL_SLOT = 28;     // dp of empty space above every tile row, where the name pops up
+    private static final int LABEL_SLOT = 0;     // dp of empty space above every tile row, where the name pops up
     private static final String HIDDEN = "__hidden";
     /** First-run order, until you move something yourself. */
     private static final List<String> PRESET = Arrays.asList(
@@ -78,8 +78,9 @@ public class HomeActivity extends Activity {
     private FrameLayout rootView;
     private LinearLayout contentCol;
     private ContextMenu ctxMenu;
-    private TextView focusLabel;
-    private View labelTile;      // the tile whose name is showing
+    private TextView capName, capSub;
+    private View capBox;
+    private final Runnable capFade = new Runnable() { public void run() { if (capBox != null) capBox.animate().alpha(0.35f).setDuration(160).start(); } };
     private LinearLayout grid;
     private float dn;
     private boolean loading, showHidden, moving;
@@ -128,6 +129,47 @@ public class HomeActivity extends Activity {
         sp.bottomMargin = px(2);
         col.addView(status, sp);
 
+        // fixed caption: always in the same place, it follows whatever has the focus
+        LinearLayout cap = new LinearLayout(this);
+        cap.setGravity(Gravity.CENTER_VERTICAL);
+        cap.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        View accent = new View(this);
+        accent.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{GARNET, BLUE}));
+        LinearLayout.LayoutParams acp = new LinearLayout.LayoutParams(px(5), px(40));
+        acp.setMarginEnd(px(14));
+        cap.addView(accent, acp);
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        capBox = box;
+        capName = new TextView(this);
+        capName.setTextColor(0xFFFFFFFF);
+        capName.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        capName.setTextSize(TypedValue.COMPLEX_UNIT_SP, 28);
+        capName.setLetterSpacing(0.01f);
+        capName.setSingleLine(true);
+        capName.setEllipsize(TextUtils.TruncateAt.END);
+        capName.setIncludeFontPadding(false);
+        capName.setTextDirection(View.TEXT_DIRECTION_RTL);
+        capName.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+        capSub = new TextView(this);
+        capSub.setTextColor(GOLD);
+        capSub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13.5f);
+        capSub.setSingleLine(true);
+        capSub.setIncludeFontPadding(false);
+        capSub.setTextDirection(View.TEXT_DIRECTION_RTL);
+        capSub.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+        box.addView(capName);
+        LinearLayout.LayoutParams csp = new LinearLayout.LayoutParams(-2, -2);
+        csp.topMargin = px(3);
+        box.addView(capSub, csp);
+        cap.addView(box, new LinearLayout.LayoutParams(0, -2, 1f));
+        cap.addView(keyHint("OK", "فتح"), hintLp());
+        cap.addView(keyHint("OK مطوّل", "خيارات"), hintLp());
+        LinearLayout.LayoutParams cpp = new LinearLayout.LayoutParams(-1, -2);
+        cpp.topMargin = px(6);
+        cpp.bottomMargin = px(2);
+        col.addView(cap, cpp);
+
         scroll = new ScrollView(this);
         scroll.setVerticalScrollBarEnabled(false);
         scroll.setClipToPadding(false);
@@ -143,28 +185,6 @@ public class HomeActivity extends Activity {
         contentCol = col;
         ctxMenu = new ContextMenu(this, root, col);
 
-        // the app's name floats above whichever tile has the focus (the tiles themselves carry no text)
-        focusLabel = new TextView(this);
-        focusLabel.setTextColor(0xFFFFFFFF);
-        focusLabel.setTypeface(Typeface.DEFAULT_BOLD);
-        focusLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
-        focusLabel.setSingleLine(true);
-        focusLabel.setEllipsize(TextUtils.TruncateAt.END);
-        focusLabel.setIncludeFontPadding(false);
-        focusLabel.setTextDirection(View.TEXT_DIRECTION_RTL);
-        focusLabel.setPadding(px(15), px(6), px(15), px(7));
-        GradientDrawable lb = new GradientDrawable();
-        lb.setColor(0xF2141C33);
-        lb.setCornerRadius(px(20));
-        lb.setStroke(Math.max(1, px(1)), 0x33FFFFFF);
-        focusLabel.setBackground(lb);
-        focusLabel.setElevation(px(14));
-        focusLabel.setAlpha(0f);
-        focusLabel.setMaxWidth(px(320));
-        root.addView(focusLabel, new FrameLayout.LayoutParams(-2, -2));
-        scroll.setOnScrollChangeListener(new View.OnScrollChangeListener() {
-            @Override public void onScrollChange(View v, int x, int y, int ox, int oy) { placeLabel(); }
-        });
         setContentView(root);
     }
 
@@ -395,8 +415,6 @@ public class HomeActivity extends Activity {
 
         grid.removeAllViews();
         tiles.clear();
-        labelTile = null;
-        if (focusLabel != null) { focusLabel.animate().cancel(); focusLabel.setAlpha(0f); }
         List<App> mine = group(false);
         if (hidden.size() > 0) {
             App t = new App();
@@ -441,16 +459,15 @@ public class HomeActivity extends Activity {
         final boolean special = HIDDEN.equals(a.pkg);
         final boolean dim = !special && hidden.contains(a.pkg);
         final boolean isMoving = moving && a.pkg.equals(movingPkg);
-        final int w = px(126), h = px(71);
+        final int w = px(122), h = px(69);
 
         LinearLayout cell = new LinearLayout(this);
         cell.setOrientation(LinearLayout.VERTICAL);
         cell.setGravity(Gravity.CENTER_HORIZONTAL);
         cell.setClipChildren(false);
         LinearLayout.LayoutParams cl = new LinearLayout.LayoutParams(-2, -2);
-        cl.setMargins(px(9), px(0), px(9), px(5));
+        cl.setMargins(px(9), px(5), px(9), px(5));
         cell.setLayoutParams(cl);
-        cell.addView(new View(this), new LinearLayout.LayoutParams(1, px(LABEL_SLOT)));   // room for the floating name
 
         final FrameLayout t = new FrameLayout(this);
         t.setFocusable(true);
@@ -504,7 +521,7 @@ public class HomeActivity extends Activity {
                 t.animate().scaleX(f ? 1.1f : 1f).scaleY(f ? 1.1f : 1f).setDuration(120).start();
                 t.setElevation(f ? px(10) : 0);
                 ring.setAlpha(f ? 255 : 0);
-                if (f) showLabel(t, special ? a.label : nameOf(a)); else hideLabel(t);
+                if (f) showCaption(a, special); else fadeCaptionSoon();
             }
         });
         t.setOnClickListener(new View.OnClickListener() {
@@ -526,38 +543,66 @@ public class HomeActivity extends Activity {
         return cell;
     }
 
-    // ---- the floating name ------------------------------------------------------------------
+    // ---- the fixed caption ------------------------------------------------------------------
 
-    private void showLabel(View tile, String name) {
-        labelTile = tile;
-        focusLabel.setText(name);
-        focusLabel.animate().cancel();
-        placeLabel();
-        ui.postDelayed(new Runnable() { public void run() { if (labelTile != null) placeLabel(); } }, 90);   // after a rebuilt grid has been laid out
-        focusLabel.animate().alpha(1f).setDuration(140).start();
+    private void showCaption(App a, boolean special) {
+        ui.removeCallbacks(capFade);
+        String name = special ? a.label : nameOf(a);
+        String sub;
+        if (special) sub = showHidden ? "اضغط OK للرجوع" : "تطبيقات أخفيتها · اضغط OK لإظهارها";
+        else if (custom.containsKey(a.pkg) && !custom.get(a.pkg).equals(a.label)) sub = "الاسم الأصلي: " + a.label;
+        else sub = a.system ? "تطبيق نظام" : "تطبيق";
+        if (!name.contentEquals(capName.getText())) {
+            capBox.animate().cancel();
+            capBox.setAlpha(0f);
+            capBox.setTranslationX(px(14));
+            capName.setText(name);
+            capSub.setText(sub);
+            capBox.animate().alpha(1f).translationX(0f).setDuration(170).start();
+        } else {
+            capSub.setText(sub);
+            capBox.animate().alpha(1f).setDuration(100).start();
+        }
     }
 
-    private void hideLabel(View tile) {
-        if (labelTile != tile) return;
-        labelTile = null;
-        focusLabel.animate().cancel();
-        focusLabel.animate().alpha(0f).setDuration(100).start();
+    /** The focus left the grid (to the status row): dim the caption unless another tile takes over right away. */
+    private void fadeCaptionSoon() {
+        ui.removeCallbacks(capFade);
+        ui.postDelayed(capFade, 90);
     }
 
-    /** Centres the name above the focused tile, kept inside the screen. */
-    private void placeLabel() {
-        final View t = labelTile;
-        if (t == null || rootView == null || !t.isLaidOut() || t.getWidth() == 0) return;
-        focusLabel.measure(View.MeasureSpec.makeMeasureSpec(px(320), View.MeasureSpec.AT_MOST), View.MeasureSpec.UNSPECIFIED);
-        int[] a = new int[2], r = new int[2];
-        t.getLocationInWindow(a);
-        rootView.getLocationInWindow(r);
-        float cx = a[0] - r[0] + t.getWidth() / 2f;
-        float x = cx - focusLabel.getMeasuredWidth() / 2f;
-        x = Math.max(px(24), Math.min(rootView.getWidth() - px(24) - focusLabel.getMeasuredWidth(), x));
-        float y = a[1] - r[1] - focusLabel.getMeasuredHeight() - px(4) - t.getHeight() * 0.04f;
-        focusLabel.setTranslationX(x);
-        focusLabel.setTranslationY(y);
+    private View keyHint(String key, String text) {
+        LinearLayout h = new LinearLayout(this);
+        h.setGravity(Gravity.CENTER_VERTICAL);
+        h.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        TextView k = new TextView(this);
+        k.setText(key);
+        k.setTextColor(0xFFDCE6FF);
+        k.setTypeface(Typeface.DEFAULT_BOLD);
+        k.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        k.setIncludeFontPadding(false);
+        k.setPadding(px(9), px(4), px(9), px(5));
+        GradientDrawable kb = new GradientDrawable();
+        kb.setColor(0x22FFFFFF);
+        kb.setCornerRadius(px(8));
+        kb.setStroke(Math.max(1, px(1)), 0x44FFFFFF);
+        k.setBackground(kb);
+        TextView t = new TextView(this);
+        t.setText(text);
+        t.setTextColor(MUTED);
+        t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        t.setIncludeFontPadding(false);
+        LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(-2, -2);
+        tp.setMarginStart(px(7));
+        h.addView(k);
+        h.addView(t, tp);
+        return h;
+    }
+
+    private LinearLayout.LayoutParams hintLp() {
+        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-2, -2);
+        p.setMarginStart(px(18));
+        return p;
     }
 
     // ---- menu / move / rename / hide / uninstall --------------------------------------------
@@ -592,8 +637,6 @@ public class HomeActivity extends Activity {
             iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
             iv.setPadding(px(14), px(9), px(14), px(9));
         }
-        focusLabel.animate().cancel();
-        focusLabel.setAlpha(0f);                                   // the menu has its own header
         ctxMenu.show(tile, iv, nameOf(a), items, new Runnable() {
             public void run() {
                 View t = tiles.get(a.pkg);
