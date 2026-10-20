@@ -36,7 +36,7 @@ final class MatchesDialog {
 
         final LinearLayout root = new LinearLayout(c);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        root.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         root.setBackground(glass(dn));
         root.setPadding(px(20, dn), px(12, dn), px(20, dn), px(12, dn));
 
@@ -117,7 +117,7 @@ final class MatchesDialog {
             if (anchor != null && anchor.isAttachedToWindow()) {
                 int[] loc = new int[2];
                 anchor.getLocationOnScreen(loc);
-                x = Math.max(px(20, dn), Math.min(dm.widthPixels - ww - px(20, dn), loc[0] + anchor.getWidth() / 2 - ww / 2));
+                x = Math.max(Safe.h(c), Math.min(dm.widthPixels - ww - Safe.h(c), loc[0] + anchor.getWidth() / 2 - ww / 2));
                 y = loc[1] + anchor.getHeight() + px(10, dn);
             } else {
                 x = (dm.widthPixels - ww) / 2;
@@ -331,7 +331,7 @@ final class MatchesDialog {
         r.addView(home, hp);
 
         // the home team sits on the right, so with a left-to-right number its score goes last
-        TextView score = text(c, m.awayScore + "  -  " + m.homeScore, 24, WHITE, true);
+        TextView score = text(c, m.homeScore + "  -  " + m.awayScore, 24, WHITE, true);
         score.setGravity(Gravity.CENTER);
         score.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         r.addView(score, new LinearLayout.LayoutParams(px(120, dn), -2));

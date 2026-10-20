@@ -62,7 +62,7 @@ final class Ambient extends View {
         if (glow == null || w != lastW || h != lastH || color != lastColor) {
             int strong = Color.argb(215, Color.red(color), Color.green(color), Color.blue(color));
             int mid = Color.argb(90, Color.red(color), Color.green(color), Color.blue(color));
-            glow = new RadialGradient(w * 0.24f, h * 0.30f, w * 0.78f, new int[]{strong, mid, 0x00000000}, new float[]{0f, 0.45f, 1f},
+            glow = new RadialGradient(w * 0.76f, h * 0.30f, w * 0.78f, new int[]{strong, mid, 0x00000000}, new float[]{0f, 0.45f, 1f},
                     Shader.TileMode.CLAMP);
             floor = new LinearGradient(0, h * 0.40f, 0, h, 0x00000000, 0xEE04060F, Shader.TileMode.CLAMP);
             lastW = w;

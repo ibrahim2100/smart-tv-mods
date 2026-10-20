@@ -96,7 +96,7 @@ final class WidgetView extends LinearLayout {
 
     private void build() {
         setOrientation(VERTICAL);
-        setLayoutDirection(LAYOUT_DIRECTION_RTL);
+        setLayoutDirection(LAYOUT_DIRECTION_LTR);
         if (!full) {
             GradientDrawable bg = round(0xFF080E20, 22);
             bg.setStroke(Math.max(1, px(1)), 0x33FFFFFF);
@@ -206,7 +206,7 @@ final class WidgetView extends LinearLayout {
         cdRow = new LinearLayout(getContext());
         cdRow.setOrientation(HORIZONTAL);
         cdRow.setGravity(Gravity.CENTER);
-        cdRow.setLayoutDirection(LAYOUT_DIRECTION_RTL);
+        cdRow.setLayoutDirection(LAYOUT_DIRECTION_LTR);
         String[] units = {"يوم", "ساعة", "دقيقة"};
         for (int i = 0; i < 3; i++) {
             LinearLayout b = new LinearLayout(getContext());

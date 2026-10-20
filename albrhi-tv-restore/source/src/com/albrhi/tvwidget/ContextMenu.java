@@ -104,7 +104,7 @@ final class ContextMenu {
         // the glass menu
         panel = new LinearLayout(act);
         panel.setOrientation(LinearLayout.VERTICAL);
-        panel.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        panel.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         GradientDrawable pb = new GradientDrawable();
         pb.setColor(0xF01B2336);
         pb.setCornerRadius(px(24));
@@ -126,7 +126,7 @@ final class ContextMenu {
         panel.measure(View.MeasureSpec.makeMeasureSpec(menuW, View.MeasureSpec.EXACTLY),
                 View.MeasureSpec.makeMeasureSpec(rootH, View.MeasureSpec.AT_MOST));
         final int menuH = panel.getMeasuredHeight();
-        final int gap = px(16), edge = px(24);
+        final int gap = px(16), edge = Safe.h(act);
         final int placement;                       // 0 = below the app, 1 = above it, 2 = beside it
         int top, left;
         if (ty + th + gap + menuH <= rootH - px(16)) {
@@ -157,7 +157,7 @@ final class ContextMenu {
         pill.setSingleLine(true);
         pill.setEllipsize(TextUtils.TruncateAt.END);
         pill.setIncludeFontPadding(false);
-        pill.setTextDirection(View.TEXT_DIRECTION_RTL);
+        pill.setTextDirection(View.TEXT_DIRECTION_FIRST_STRONG);
         pill.setPadding(px(16), px(7), px(16), px(8));
         pill.setMaxWidth(px(320));
         GradientDrawable pg = new GradientDrawable();
@@ -230,23 +230,25 @@ final class ContextMenu {
         on.setCornerRadius(px(17));
         r.setBackground(idle);
 
+        final ImageView ic = new ImageView(act);
+        ic.setImageResource(it.icon);
+        final int idleTint = it.danger ? 0xFFFF6B60 : 0xCCFFFFFF;
+        Sheet.tint(ic, idleTint);
+        LinearLayout.LayoutParams ipp = new LinearLayout.LayoutParams(px(24), px(24));
+        ipp.setMarginEnd(px(14));
+        r.addView(ic, ipp);
+
         final TextView t = new TextView(act);
         t.setText(it.title);
         t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17.5f);
         t.setTypeface(Fonts.bold);
         t.setSingleLine(true);
         t.setEllipsize(TextUtils.TruncateAt.END);
-        t.setTextDirection(View.TEXT_DIRECTION_RTL);
+        t.setTextDirection(View.TEXT_DIRECTION_FIRST_STRONG);
         t.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
         final int idleText = it.danger ? 0xFFFF6B60 : WHITE;
         t.setTextColor(idleText);
         r.addView(t, new LinearLayout.LayoutParams(0, -2, 1f));
-
-        final ImageView ic = new ImageView(act);
-        ic.setImageResource(it.icon);
-        final int idleTint = it.danger ? 0xFFFF6B60 : 0xCCFFFFFF;
-        Sheet.tint(ic, idleTint);
-        r.addView(ic, new LinearLayout.LayoutParams(px(24), px(24)));
 
         r.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override public void onFocusChange(View v, boolean f) {

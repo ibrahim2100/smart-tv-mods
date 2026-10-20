@@ -49,7 +49,7 @@ final class Banner {
 
         LinearLayout box = new LinearLayout(c);
         box.setOrientation(LinearLayout.HORIZONTAL);
-        box.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        box.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         box.setGravity(Gravity.CENTER_VERTICAL);
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF0B1226);
@@ -79,7 +79,7 @@ final class Banner {
                         | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 PixelFormat.TRANSLUCENT);
         lp.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
-        lp.y = Math.round(36 * dn);
+        lp.y = Safe.v(c) + Math.round(96 * dn);
         try {
             box.setAlpha(0f);
             wm.addView(box, lp);

@@ -96,7 +96,7 @@ final class Sheet {
         t.setTextSize(TypedValue.COMPLEX_UNIT_SP, sp);
         if (bold) t.setTypeface(Fonts.bold);
         t.setIncludeFontPadding(false);
-        t.setTextDirection(View.TEXT_DIRECTION_RTL);                // Latin names (Apple TV) still line up on the right edge
+        t.setTextDirection(View.TEXT_DIRECTION_FIRST_STRONG);                // Latin names (Apple TV) still line up on the right edge
         t.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
         return t;
     }
@@ -153,7 +153,7 @@ final class Sheet {
 
         final LinearLayout panel = new LinearLayout(c);
         panel.setOrientation(LinearLayout.VERTICAL);
-        panel.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        panel.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         panel.setBackground(panelBackground(dn));
         panel.setElevation(24 * dn);
         panel.setPadding(Math.round(18 * dn), Math.round(14 * dn), Math.round(18 * dn), Math.round(10 * dn));
@@ -342,7 +342,7 @@ final class Sheet {
     static View meter(Context c, String label, String value, int used, final float dn) {
         LinearLayout box = new LinearLayout(c);
         box.setOrientation(LinearLayout.VERTICAL);
-        box.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        box.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         LinearLayout top = new LinearLayout(c);
         TextView l = text(c, label, 12.5f, MUTED, true);
         TextView v = text(c, value, 12.5f, WHITE, false);
@@ -361,7 +361,7 @@ final class Sheet {
                 cv.drawRoundRect(0, 0, w, h, r, r, p);
                 p.setColor(color);
                 float fw = Math.max(h, w * pct / 100f);
-                cv.drawRoundRect(w - fw, 0, w, h, r, r, p);          // fills from the right: the app reads right-to-left
+                cv.drawRoundRect(0, 0, fw, h, r, r, p);
             }
         };
         LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(-1, Math.round(6 * dn));

@@ -125,7 +125,7 @@ final class StatusBar extends LinearLayout {
 
     private void build() {
         setOrientation(HORIZONTAL);
-        setLayoutDirection(LAYOUT_DIRECTION_RTL);
+        setLayoutDirection(LAYOUT_DIRECTION_LTR);
         setGravity(Gravity.CENTER_VERTICAL);
         setClipChildren(false);
         if (top) buildTop(); else buildBottom();
@@ -147,7 +147,7 @@ final class StatusBar extends LinearLayout {
         LinearLayout.LayoutParams htp = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         htp.setMarginStart(px(7));
         hp0.addView(healthText, htp);
-        healthFrame = focusable(hp0, 22, new Runnable() { public void run() { openSettings(Settings.ACTION_APPLICATION_SETTINGS); } });
+        healthFrame = focusable(hp0, 22, new Runnable() { public void run() { QuickSettings.cleanMemory(getContext()); } });
         healthFrame.setVisibility(GONE);
         LinearLayout.LayoutParams hfl = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         hfl.setMarginStart(px(12));
@@ -167,6 +167,7 @@ final class StatusBar extends LinearLayout {
         gear.addView(gi, new FrameLayout.LayoutParams(-1, -1));
         LinearLayout.LayoutParams gl = new LinearLayout.LayoutParams(px(48), px(48));
         gl.setMarginStart(px(12));
+        gl.setMarginEnd(px(6));            // room for the focus ring and the zoom, so the edge never clips it
         gearView = focusable(gear, 24, new Runnable() { public void run() { quickSettings(); } });
         addView(gearView, gl);
     }

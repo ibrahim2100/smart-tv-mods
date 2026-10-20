@@ -48,7 +48,7 @@ final class Dropdown {
 
         final LinearLayout panel = new LinearLayout(c);
         panel.setOrientation(LinearLayout.VERTICAL);
-        panel.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        panel.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         GradientDrawable pb = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{0xFA1D2742, 0xFA121A2E});
         pb.setCornerRadius(26 * dn);
         pb.setStroke(Math.max(1, Math.round(dn)), 0x33FFFFFF);
@@ -100,11 +100,11 @@ final class Dropdown {
         if (fromButton) {
             anchor.getLocationOnScreen(loc);
             int cx = loc[0] + anchor.getWidth() / 2;
-            x = Math.max(Math.round(20 * dn), Math.min(dm.widthPixels - w - Math.round(20 * dn), cx - w / 2));
+            x = Math.max(Safe.h(c), Math.min(dm.widthPixels - w - Safe.h(c), cx - w / 2));
             y = loc[1] + anchor.getHeight() + Math.round(10 * dn);
         } else {
-            x = dm.widthPixels - w - Math.round(40 * dn);
-            y = Math.round(36 * dn);
+            x = dm.widthPixels - w - Safe.h(c);
+            y = Safe.v(c) + Math.round(8 * dn);
         }
 
         // what is left under the menu's top edge, minus the header, footer and padding
@@ -179,6 +179,14 @@ final class Dropdown {
         on.setCornerRadius(17 * dn);
         r.setBackground(idle);
 
+        final ImageView ic = new ImageView(c);
+        ic.setImageResource(it.icon);
+        final int idleTint = it.danger ? 0xFFFF6B60 : 0xCCFFFFFF;
+        Sheet.tint(ic, idleTint);
+        LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(Math.round(24 * dn), Math.round(24 * dn));
+        ip.setMarginEnd(Math.round(14 * dn));
+        r.addView(ic, ip);
+
         LinearLayout col = new LinearLayout(c);
         col.setOrientation(LinearLayout.VERTICAL);
         final int idleText = it.danger ? 0xFFFF6B60 : WHITE;
@@ -205,14 +213,6 @@ final class Dropdown {
             vp.setMarginStart(Math.round(10 * dn));
             r.addView(val, vp);
         }
-
-        final ImageView ic = new ImageView(c);
-        ic.setImageResource(it.icon);
-        final int idleTint = it.danger ? 0xFFFF6B60 : 0xCCFFFFFF;
-        Sheet.tint(ic, idleTint);
-        LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(Math.round(24 * dn), Math.round(24 * dn));
-        ip.setMarginStart(Math.round(12 * dn));
-        r.addView(ic, ip);
 
         r.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override public void onFocusChange(View v, boolean f) {

@@ -74,7 +74,7 @@
         <button data-k="right" class="right">▶</button><button data-k="down" class="down">▼</button>
       </div>
       <div class="krow"><button class="ghost" data-k="back">رجوع</button><button class="ghost" data-k="home">الرئيسية</button><button class="ghost" data-k="recents">التطبيقات</button></div>
-      <div class="krow"><button class="ghost" data-k="settings">إعدادات مختصرة</button></div>
+      <div class="krow"><button class="ghost" data-k="settings">إعدادات مختصرة</button><button class="ghost" id="clean">تنظيف الذاكرة</button></div>
       <div class="krow"><button class="ghost" data-k="voldown">صوت −</button><button class="ghost" data-k="mute">كتم</button><button class="ghost" data-k="volup">صوت +</button></div>
       <div class="krow"><button class="ghost" data-k="prev">⏮</button><button class="ghost" data-k="playpause">⏯</button><button class="ghost" data-k="next">⏭</button></div>
       <div class="krow"><button class="danger" id="sleep">إطفاء الشاشة</button><button class="ghost" id="wake">إيقاظ</button></div>
@@ -164,6 +164,7 @@ document.addEventListener('click',async e=>{
   try{const j=await post('/api/key',{key:k});$('#ctlMsg').textContent=j.ok?'':(j.error||'ما تنفّذ (قد ما يدعمه التطبيق المفتوح)')}catch(_){}
 });
 $('#sleep').addEventListener('click',async()=>{try{const j=await post('/api/power',{action:'sleep'});$('#ctlMsg').textContent=j.ok?'':(j.error||'ما انطفت')}catch(_){}});
+$('#clean').addEventListener('click',async()=>{try{const j=await post('/api/clean');$('#ctlMsg').textContent=j.message||''}catch(_){}});
 $('#wake').addEventListener('click',async()=>{try{await post('/api/power',{action:'wake'})}catch(_){}});
 $('#txtBtn').addEventListener('click',async()=>{try{const j=await post('/api/text',{text:$('#txt').value});$('#ctlMsg').textContent=j.ok?'':(j.message||j.error||'')}catch(_){}});
 $('#vurlBtn').addEventListener('click',async()=>{const u=$('#vurl').value.trim();if(!u)return;try{const j=await post('/api/open-url',{url:u});$('#ctlMsg').textContent=j.ok?'':(j.error||'')}catch(_){}});

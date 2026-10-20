@@ -85,6 +85,7 @@ public class HomeActivity extends Activity {
     private LinearLayout listApps, listTools;
     private App current;
     private String heroShown;
+    private int appliedSafe;
     private float dn;
     private boolean loading, showHidden, moving;
     private String movingPkg, lastFocusPkg;
@@ -98,6 +99,7 @@ public class HomeActivity extends Activity {
         super.onCreate(b);
         dn = getResources().getDisplayMetrics().density;
         if (CrashGuard.tripped(this)) { showEmergency(); return; }
+        appliedSafe = Safe.level(this);
         prefs = getSharedPreferences("layout", MODE_PRIVATE);
         LayoutBackup.importPending(this);     // a layout.json pushed from the Mac (see restore.sh)
         loadHidden();
@@ -118,20 +120,20 @@ public class HomeActivity extends Activity {
         watermark.setOutlineProvider(new ViewOutlineProvider() {
             @Override public void getOutline(View v, Outline o) { o.setRoundRect(0, 0, v.getWidth(), v.getHeight(), px(30)); }
         });
-        FrameLayout.LayoutParams wl = new FrameLayout.LayoutParams(px(330), px(186), Gravity.LEFT | Gravity.TOP);
-        wl.leftMargin = px(150);
-        wl.topMargin = px(96);
+        FrameLayout.LayoutParams wl = new FrameLayout.LayoutParams(px(330), px(186), Gravity.RIGHT | Gravity.TOP);
+        wl.rightMargin = Safe.h(this) + px(40);
+        wl.topMargin = px(104);
         root.addView(watermark, wl);
 
         LinearLayout col = new LinearLayout(this);
         col.setOrientation(LinearLayout.VERTICAL);
-        col.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        col.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         col.setClipChildren(false);
-        col.setPadding(px(44), px(16), px(44), px(10));
+        col.setPadding(Safe.h(this), Safe.v(this), Safe.h(this), Safe.v(this));
 
         // top row: clock + next match on one side, settings on the other
         LinearLayout topRow = new LinearLayout(this);
-        topRow.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        topRow.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         topRow.setGravity(Gravity.CENTER_VERTICAL);
         header = new TopPills(this);
         topRow.addView(header, new LinearLayout.LayoutParams(-2, -2));
@@ -143,13 +145,14 @@ public class HomeActivity extends Activity {
         // hero: greeting, big name, kind of app, and the two buttons
         LinearLayout hero = new LinearLayout(this);
         hero.setOrientation(LinearLayout.VERTICAL);
-        hero.setGravity(Gravity.BOTTOM);
+        hero.setGravity(Gravity.TOP);
+        hero.setPadding(0, px(8), 0, px(6));
         hero.setClipChildren(false);
         heroBox = hero;
 
         LinearLayout greetRow = new LinearLayout(this);
         greetRow.setGravity(Gravity.CENTER_VERTICAL);
-        greetRow.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        greetRow.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         View dash = new View(this);
         dash.setBackgroundColor(GARNET);
         LinearLayout.LayoutParams dl = new LinearLayout.LayoutParams(px(22), px(3));
@@ -159,29 +162,30 @@ public class HomeActivity extends Activity {
         greetRow.addView(heroGreet);
         hero.addView(greetRow, new LinearLayout.LayoutParams(-2, -2));
 
-        heroName = text(44, 0xFFFFFFFF, true);
+        heroName = text(new int[]{40, 36, 30}[Safe.level(this)], 0xFFFFFFFF, true);
         heroName.setMaxWidth(px(620));
         LinearLayout.LayoutParams nl = new LinearLayout.LayoutParams(-2, -2);
         nl.topMargin = px(2);
         hero.addView(heroName, nl);
-        heroSub = text(15, 0xCCFFFFFF, false);
+        heroSub = text(14, 0xCCFFFFFF, false);
         heroSub.setMaxWidth(px(620));
         LinearLayout.LayoutParams sl = new LinearLayout.LayoutParams(-2, -2);
         sl.topMargin = px(3);
         hero.addView(heroSub, sl);
 
         LinearLayout btns = new LinearLayout(this);
-        btns.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        btns.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         btnOpen = heroButton("فتح", true, new Runnable() { public void run() { heroOpen(); } });
         btnOpts = heroButton("خيارات", false, new Runnable() { public void run() { heroOptions(); } });
-        btns.addView(btnOpen, new LinearLayout.LayoutParams(-2, px(38)));
-        LinearLayout.LayoutParams ol = new LinearLayout.LayoutParams(-2, px(38));
+        btns.addView(btnOpen, new LinearLayout.LayoutParams(-2, px(36)));
+        LinearLayout.LayoutParams ol = new LinearLayout.LayoutParams(-2, px(36));
         ol.setMarginStart(px(12));
         btns.addView(btnOpts, ol);
         LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(-2, -2);
-        bl.topMargin = px(10);
+        bl.topMargin = px(8);
         hero.addView(btns, bl);
-        col.addView(hero, new LinearLayout.LayoutParams(-1, 0, 1f));
+        col.addView(hero, new LinearLayout.LayoutParams(-1, -2));
+        col.addView(new View(this), new LinearLayout.LayoutParams(-1, 0, 1f));      // spring: pushes the rows to the bottom
 
         // rows
         LinearLayout.LayoutParams lab = new LinearLayout.LayoutParams(-2, -2);
@@ -189,7 +193,7 @@ public class HomeActivity extends Activity {
         lab.bottomMargin = px(0);
         LinearLayout appsHead = new LinearLayout(this);
         appsHead.setGravity(Gravity.CENTER_VERTICAL);
-        appsHead.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        appsHead.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         TextView ah = text(15, 0xFFB8C4E0, true);
         ah.setText("التطبيقات");
         appsHead.addView(ah);
@@ -202,7 +206,7 @@ public class HomeActivity extends Activity {
         col.addView(appsHead, lab);
 
         listApps = new LinearLayout(this);
-        listApps.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        listApps.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         listApps.setClipChildren(false);
         rowApps = hscroll(listApps);
         col.addView(rowApps, new LinearLayout.LayoutParams(-1, -2));
@@ -214,7 +218,7 @@ public class HomeActivity extends Activity {
         tlab.bottomMargin = px(2);
         col.addView(toolsLabel, tlab);
         listTools = new LinearLayout(this);
-        listTools.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        listTools.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         listTools.setClipChildren(false);
         rowTools = hscroll(listTools);
         col.addView(rowTools, new LinearLayout.LayoutParams(-1, -2));
@@ -241,7 +245,7 @@ public class HomeActivity extends Activity {
         t.setSingleLine(true);
         t.setEllipsize(TextUtils.TruncateAt.END);
         t.setIncludeFontPadding(false);
-        t.setTextDirection(View.TEXT_DIRECTION_RTL);
+        t.setTextDirection(View.TEXT_DIRECTION_FIRST_STRONG);
         t.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
         return t;
     }
@@ -258,7 +262,7 @@ public class HomeActivity extends Activity {
         h.setHorizontalScrollBarEnabled(false);
         h.setClipChildren(false);
         h.setClipToPadding(false);
-        h.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        h.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         h.setPadding(0, px(4), 0, px(4));
         h.setOverScrollMode(View.OVER_SCROLL_NEVER);
         h.addView(inner, new FrameLayout.LayoutParams(-2, -2));
@@ -314,6 +318,7 @@ public class HomeActivity extends Activity {
     @Override protected void onResume() {
         super.onResume();
         if (header == null) return;                          // emergency screen is showing
+        if (Safe.level(this) != appliedSafe) { recreate(); return; }
         ui.postDelayed(calm, 60000);                         // a full calm minute clears the crash counter
         refreshGreeting();
         header.start();
@@ -356,7 +361,7 @@ public class HomeActivity extends Activity {
         LinearLayout col = new LinearLayout(this);
         col.setOrientation(LinearLayout.VERTICAL);
         col.setGravity(Gravity.CENTER);
-        col.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        col.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         col.setBackgroundColor(0xFF060A18);
         col.setPadding(px(80), px(40), px(80), px(40));
         TextView t = new TextView(this);
@@ -567,14 +572,15 @@ public class HomeActivity extends Activity {
         final boolean special = HIDDEN.equals(a.pkg);
         final boolean dim = !special && hidden.contains(a.pkg);
         final boolean isMoving = moving && a.pkg.equals(movingPkg);
-        final int w = px(122), h = px(68);
+        final int tw = 116 - 14 * Safe.level(this);
+        final int w = px(tw), h = px(tw * 9 / 16f);
 
         LinearLayout cell = new LinearLayout(this);
         cell.setOrientation(LinearLayout.VERTICAL);
         cell.setGravity(Gravity.CENTER_HORIZONTAL);
         cell.setClipChildren(false);
         LinearLayout.LayoutParams cl = new LinearLayout.LayoutParams(-2, -2);
-        cl.setMargins(px(7), px(2), px(7), px(2));
+        cl.setMargins(px(7), px(Safe.level(this) == 0 ? 2 : 0), px(7), px(Safe.level(this) == 0 ? 2 : 0));
         cell.setLayoutParams(cl);
 
         final FrameLayout t = new FrameLayout(this);
@@ -781,10 +787,10 @@ public class HomeActivity extends Activity {
             if (e.getAction() == KeyEvent.ACTION_UP) endMove(true);
             return true;
         }
-        int delta;   // the rows run right-to-left
+        int delta;   // the rows run left-to-right
         switch (k) {
-            case KeyEvent.KEYCODE_DPAD_LEFT: delta = 1; break;
-            case KeyEvent.KEYCODE_DPAD_RIGHT: delta = -1; break;
+            case KeyEvent.KEYCODE_DPAD_RIGHT: delta = 1; break;
+            case KeyEvent.KEYCODE_DPAD_LEFT: delta = -1; break;
             default: return true;
         }
         if (e.getAction() == KeyEvent.ACTION_DOWN) {

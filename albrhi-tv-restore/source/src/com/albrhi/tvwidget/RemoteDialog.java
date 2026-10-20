@@ -33,7 +33,7 @@ final class RemoteDialog {
 
         LinearLayout box = new LinearLayout(c);
         box.setOrientation(LinearLayout.VERTICAL);
-        box.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        box.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF0B1226);
         bg.setCornerRadius(20 * dn);
@@ -56,7 +56,7 @@ final class RemoteDialog {
         box.addView(status, lp(dn, 10));
 
         LinearLayout buttons = new LinearLayout(c);
-        buttons.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        buttons.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         TextView close = button(c, "إغلاق", dn, false);
         TextView revoke = button(c, "فصل كل الأجهزة", dn, true);
         close.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { d.dismiss(); } });

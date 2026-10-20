@@ -99,14 +99,14 @@ final class TopPills extends LinearLayout {
 
     private void build() {
         setOrientation(HORIZONTAL);
-        setLayoutDirection(LAYOUT_DIRECTION_RTL);
+        setLayoutDirection(LAYOUT_DIRECTION_LTR);
         setGravity(Gravity.CENTER_VERTICAL);
         setClipChildren(false);
 
         // ---- clock pill
         LinearLayout cp = new LinearLayout(getContext());
         cp.setGravity(Gravity.CENTER_VERTICAL);
-        cp.setLayoutDirection(LAYOUT_DIRECTION_RTL);
+        cp.setLayoutDirection(LAYOUT_DIRECTION_LTR);
         cp.setBackground(pill(0xB30E1530));
         cp.setPadding(px(22), px(8), px(22), px(9));
 
@@ -144,7 +144,7 @@ final class TopPills extends LinearLayout {
         matchFrame.setClickable(true);
         LinearLayout mp = new LinearLayout(getContext());
         mp.setGravity(Gravity.CENTER_VERTICAL);
-        mp.setLayoutDirection(LAYOUT_DIRECTION_RTL);
+        mp.setLayoutDirection(LAYOUT_DIRECTION_LTR);
         matchBg = pill(0xB30E1530);
         mp.setBackground(matchBg);
         mp.setPadding(px(18), px(7), px(22), px(7));

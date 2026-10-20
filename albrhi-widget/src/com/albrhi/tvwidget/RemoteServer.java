@@ -380,6 +380,11 @@ final class RemoteServer {
             json(out, 200, new JSONObject().put("ok", true).put("level", lv));
             return;
         }
+        if (method.equals("POST") && path.equals("/api/clean")) {
+            Cleaner.clean(ctx, null);
+            json(out, 200, new JSONObject().put("ok", true).put("message", "جاري تنظيف الذاكرة"));
+            return;
+        }
         if (method.equals("POST") && path.equals("/api/power")) { power(jsonBody(in, len).optString("action"), out); return; }
         if (method.equals("POST") && path.equals("/api/open-url")) { openUrl(jsonBody(in, len).optString("url"), out); return; }
         if (method.equals("POST") && path.equals("/api/settings")) {

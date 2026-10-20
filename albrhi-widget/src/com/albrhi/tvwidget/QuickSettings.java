@@ -37,12 +37,16 @@ final class QuickSettings {
         items.add(Sheet.Item.of("الشبكة والإنترنت", R.drawable.ic_wifi, open(c, Settings.ACTION_WIFI_SETTINGS)).value(networkSummary(c)));
         items.add(Sheet.Item.of("ربط الجوال", R.drawable.ic_phone, new Runnable() { public void run() { RemoteDialog.show(c); } })
                 .value(paired == 0 ? "غير مربوط" : paired + (paired == 1 ? " جهاز" : " أجهزة")));
+        items.add(Sheet.Item.of("تنظيف الذاكرة", R.drawable.ic_refresh, new Runnable() { public void run() { cleanMemory(c); } })
+                .value(hi.ramFreeMb + " MB حرة"));
+        items.add(Sheet.Item.of("حواف الشاشة", R.drawable.ic_tv, new Runnable() { public void run() { cycleEdges(c); } })
+                .value(Safe.NAMES[Safe.level(c)]));
         items.add(Sheet.Item.of("كل الإعدادات", R.drawable.ic_gear, open(c, Settings.ACTION_SETTINGS)));
         items.add(Sheet.Item.of("المزيد", R.drawable.ic_more, new Runnable() { public void run() { Sheet.chained = true; more(c, anchor, onClose); } }));
 
         LinearLayout meters = new LinearLayout(c);
         meters.setOrientation(LinearLayout.HORIZONTAL);
-        meters.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        meters.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         View ram = Sheet.meter(c, "الرام", hi.ramFreePct + "% متاحة", 100 - hi.ramFreePct, dn);
         View st = Sheet.meter(c, "التخزين", "\u2066" + String.format(java.util.Locale.US, "%.0f", hi.storageFreeMb / 1024.0) + " GB\u2069 حرة",
                 100 - hi.storageFreePct, dn);
@@ -78,6 +82,24 @@ final class QuickSettings {
             c.startActivity(new Intent(c, HomeActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP));
         } }).sub("للتأكد من خطة الإنقاذ فقط").danger());
         Dropdown.show(c, anchor, "المزيد", "أدوات وصيانة", items, null, 420, onClose);
+    }
+
+    /** Ends background apps (never the one on screen) and tells you how much memory came back. */
+    static void cleanMemory(final Context c) {
+        Toast.makeText(c, "جاري تنظيف الذاكرة…", Toast.LENGTH_SHORT).show();
+        Cleaner.clean(c, new Cleaner.Done() {
+            public void onDone(int freedMb, int apps) {
+                Banner.show(c, "تنظيف الذاكرة", freedMb > 0 ? "تحرّر " + freedMb + " MB" : "الذاكرة نظيفة أصلًا",
+                        apps + " تطبيق راجعته · ما لمست التطبيق المفتوح", null, null, 6);
+            }
+        });
+    }
+
+    /** Some TVs crop the picture edges: cycles how far from the edge everything is kept. */
+    private static void cycleEdges(Context c) {
+        Safe.setLevel(c, (Safe.level(c) + 1) % 3);
+        if (c instanceof HomeActivity) ((HomeActivity) c).recreate();      // others pick it up when Home comes back
+        Toast.makeText(c, "حواف الشاشة: " + Safe.NAMES[Safe.level(c)], Toast.LENGTH_SHORT).show();
     }
 
     private static String networkSummary(Context c) {

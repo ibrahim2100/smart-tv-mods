@@ -31,7 +31,7 @@ final class RenameDialog {
 
         LinearLayout box = new LinearLayout(c);
         box.setOrientation(LinearLayout.VERTICAL);
-        box.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        box.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF0B1226);
         bg.setCornerRadius(18 * dn);
@@ -65,7 +65,7 @@ final class RenameDialog {
         box.addView(in, ip);
 
         LinearLayout row = new LinearLayout(c);
-        row.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        row.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         TextView save = button(c, "حفظ", dn, BLUE);
         TextView orig = button(c, "الاسم الأصلي", dn, 0xFF2A3358);
         TextView cancel = button(c, "إلغاء", dn, 0xFF2A3358);
