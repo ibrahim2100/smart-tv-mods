@@ -26,7 +26,9 @@ import android.view.ViewOutlineProvider;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.HorizontalScrollView;
 import android.widget.ScrollView;
+import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -50,8 +52,6 @@ import static com.albrhi.tvwidget.WidgetView.*;
  * Long-press OK on an app: move it, rename it, hide it, or uninstall it.
  */
 public class HomeActivity extends Activity {
-    private static final int COLUMNS = 6;
-    private static final int LABEL_SLOT = 0;     // dp of empty space above every tile row, where the name pops up
     private static final String HIDDEN = "__hidden";
     /** First-run order, until you move something yourself. */
     private static final List<String> PRESET = Arrays.asList(
@@ -72,16 +72,19 @@ public class HomeActivity extends Activity {
     }
 
     private final Handler ui = new Handler(Looper.getMainLooper());
-    private HeaderView header;
-    private StatusBar status;
-    private ScrollView scroll;
+    private TopPills header;
+    private StatusBar statusTop, statusBottom;
     private FrameLayout rootView;
     private LinearLayout contentCol;
     private ContextMenu ctxMenu;
-    private TextView capName, capSub;
-    private View capBox;
-    private final Runnable capFade = new Runnable() { public void run() { if (capBox != null) capBox.animate().alpha(0.35f).setDuration(160).start(); } };
-    private LinearLayout grid;
+    private Ambient ambient;
+    private ImageView watermark;
+    private TextView heroGreet, heroName, heroSub, appsCount, toolsLabel;
+    private View heroBox, btnOpen, btnOpts;
+    private HorizontalScrollView rowApps, rowTools;
+    private LinearLayout listApps, listTools;
+    private App current;
+    private String heroShown;
     private float dn;
     private boolean loading, showHidden, moving;
     private String movingPkg, lastFocusPkg;
@@ -104,94 +107,218 @@ public class HomeActivity extends Activity {
         LayoutBackup.export(this);
 
         FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(0xFF060A18);
-        root.addView(new SaverView.Stripes(this, 0.4f), new FrameLayout.LayoutParams(-1, -1));   // calmer than the screensaver
+        ambient = new Ambient(this);
+        root.addView(ambient, new FrameLayout.LayoutParams(-1, -1));
+
+        // the focused app's artwork, big and faint, on the side opposite the text
+        watermark = new ImageView(this);
+        watermark.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        watermark.setAlpha(0f);
+        watermark.setClipToOutline(true);
+        watermark.setOutlineProvider(new ViewOutlineProvider() {
+            @Override public void getOutline(View v, Outline o) { o.setRoundRect(0, 0, v.getWidth(), v.getHeight(), px(30)); }
+        });
+        FrameLayout.LayoutParams wl = new FrameLayout.LayoutParams(px(330), px(186), Gravity.LEFT | Gravity.TOP);
+        wl.leftMargin = px(150);
+        wl.topMargin = px(96);
+        root.addView(watermark, wl);
 
         LinearLayout col = new LinearLayout(this);
         col.setOrientation(LinearLayout.VERTICAL);
         col.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-        col.setPadding(px(48), px(12), px(48), px(6));
+        col.setClipChildren(false);
+        col.setPadding(px(44), px(16), px(44), px(10));
 
-        header = new HeaderView(this);
-        col.addView(header, new LinearLayout.LayoutParams(-1, -2));
+        // top row: clock + next match on one side, settings on the other
+        LinearLayout topRow = new LinearLayout(this);
+        topRow.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        topRow.setGravity(Gravity.CENTER_VERTICAL);
+        header = new TopPills(this);
+        topRow.addView(header, new LinearLayout.LayoutParams(-2, -2));
+        topRow.addView(new View(this), new LinearLayout.LayoutParams(0, 1, 1f));
+        statusTop = new StatusBar(this, true);
+        topRow.addView(statusTop, new LinearLayout.LayoutParams(-2, -2));
+        col.addView(topRow, new LinearLayout.LayoutParams(-1, -2));
 
-        View bar = new View(this);
-        GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.RIGHT_LEFT, new int[]{GARNET, BLUE});
-        g.setCornerRadius(px(2));
-        bar.setBackground(g);
-        LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(-1, px(3));
-        bp.topMargin = px(7);
-        bp.bottomMargin = px(6);
-        col.addView(bar, bp);
+        // hero: greeting, big name, kind of app, and the two buttons
+        LinearLayout hero = new LinearLayout(this);
+        hero.setOrientation(LinearLayout.VERTICAL);
+        hero.setGravity(Gravity.BOTTOM);
+        hero.setClipChildren(false);
+        heroBox = hero;
 
-        status = new StatusBar(this);
-        LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(-1, -2);
-        sp.bottomMargin = px(2);
-        col.addView(status, sp);
+        LinearLayout greetRow = new LinearLayout(this);
+        greetRow.setGravity(Gravity.CENTER_VERTICAL);
+        greetRow.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        View dash = new View(this);
+        dash.setBackgroundColor(GARNET);
+        LinearLayout.LayoutParams dl = new LinearLayout.LayoutParams(px(22), px(3));
+        dl.setMarginEnd(px(10));
+        greetRow.addView(dash, dl);
+        heroGreet = text(14.5f, 0xFFDCE6FF, false);
+        greetRow.addView(heroGreet);
+        hero.addView(greetRow, new LinearLayout.LayoutParams(-2, -2));
 
-        // fixed caption: always in the same place, it follows whatever has the focus
-        LinearLayout cap = new LinearLayout(this);
-        cap.setGravity(Gravity.CENTER_VERTICAL);
-        cap.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-        View accent = new View(this);
-        accent.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{GARNET, BLUE}));
-        LinearLayout.LayoutParams acp = new LinearLayout.LayoutParams(px(5), px(36));
-        acp.setMarginEnd(px(14));
-        cap.addView(accent, acp);
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        capBox = box;
-        capName = new TextView(this);
-        capName.setTextColor(0xFFFFFFFF);
-        capName.setTypeface(Fonts.bold);
-        capName.setTextSize(TypedValue.COMPLEX_UNIT_SP, 26);
-        capName.setLetterSpacing(0f);
-        capName.setSingleLine(true);
-        capName.setEllipsize(TextUtils.TruncateAt.END);
-        capName.setIncludeFontPadding(false);
-        capName.setTextDirection(View.TEXT_DIRECTION_RTL);
-        capName.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
-        capSub = new TextView(this);
-        capSub.setTextColor(GOLD);
-        capSub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13.5f);
-        capSub.setSingleLine(true);
-        capSub.setIncludeFontPadding(false);
-        capSub.setTextDirection(View.TEXT_DIRECTION_RTL);
-        capSub.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
-        box.addView(capName);
-        LinearLayout.LayoutParams csp = new LinearLayout.LayoutParams(-2, -2);
-        csp.topMargin = px(3);
-        box.addView(capSub, csp);
-        cap.addView(box, new LinearLayout.LayoutParams(0, -2, 1f));
-        LinearLayout.LayoutParams cpp = new LinearLayout.LayoutParams(-1, -2);
-        cpp.topMargin = px(2);
-        cpp.bottomMargin = px(0);
-        col.addView(cap, cpp);
+        heroName = text(44, 0xFFFFFFFF, true);
+        heroName.setMaxWidth(px(620));
+        LinearLayout.LayoutParams nl = new LinearLayout.LayoutParams(-2, -2);
+        nl.topMargin = px(2);
+        hero.addView(heroName, nl);
+        heroSub = text(15, 0xCCFFFFFF, false);
+        heroSub.setMaxWidth(px(620));
+        LinearLayout.LayoutParams sl = new LinearLayout.LayoutParams(-2, -2);
+        sl.topMargin = px(3);
+        hero.addView(heroSub, sl);
 
-        scroll = new ScrollView(this);
-        scroll.setVerticalScrollBarEnabled(false);
-        scroll.setClipToPadding(false);
-        scroll.setPadding(0, px(6), 0, px(6));
-        grid = new LinearLayout(this);
-        grid.setOrientation(LinearLayout.VERTICAL);
-        grid.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-        scroll.addView(grid, new FrameLayout.LayoutParams(-1, -2));
-        col.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
+        LinearLayout btns = new LinearLayout(this);
+        btns.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        btnOpen = heroButton("فتح", true, new Runnable() { public void run() { heroOpen(); } });
+        btnOpts = heroButton("خيارات", false, new Runnable() { public void run() { heroOptions(); } });
+        btns.addView(btnOpen, new LinearLayout.LayoutParams(-2, px(38)));
+        LinearLayout.LayoutParams ol = new LinearLayout.LayoutParams(-2, px(38));
+        ol.setMarginStart(px(12));
+        btns.addView(btnOpts, ol);
+        LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(-2, -2);
+        bl.topMargin = px(10);
+        hero.addView(btns, bl);
+        col.addView(hero, new LinearLayout.LayoutParams(-1, 0, 1f));
+
+        // rows
+        LinearLayout.LayoutParams lab = new LinearLayout.LayoutParams(-2, -2);
+        lab.topMargin = px(4);
+        lab.bottomMargin = px(0);
+        LinearLayout appsHead = new LinearLayout(this);
+        appsHead.setGravity(Gravity.CENTER_VERTICAL);
+        appsHead.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        TextView ah = text(15, 0xFFB8C4E0, true);
+        ah.setText("التطبيقات");
+        appsHead.addView(ah);
+        appsCount = text(12, 0xFFDCE6FF, true);
+        appsCount.setPadding(px(8), px(2), px(8), px(3));
+        appsCount.setBackground(roundBg(0x33FFFFFF, 9));
+        LinearLayout.LayoutParams ac = new LinearLayout.LayoutParams(-2, -2);
+        ac.setMarginStart(px(8));
+        appsHead.addView(appsCount, ac);
+        col.addView(appsHead, lab);
+
+        listApps = new LinearLayout(this);
+        listApps.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        listApps.setClipChildren(false);
+        rowApps = hscroll(listApps);
+        col.addView(rowApps, new LinearLayout.LayoutParams(-1, -2));
+
+        toolsLabel = text(15, 0xFFB8C4E0, true);
+        toolsLabel.setText("أدوات التلفزيون");
+        LinearLayout.LayoutParams tlab = new LinearLayout.LayoutParams(-2, -2);
+        tlab.topMargin = px(2);
+        tlab.bottomMargin = px(2);
+        col.addView(toolsLabel, tlab);
+        listTools = new LinearLayout(this);
+        listTools.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        listTools.setClipChildren(false);
+        rowTools = hscroll(listTools);
+        col.addView(rowTools, new LinearLayout.LayoutParams(-1, -2));
+
+        statusBottom = new StatusBar(this, false);
+        LinearLayout.LayoutParams sbl = new LinearLayout.LayoutParams(-1, -2);
+        sbl.topMargin = px(4);
+        col.addView(statusBottom, sbl);
 
         root.addView(col, new FrameLayout.LayoutParams(-1, -1));
         rootView = root;
         contentCol = col;
         ctxMenu = new ContextMenu(this, root, col);
+        refreshGreeting();
 
         setContentView(root);
+    }
+
+    private TextView text(float sp, int color, boolean bold) {
+        TextView t = new TextView(this);
+        t.setTextColor(color);
+        t.setTextSize(TypedValue.COMPLEX_UNIT_SP, sp);
+        if (bold) t.setTypeface(Fonts.bold);
+        t.setSingleLine(true);
+        t.setEllipsize(TextUtils.TruncateAt.END);
+        t.setIncludeFontPadding(false);
+        t.setTextDirection(View.TEXT_DIRECTION_RTL);
+        t.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+        return t;
+    }
+
+    private GradientDrawable roundBg(int color, float r) {
+        GradientDrawable g = new GradientDrawable();
+        g.setColor(color);
+        g.setCornerRadius(px(r));
+        return g;
+    }
+
+    private HorizontalScrollView hscroll(LinearLayout inner) {
+        HorizontalScrollView h = new HorizontalScrollView(this);
+        h.setHorizontalScrollBarEnabled(false);
+        h.setClipChildren(false);
+        h.setClipToPadding(false);
+        h.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        h.setPadding(0, px(4), 0, px(4));
+        h.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        h.addView(inner, new FrameLayout.LayoutParams(-2, -2));
+        return h;
+    }
+
+    /** Pill button under the name. The first is solid white, the second translucent. */
+    private View heroButton(String label, boolean solid, final Runnable action) {
+        final FrameLayout f = new FrameLayout(this);
+        f.setFocusable(true);
+        f.setClickable(true);
+        final GradientDrawable bg = new GradientDrawable();
+        bg.setCornerRadius(px(19));
+        bg.setColor(solid ? 0xFAFFFFFF : 0x40FFFFFF);
+        bg.setStroke(Math.max(1, px(1)), solid ? 0xFFFFFFFF : 0x66FFFFFF);
+        f.setBackground(bg);
+        final TextView t = text(15, solid ? 0xFF0B1226 : 0xFFFFFFFF, true);
+        t.setGravity(Gravity.CENTER);
+        t.setText(label);
+        t.setPadding(px(24), 0, px(24), 0);
+        f.addView(t, new FrameLayout.LayoutParams(-2, -1, Gravity.CENTER));
+        final GradientDrawable ring = new GradientDrawable();
+        ring.setColor(0);
+        ring.setCornerRadius(px(22));
+        ring.setStroke(px(3), solid ? 0xFF1E88E5 : 0xFFFFFFFF);
+        ring.setAlpha(0);
+        f.setForeground(ring);
+        f.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override public void onFocusChange(View v, boolean has) {
+                ring.setAlpha(has ? 255 : 0);
+                f.animate().scaleX(has ? 1.06f : 1f).scaleY(has ? 1.06f : 1f).setDuration(120).start();
+            }
+        });
+        f.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { action.run(); } });
+        return f;
+    }
+
+    private void refreshGreeting() {
+        heroGreet.setText(greeting(java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)));
+    }
+
+    private void heroOpen() {
+        if (current == null) return;
+        if (HIDDEN.equals(current.pkg)) { showHidden = !showHidden; fill(); }
+        else if (!moving) launch(current);
+    }
+
+    private void heroOptions() {
+        if (current == null || HIDDEN.equals(current.pkg) || moving) return;
+        appMenu(current);
     }
 
     @Override protected void onResume() {
         super.onResume();
         if (header == null) return;                          // emergency screen is showing
         ui.postDelayed(calm, 60000);                         // a full calm minute clears the crash counter
+        refreshGreeting();
         header.start();
-        status.start();
+        statusTop.start();
+        statusBottom.start();
         loadApps();
     }
 
@@ -201,7 +328,8 @@ public class HomeActivity extends Activity {
         if (ctxMenu != null) ctxMenu.dismissNow();
         if (moving) endMove(true);
         header.stop();
-        status.stop();
+        statusTop.stop();
+        statusBottom.stop();
         super.onPause();
     }
 
@@ -210,8 +338,8 @@ public class HomeActivity extends Activity {
         if (CrashGuard.tripped(this)) { recreate(); return; }
         // Home pressed again: jump back to the top
         lastFocusPkg = null;
-        scroll.fullScroll(View.FOCUS_UP);
-        grid.requestFocus();
+        View first = listApps.getChildCount() > 0 ? ((ViewGroup) listApps.getChildAt(0)).getChildAt(0) : null;
+        if (first != null) { first.requestFocus(); reveal(first); }
     }
 
     @Override public void onBackPressed() {
@@ -409,62 +537,44 @@ public class HomeActivity extends Activity {
         View f = getCurrentFocus();
         String want = f != null && f.getTag() instanceof String ? (String) f.getTag() : lastFocusPkg;
         if (moving) want = movingPkg;
-        final int scrollY = scroll.getScrollY();
+        if (want == null && current != null) want = current.pkg;
+        final int scrollApps = rowApps.getScrollX(), scrollTools = rowTools.getScrollX();
 
-        grid.removeAllViews();
+        listApps.removeAllViews();
+        listTools.removeAllViews();
         tiles.clear();
         List<App> mine = group(false);
+        appsCount.setText(String.valueOf(mine.size()));
         if (hidden.size() > 0) {
             App t = new App();
             t.pkg = HIDDEN;
             t.label = showHidden ? "إخفاء المخفية" : "المخفية (" + hidden.size() + ")";
             mine.add(t);
         }
-        addRows(mine);
+        for (App a : mine) listApps.addView(tile(a));
         List<App> tools = group(true);
-        if (!tools.isEmpty()) {
-            TextView head = new TextView(this);
-            head.setText("أدوات التلفزيون");
-            head.setTextColor(MUTED);
-            head.setTypeface(Fonts.bold);
-            head.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-            LinearLayout.LayoutParams hp = new LinearLayout.LayoutParams(-2, -2);
-            hp.setMargins(px(9), px(4), 0, px(16));
-            grid.addView(head, hp);
-            addRows(tools);
-        }
-        grid.setClipChildren(false);
+        for (App a : tools) listTools.addView(tile(a));
+        toolsLabel.setVisibility(tools.isEmpty() ? View.GONE : View.VISIBLE);
+        rowTools.setVisibility(tools.isEmpty() ? View.GONE : View.VISIBLE);
 
         View target = want == null ? null : tiles.get(want);
-        if (target != null) target.requestFocus(); else grid.requestFocus();
-        scroll.post(new Runnable() { public void run() { scroll.scrollTo(0, scrollY); } });
-    }
-
-    private void addRows(List<App> items) {
-        LinearLayout row = null;
-        for (int i = 0; i < items.size(); i++) {
-            if (i % COLUMNS == 0) {
-                row = new LinearLayout(this);
-                row.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-                row.setClipChildren(false);
-                grid.addView(row, new LinearLayout.LayoutParams(-1, -2));
-            }
-            row.addView(tile(items.get(i)));
-        }
+        if (target == null && listApps.getChildCount() > 0) target = ((ViewGroup) listApps.getChildAt(0)).getChildAt(0);
+        heroShown = null;                      // the grid was rebuilt: show the hero again for the focused tile
+        if (target != null) { target.requestFocus(); reveal(target); }
     }
 
     private View tile(final App a) {
         final boolean special = HIDDEN.equals(a.pkg);
         final boolean dim = !special && hidden.contains(a.pkg);
         final boolean isMoving = moving && a.pkg.equals(movingPkg);
-        final int w = px(117), h = px(66);
+        final int w = px(122), h = px(68);
 
         LinearLayout cell = new LinearLayout(this);
         cell.setOrientation(LinearLayout.VERTICAL);
         cell.setGravity(Gravity.CENTER_HORIZONTAL);
         cell.setClipChildren(false);
         LinearLayout.LayoutParams cl = new LinearLayout.LayoutParams(-2, -2);
-        cl.setMargins(px(9), px(4), px(9), px(4));
+        cl.setMargins(px(7), px(2), px(7), px(2));
         cell.setLayoutParams(cl);
 
         final FrameLayout t = new FrameLayout(this);
@@ -519,7 +629,7 @@ public class HomeActivity extends Activity {
                 t.animate().scaleX(f ? 1.1f : 1f).scaleY(f ? 1.1f : 1f).setDuration(120).start();
                 t.setElevation(f ? px(10) : 0);
                 ring.setAlpha(f ? 255 : 0);
-                if (f) showCaption(a, special); else fadeCaptionSoon();
+                if (f) { showHero(a, special); reveal(t); }
             }
         });
         t.setOnClickListener(new View.OnClickListener() {
@@ -541,32 +651,60 @@ public class HomeActivity extends Activity {
         return cell;
     }
 
-    // ---- the fixed caption ------------------------------------------------------------------
+    // ---- the hero ---------------------------------------------------------------------------
 
-    private void showCaption(App a, boolean special) {
-        ui.removeCallbacks(capFade);
+    /** Scrolls the tile's row so the tile is fully visible (works for the right-to-left rows). */
+    private void reveal(final View tile) {
+        tile.post(new Runnable() {
+            public void run() {
+                View cell = (View) tile.getParent();
+                if (cell == null || !(cell.getParent() instanceof LinearLayout)) return;
+                LinearLayout list = (LinearLayout) cell.getParent();
+                HorizontalScrollView hs = (HorizontalScrollView) list.getParent();
+                android.graphics.Rect r = new android.graphics.Rect(0, 0, cell.getWidth(), cell.getHeight());
+                list.offsetDescendantRectToMyCoords(cell, r);
+                r.inset(-px(16), 0);
+                hs.requestChildRectangleOnScreen(list, r, true);
+            }
+        });
+    }
+
+    private void showHero(final App a, boolean special) {
+        current = a;
         String name = special ? a.label : nameOf(a);
         String sub;
         if (special) sub = showHidden ? "اضغط OK للرجوع" : "تطبيقات أخفيتها · اضغط OK لإظهارها";
         else if (custom.containsKey(a.pkg) && !custom.get(a.pkg).equals(a.label)) sub = "الاسم الأصلي: " + a.label;
         else sub = a.system ? "تطبيق نظام" : "تطبيق";
-        if (!name.contentEquals(capName.getText())) {
-            capBox.animate().cancel();
-            capBox.setAlpha(0f);
-            capBox.setTranslationX(px(14));
-            capName.setText(name);
-            capSub.setText(sub);
-            capBox.animate().alpha(1f).translationX(0f).setDuration(170).start();
-        } else {
-            capSub.setText(sub);
-            capBox.animate().alpha(1f).setDuration(100).start();
-        }
-    }
+        if (a.pkg.equals(heroShown)) { heroSub.setText(sub); return; }
+        heroShown = a.pkg;
 
-    /** The focus left the grid (to the status row): dim the caption unless another tile takes over right away. */
-    private void fadeCaptionSoon() {
-        ui.removeCallbacks(capFade);
-        ui.postDelayed(capFade, 90);
+        // colour + artwork follow the focused app
+        Drawable art = special ? null : (a.banner != null ? a.banner : a.icon);
+        ambient.follow(a.pkg, art);
+        watermark.animate().cancel();
+        if (art != null && art.getConstantState() != null) {
+            watermark.setImageDrawable(art.getConstantState().newDrawable().mutate());
+            watermark.setAlpha(0f);
+            watermark.setTranslationX(-px(16));
+            watermark.animate().alpha(0.34f).translationX(0f).setDuration(320).start();
+        } else {
+            watermark.animate().alpha(0f).setDuration(160).start();
+        }
+
+        // the text slides in
+        heroName.animate().cancel();
+        heroSub.animate().cancel();
+        heroName.setText(name);
+        heroSub.setText(sub);
+        heroName.setAlpha(0f);
+        heroSub.setAlpha(0f);
+        heroName.setTranslationX(px(18));
+        heroSub.setTranslationX(px(18));
+        heroName.animate().alpha(1f).translationX(0f).setDuration(220).start();
+        heroSub.animate().alpha(1f).translationX(0f).setStartDelay(50).setDuration(220).start();
+        ((TextView) ((ViewGroup) btnOpen).getChildAt(0)).setText(special && showHidden ? "رجوع" : special ? "إظهار" : "فتح");
+        btnOpts.setVisibility(special ? View.GONE : View.VISIBLE);
     }
 
     // ---- menu / move / rename / hide / uninstall --------------------------------------------
@@ -643,12 +781,10 @@ public class HomeActivity extends Activity {
             if (e.getAction() == KeyEvent.ACTION_UP) endMove(true);
             return true;
         }
-        int delta;   // the grid runs right-to-left
+        int delta;   // the rows run right-to-left
         switch (k) {
             case KeyEvent.KEYCODE_DPAD_LEFT: delta = 1; break;
             case KeyEvent.KEYCODE_DPAD_RIGHT: delta = -1; break;
-            case KeyEvent.KEYCODE_DPAD_DOWN: delta = COLUMNS; break;
-            case KeyEvent.KEYCODE_DPAD_UP: delta = -COLUMNS; break;
             default: return true;
         }
         if (e.getAction() == KeyEvent.ACTION_DOWN) {

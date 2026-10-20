@@ -60,8 +60,7 @@ final class StatusBar extends LinearLayout {
 
     private final Runnable tick = new Runnable() {
         public void run() {
-            refreshNet();
-            refreshHealth();
+            if (top) refreshHealth(); else refreshNet();
             h.postDelayed(this, 10000);
         }
     };
@@ -75,8 +74,11 @@ final class StatusBar extends LinearLayout {
         @Override public void onInputUpdated(String id) { refreshInputs(); }
     };
 
-    StatusBar(Context c) {
+    private final boolean top;      // true: warning + settings button; false: HDMI inputs + network
+
+    StatusBar(Context c, boolean top) {
         super(c);
+        this.top = top;
         dn = c.getResources().getDisplayMetrics().density;
         tim = (TvInputManager) c.getSystemService(Context.TV_INPUT_SERVICE);
         cm = (ConnectivityManager) c.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -85,18 +87,20 @@ final class StatusBar extends LinearLayout {
     }
 
     void start() {
-        try { if (tim != null) tim.registerCallback(inputCb, h); } catch (Throwable ignored) { }
-        refreshInputs();
+        if (!top) {
+            try { if (tim != null) tim.registerCallback(inputCb, h); } catch (Throwable ignored) { }
+            refreshInputs();
+        }
         h.removeCallbacks(tick);
         h.removeCallbacks(pingTick);
         tick.run();
-        pingTick.run();
+        if (!top) pingTick.run();
     }
 
     void stop() {
         h.removeCallbacks(tick);
         h.removeCallbacks(pingTick);
-        try { if (tim != null) tim.unregisterCallback(inputCb); } catch (Throwable ignored) { }
+        if (!top) { try { if (tim != null) tim.unregisterCallback(inputCb); } catch (Throwable ignored) { } }
     }
 
     private int px(float dp) { return Math.round(dp * dn); }
@@ -124,16 +128,15 @@ final class StatusBar extends LinearLayout {
         setLayoutDirection(LAYOUT_DIRECTION_RTL);
         setGravity(Gravity.CENTER_VERTICAL);
         setClipChildren(false);
+        if (top) buildTop(); else buildBottom();
+    }
 
-        TextView title = tv(14, MUTED, true);
-        title.setText("تطبيقاتي");
-        addView(title, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));
-
+    private void buildTop() {
         // low memory / storage warning (only visible when something is wrong)
         LinearLayout hp0 = new LinearLayout(getContext());
         hp0.setGravity(Gravity.CENTER_VERTICAL);
-        hp0.setBackground(round(0x33FFB020, 10));
-        hp0.setPadding(px(11), px(6), px(12), px(6));
+        hp0.setBackground(round(0x33FFB020, 22));
+        hp0.setPadding(px(13), px(8), px(15), px(8));
         View hdot = new View(getContext());
         GradientDrawable hd = new GradientDrawable();
         hd.setShape(GradientDrawable.OVAL);
@@ -144,56 +147,49 @@ final class StatusBar extends LinearLayout {
         LinearLayout.LayoutParams htp = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         htp.setMarginStart(px(7));
         hp0.addView(healthText, htp);
-        healthFrame = focusable(hp0, new Runnable() { public void run() { openSettings(Settings.ACTION_APPLICATION_SETTINGS); } });
+        healthFrame = focusable(hp0, 22, new Runnable() { public void run() { openSettings(Settings.ACTION_APPLICATION_SETTINGS); } });
         healthFrame.setVisibility(GONE);
         LinearLayout.LayoutParams hfl = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        hfl.setMarginEnd(px(12));
+        hfl.setMarginStart(px(12));
         addView(healthFrame, hfl);
 
-        // upcoming matches
-        LinearLayout mc = new LinearLayout(getContext());
-        mc.setGravity(Gravity.CENTER_VERTICAL);
-        mc.setBackground(round(0xFF0F1730, 10));
-        mc.setPadding(px(12), px(7), px(14), px(7));
-        TextView mt = tv(14, WHITE, true);
-        mt.setText("⚽  المباريات");
-        mc.addView(mt, wrap());
-        LinearLayout.LayoutParams ml = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        ml.setMarginEnd(px(12));
-        matchView = focusable(mc, new Runnable() { public void run() { matchesMenu(); } });
-        addView(matchView, ml);
-
-        // quick settings
-        LinearLayout gear = new LinearLayout(getContext());
-        gear.setGravity(Gravity.CENTER_VERTICAL);
-        gear.setBackground(round(0xFF0F1730, 10));
-        gear.setPadding(px(12), px(7), px(14), px(7));
+        // quick settings: a round button
+        FrameLayout gear = new FrameLayout(getContext());
+        GradientDrawable gb = new GradientDrawable();
+        gb.setShape(GradientDrawable.OVAL);
+        gb.setColor(0xB30E1530);
+        gb.setStroke(Math.max(1, px(1)), 0x33FFFFFF);
+        gear.setBackground(gb);
         ImageView gi = new ImageView(getContext());
-        gi.setImageResource(android.R.drawable.ic_menu_preferences);
+        gi.setImageResource(R.drawable.ic_gear);
         gi.setColorFilter(WHITE, PorterDuff.Mode.SRC_IN);
-        gear.addView(gi, new LinearLayout.LayoutParams(px(18), px(18)));
-        TextView gt = tv(14, WHITE, true);
-        gt.setText("الإعدادات");
-        LinearLayout.LayoutParams gp = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        gp.setMarginStart(px(7));
-        gear.addView(gt, gp);
-        LinearLayout.LayoutParams gl = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        gl.setMarginEnd(px(12));
-        gearView = focusable(gear, new Runnable() { public void run() { quickSettings(); } });
+        gi.setPadding(px(12), px(12), px(12), px(12));
+        gear.addView(gi, new FrameLayout.LayoutParams(-1, -1));
+        LinearLayout.LayoutParams gl = new LinearLayout.LayoutParams(px(48), px(48));
+        gl.setMarginStart(px(12));
+        gearView = focusable(gear, 24, new Runnable() { public void run() { quickSettings(); } });
         addView(gearView, gl);
+    }
+
+    private void buildBottom() {
+        TextView title = tv(15, MUTED, true);
+        title.setText("المداخل");
+        LinearLayout.LayoutParams tl = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        tl.setMarginEnd(px(14));
+        addView(title, tl);
 
         hdmiBox = new LinearLayout(getContext());
         hdmiBox.setLayoutDirection(LAYOUT_DIRECTION_LTR);
         hdmiBox.setClipChildren(false);
         hdmiBox.setGravity(Gravity.CENTER_VERTICAL);
-        LinearLayout.LayoutParams hp = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        hp.setMarginEnd(px(14));
-        addView(hdmiBox, hp);
+        addView(hdmiBox, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+
+        addView(new View(getContext()), new LinearLayout.LayoutParams(0, 1, 1f));
 
         netPill = new LinearLayout(getContext());
         netPill.setGravity(Gravity.CENTER_VERTICAL);
-        netPill.setBackground(round(0xFF0F1730, 10));
-        netPill.setPadding(px(10), px(5), px(12), px(5));
+        netPill.setBackground(round(0x990E1530, 20));
+        netPill.setPadding(px(12), px(6), px(14), px(6));
         bars = new Bars(getContext());
         netPill.addView(bars, new LinearLayout.LayoutParams(px(20), px(16)));
         LinearLayout txt = new LinearLayout(getContext());
@@ -203,21 +199,23 @@ final class StatusBar extends LinearLayout {
         txt.addView(netTitle, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
         txt.addView(netSub, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
         LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        tp.setMarginStart(px(9));
+        tp.setMarginStart(px(10));
         netPill.addView(txt, tp);
-        addView(focusable(netPill, new Runnable() { public void run() { openSettings(Settings.ACTION_WIFI_SETTINGS); } }),
+        addView(focusable(netPill, 20, new Runnable() { public void run() { openSettings(Settings.ACTION_WIFI_SETTINGS); } }),
                 new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
     }
 
     /** Wraps a pill so the remote can focus it (white ring + slight zoom) and press OK. */
-    private FrameLayout focusable(View content, final Runnable click) {
+    private FrameLayout focusable(View content, final Runnable click) { return focusable(content, 10, click); }
+
+    private FrameLayout focusable(View content, float radius, final Runnable click) {
         final FrameLayout f = new FrameLayout(getContext());
         f.setFocusable(true);
         f.setClickable(true);
         f.addView(content);
         final GradientDrawable ring = new GradientDrawable();
         ring.setColor(0);
-        ring.setCornerRadius(px(10));
+        ring.setCornerRadius(px(radius));
         ring.setStroke(px(2), 0xFFFFFFFF);
         ring.setAlpha(0);
         f.setForeground(ring);
@@ -244,9 +242,6 @@ final class StatusBar extends LinearLayout {
     private LinearLayout.LayoutParams wrap() {
         return new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
     }
-
-    private View matchView;
-    private void matchesMenu() { MatchesDialog.show(getContext(), matchView); }
 
     private void openGoogleTvPage() {
         try {

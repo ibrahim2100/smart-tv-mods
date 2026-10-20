@@ -181,7 +181,7 @@ final class MatchesDialog {
         top.addView(lbl);
         top.addView(lg, lp);
         top.addView(new View(c), new LinearLayout.LayoutParams(0, 1, 1f));
-        TextView cd = text(c, m.postponed ? "مؤجلة" : HeaderView.countdownText(left), 14, soon ? GOLD : MUTED, true);
+        TextView cd = text(c, m.postponed ? "مؤجلة" : TopPills.countdownText(left), 14, soon ? GOLD : MUTED, true);
         top.addView(cd);
         card.addView(top, new LinearLayout.LayoutParams(-1, -2));
 
