@@ -128,6 +128,7 @@ final class StatusBar extends LinearLayout {
         setLayoutDirection(LAYOUT_DIRECTION_LTR);
         setGravity(Gravity.CENTER_VERTICAL);
         setClipChildren(false);
+        setClipToPadding(false);
         if (top) buildTop(); else buildBottom();
     }
 
@@ -219,10 +220,10 @@ final class StatusBar extends LinearLayout {
         ring.setCornerRadius(px(radius));
         ring.setStroke(px(2), 0xFFFFFFFF);
         ring.setAlpha(0);
-        f.setForeground(ring);
+        f.setForeground(new android.graphics.drawable.InsetDrawable(ring, Math.round(3 * getResources().getDisplayMetrics().density)));
         f.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override public void onFocusChange(View v, boolean has) {
-                f.animate().scaleX(has ? 1.08f : 1f).scaleY(has ? 1.08f : 1f).setDuration(120).start();
+                f.animate().scaleX(has ? 1.05f : 1f).scaleY(has ? 1.05f : 1f).setDuration(120).start();
                 ring.setAlpha(has ? 255 : 0);
             }
         });
@@ -357,7 +358,7 @@ final class StatusBar extends LinearLayout {
         ring.setCornerRadius(px(10));
         ring.setStroke(px(2), 0xFFFFFFFF);
         ring.setAlpha(0);
-        f.setForeground(ring);
+        f.setForeground(new android.graphics.drawable.InsetDrawable(ring, Math.round(3 * getResources().getDisplayMetrics().density)));
         LinearLayout.LayoutParams fl = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         fl.leftMargin = px(5);
         fl.rightMargin = px(5);

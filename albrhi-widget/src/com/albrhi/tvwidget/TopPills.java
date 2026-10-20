@@ -102,6 +102,7 @@ final class TopPills extends LinearLayout {
         setLayoutDirection(LAYOUT_DIRECTION_LTR);
         setGravity(Gravity.CENTER_VERTICAL);
         setClipChildren(false);
+        setClipToPadding(false);
 
         // ---- clock pill
         LinearLayout cp = new LinearLayout(getContext());
@@ -179,10 +180,10 @@ final class TopPills extends LinearLayout {
         ring.setCornerRadius(px(30));
         ring.setStroke(px(2.5f), 0xFFFFFFFF);
         ring.setAlpha(0);
-        matchFrame.setForeground(ring);
+        matchFrame.setForeground(new android.graphics.drawable.InsetDrawable(ring, Math.round(3 * getResources().getDisplayMetrics().density)));
         matchFrame.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override public void onFocusChange(View v, boolean f) {
-                matchFrame.animate().scaleX(f ? 1.05f : 1f).scaleY(f ? 1.05f : 1f).setDuration(120).start();
+                matchFrame.animate().scaleX(f ? 1.04f : 1f).scaleY(f ? 1.04f : 1f).setDuration(120).start();
                 ring.setAlpha(f ? 255 : 0);
             }
         });

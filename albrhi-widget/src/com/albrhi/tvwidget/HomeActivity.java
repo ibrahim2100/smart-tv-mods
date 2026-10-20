@@ -135,6 +135,9 @@ public class HomeActivity extends Activity {
         LinearLayout topRow = new LinearLayout(this);
         topRow.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         topRow.setGravity(Gravity.CENTER_VERTICAL);
+        topRow.setClipChildren(false);
+        topRow.setClipToPadding(false);
+        topRow.setPadding(0, px(4), 0, px(0));
         header = new TopPills(this);
         topRow.addView(header, new LinearLayout.LayoutParams(-2, -2));
         topRow.addView(new View(this), new LinearLayout.LayoutParams(0, 1, 1f));
@@ -146,7 +149,7 @@ public class HomeActivity extends Activity {
         LinearLayout hero = new LinearLayout(this);
         hero.setOrientation(LinearLayout.VERTICAL);
         hero.setGravity(Gravity.TOP);
-        hero.setPadding(0, px(8), 0, px(6));
+        hero.setPadding(0, px(4), 0, px(2));
         hero.setClipChildren(false);
         heroBox = hero;
 
@@ -162,7 +165,7 @@ public class HomeActivity extends Activity {
         greetRow.addView(heroGreet);
         hero.addView(greetRow, new LinearLayout.LayoutParams(-2, -2));
 
-        heroName = text(new int[]{40, 36, 30}[Safe.level(this)], 0xFFFFFFFF, true);
+        heroName = text(new int[]{36, 34, 30}[Safe.level(this)], 0xFFFFFFFF, true);
         heroName.setMaxWidth(px(620));
         LinearLayout.LayoutParams nl = new LinearLayout.LayoutParams(-2, -2);
         nl.topMargin = px(2);
@@ -289,7 +292,7 @@ public class HomeActivity extends Activity {
         ring.setCornerRadius(px(22));
         ring.setStroke(px(3), solid ? 0xFF1E88E5 : 0xFFFFFFFF);
         ring.setAlpha(0);
-        f.setForeground(ring);
+        f.setForeground(new android.graphics.drawable.InsetDrawable(ring, Math.round(3 * getResources().getDisplayMetrics().density)));
         f.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override public void onFocusChange(View v, boolean has) {
                 ring.setAlpha(has ? 255 : 0);
@@ -572,7 +575,7 @@ public class HomeActivity extends Activity {
         final boolean special = HIDDEN.equals(a.pkg);
         final boolean dim = !special && hidden.contains(a.pkg);
         final boolean isMoving = moving && a.pkg.equals(movingPkg);
-        final int tw = 116 - 14 * Safe.level(this);
+        final int tw = 112 - 14 * Safe.level(this);
         final int w = px(tw), h = px(tw * 9 / 16f);
 
         LinearLayout cell = new LinearLayout(this);
@@ -624,7 +627,7 @@ public class HomeActivity extends Activity {
         ring.setCornerRadius(px(12));
         ring.setStroke(px(2.5f), isMoving ? GOLD : 0xFFFFFFFF);
         ring.setAlpha(isMoving ? 255 : 0);
-        t.setForeground(ring);
+        t.setForeground(new android.graphics.drawable.InsetDrawable(ring, Math.round(3 * getResources().getDisplayMetrics().density)));
         if (isMoving) { t.setScaleX(1.15f); t.setScaleY(1.15f); t.setElevation(px(12)); }
         cell.addView(t, new LinearLayout.LayoutParams(w, h));
 
