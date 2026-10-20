@@ -84,6 +84,8 @@ public class HomeActivity extends Activity {
     private HorizontalScrollView rowApps, rowTools;
     private LinearLayout listApps, listTools;
     static String perf = "";            // debug only: comma list of effects to switch off while measuring (am start --es perf nowm,noamb,nozoom,notext)
+    private long lastKeyAt;
+    private int lastKeyCode;
     private App current;
     private int heroIndex = -1, heroDir = 1;
     private String heroShown;
@@ -655,7 +657,15 @@ public class HomeActivity extends Activity {
 
         t.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override public void onFocusChange(View v, boolean f) {
-                if (f) lastFocusPkg = a.pkg;
+                if (f) {
+                    String prev = lastFocusPkg;
+                    lastFocusPkg = a.pkg;
+                    boolean arrow = lastKeyCode == KeyEvent.KEYCODE_DPAD_RIGHT || lastKeyCode == KeyEvent.KEYCODE_DPAD_LEFT;
+                    if (prev != null && !prev.equals(a.pkg) && arrow && android.os.SystemClock.uptimeMillis() - lastKeyAt < 300) {
+                        t.playSoundEffect(lastKeyCode == KeyEvent.KEYCODE_DPAD_RIGHT
+                                ? android.view.SoundEffectConstants.NAVIGATION_RIGHT : android.view.SoundEffectConstants.NAVIGATION_LEFT);
+                    }
+                }
                 if (moving && a.pkg.equals(movingPkg)) return;
                 if (!perf.contains("nozoom")) t.animate().scaleX(f ? 1.1f : 1f).scaleY(f ? 1.1f : 1f).setDuration(120).start();
                 ring.setAlpha(f ? 255 : 0);
@@ -881,6 +891,7 @@ public class HomeActivity extends Activity {
     }
 
     @Override public boolean dispatchKeyEvent(KeyEvent e) {
+        if (e.getAction() == KeyEvent.ACTION_DOWN) { lastKeyAt = android.os.SystemClock.uptimeMillis(); lastKeyCode = e.getKeyCode(); }
         if (!moving) return super.dispatchKeyEvent(e);
         int k = e.getKeyCode();
         if (k == KeyEvent.KEYCODE_BACK || k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER) {
