@@ -43,6 +43,9 @@ final class Ambient extends View {
         color = DEFAULT;
     }
 
+    /** The colour the glow is heading to (also used for the artwork's rim light). */
+    int currentColor() { return color; }
+
     /** Fades the glow to the colour of this app. */
     void follow(String key, Drawable art) { setGlow(colorOf(key, art)); }
 

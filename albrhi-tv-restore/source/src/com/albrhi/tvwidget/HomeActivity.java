@@ -85,6 +85,7 @@ public class HomeActivity extends Activity {
     private LinearLayout listApps, listTools;
     static String perf = "";            // debug only: comma list of effects to switch off while measuring (am start --es perf nowm,noamb,nozoom,notext)
     private App current;
+    private int heroIndex = -1, heroDir = 1;
     private String heroShown;
     private FrameLayout.LayoutParams watermarkLp;
     private View appsHeadView;
@@ -702,33 +703,55 @@ public class HomeActivity extends Activity {
     private void applyArtwork() {
         final App a = pendingArtApp;
         watermark.animate().cancel();
+        final float travel = heroDir * px(26);
         Drawable art = a == null ? null : (a.banner != null ? a.banner : a.icon);
         if (perf.contains("nowm")) art = null;
         if (perf.contains("noamb") && a != null) { /* keep the colour still */ } else if (a != null) ambient.follow(a.pkg, art);
         if (art != null && art.getConstantState() != null) {
             positionWatermark();
             watermark.setImageDrawable(art.getConstantState().newDrawable().mutate());
+            GradientDrawable rim = new GradientDrawable();           // a thin light in the app's own colour around the card
+            rim.setColor(0);
+            rim.setCornerRadius(px(30));
+            int c = ambient.currentColor();
+            rim.setStroke(px(2), (c & 0x00FFFFFF) | 0x99000000);
+            watermark.setForeground(rim);
             watermark.setAlpha(0f);
-            watermark.setTranslationX(-px(12));
-            watermark.animate().alpha(0.34f).translationX(0f).setDuration(260).start();
+            watermark.setScaleX(0.94f);
+            watermark.setScaleY(0.94f);
+            watermark.setTranslationX(travel);                        // arrives from the side you are moving towards
+            watermark.animate().alpha(0.40f).scaleX(1f).scaleY(1f).translationX(0f).setDuration(280)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator(1.5f)).start();
         } else {
             watermark.animate().alpha(0f).setDuration(140).start();
         }
     }
 
-    /** Keeps the big artwork inside the hero area: it ends above the "Apps" title and never touches the rows. */
+    /**
+     * Centres the artwork exactly: vertically in the free band between the top pills and the "Apps" title
+     * (equal space above and below), horizontally on the next-match pill's centre line.
+     */
     private void positionWatermark() {
-        if (appsHeadView == null || watermarkLp == null) return;
-        int[] a = new int[2], r = new int[2];
+        if (appsHeadView == null || watermarkLp == null || header == null) return;
+        int[] a = new int[2], r = new int[2], m = new int[2];
         appsHeadView.getLocationInWindow(a);
         rootView.getLocationInWindow(r);
-        int limit = a[1] - r[1] - px(14);                 // bottom edge allowed
-        int top = px(Safe.v(this) / (int) dn + 66);       // under the top pills
-        int hgt = Math.max(px(110), Math.min(px(190), limit - top));
-        if (appsHeadView.getHeight() == 0 || limit <= top) return;   // not laid out yet: keep the previous box
+        View pill = header.matchView();
+        pill.getLocationInWindow(m);
+        if (appsHeadView.getHeight() == 0 || pill.getWidth() == 0) return;       // not laid out yet: keep the previous box
+        int bandTop = m[1] - r[1] + pill.getHeight();                             // bottom of the pills
+        int bandBottom = a[1] - r[1];                                              // top of the "Apps" title
+        int pad = px(16);
+        int hgt = Math.max(px(100), Math.min(px(190), bandBottom - bandTop - 2 * pad));
+        int wdt = Math.round(hgt * 16f / 9f);
+        int cx = m[0] - r[0] + pill.getWidth() / 2;
+        int left = Math.max(Safe.h(this), Math.min(rootView.getWidth() - Safe.h(this) - wdt, cx - wdt / 2));
+        watermarkLp.gravity = Gravity.LEFT | Gravity.TOP;
+        watermarkLp.leftMargin = left;
+        watermarkLp.rightMargin = 0;
+        watermarkLp.topMargin = bandTop + (bandBottom - bandTop - hgt) / 2;
+        watermarkLp.width = wdt;
         watermarkLp.height = hgt;
-        watermarkLp.width = Math.round(hgt * 16f / 9f);
-        watermarkLp.topMargin = top;
         watermark.setLayoutParams(watermarkLp);
     }
 
@@ -758,6 +781,12 @@ public class HomeActivity extends Activity {
         heroShown = a.pkg;
 
         // fast scrolling (key held down): text switches instantly and the heavy visuals wait for the focus to settle
+        View tv0 = tiles.get(a.pkg);
+        if (tv0 != null && tv0.getParent() instanceof ViewGroup && ((View) tv0.getParent()).getParent() instanceof LinearLayout) {
+            int idx = ((LinearLayout) ((View) tv0.getParent()).getParent()).indexOfChild((View) tv0.getParent());
+            if (heroIndex >= 0 && idx != heroIndex) heroDir = idx > heroIndex ? 1 : -1;
+            heroIndex = idx;
+        }
         long now = android.os.SystemClock.uptimeMillis();
         final boolean fast = now - lastHeroAt < 130;
         lastHeroAt = now;
@@ -775,8 +804,8 @@ public class HomeActivity extends Activity {
         } else {
             heroName.setAlpha(0f);
             heroSub.setAlpha(0f);
-            heroName.setTranslationX(px(14));
-            heroSub.setTranslationX(px(14));
+            heroName.setTranslationX(px(14) * heroDir);
+            heroSub.setTranslationX(px(14) * heroDir);
             heroName.animate().alpha(1f).translationX(0f).setDuration(200).start();
             heroSub.animate().alpha(1f).translationX(0f).setStartDelay(40).setDuration(200).start();
         }
