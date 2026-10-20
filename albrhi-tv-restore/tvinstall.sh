@@ -49,6 +49,14 @@ install_one() {
     esac
   fi
   [ -n "$tmp" ] && rm -rf "$tmp"
+  # Android switches an accessibility service off when its app is replaced: put ours back (and the permissions it needs)
+  if adb -s "$DEV" shell "pm list packages $APP_PKG" 2>/dev/null | grep -q "$APP_PKG"; then
+    A "pm grant $APP_PKG android.permission.ACCESS_FINE_LOCATION" >/dev/null
+    A "pm grant $APP_PKG android.permission.NEARBY_WIFI_DEVICES" >/dev/null
+    A "pm grant $APP_PKG android.permission.POST_NOTIFICATIONS" >/dev/null
+    A "settings put secure enabled_accessibility_services $APP_PKG/$APP_PKG.ControlService" >/dev/null
+    A "settings put secure accessibility_enabled 1" >/dev/null
+  fi
   echo "done. Open Albrhi Home on the TV - the app appears at the end of the grid (move it with a long press)."
 }
 

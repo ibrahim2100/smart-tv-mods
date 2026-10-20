@@ -83,8 +83,15 @@ public class HomeActivity extends Activity {
     private View heroBox, btnOpen, btnOpts;
     private HorizontalScrollView rowApps, rowTools;
     private LinearLayout listApps, listTools;
+    static String perf = "";            // debug only: comma list of effects to switch off while measuring (am start --es perf nowm,noamb,nozoom,notext)
     private App current;
     private String heroShown;
+    private FrameLayout.LayoutParams watermarkLp;
+    private View appsHeadView;
+    private long lastHeroAt;
+    private String sigApps = "";
+    private App pendingArtApp;
+    private final Runnable applyArt = new Runnable() { public void run() { applyArtwork(); } };
     private int appliedSafe;
     private float dn;
     private boolean loading, showHidden, moving;
@@ -124,11 +131,13 @@ public class HomeActivity extends Activity {
         wl.rightMargin = Safe.h(this) + px(40);
         wl.topMargin = px(104);
         root.addView(watermark, wl);
+        watermarkLp = wl;
 
         LinearLayout col = new LinearLayout(this);
         col.setOrientation(LinearLayout.VERTICAL);
         col.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         col.setClipChildren(false);
+        col.setClipToPadding(false);          // zoomed buttons and focus rings may use the padding area
         col.setPadding(Safe.h(this), Safe.v(this), Safe.h(this), Safe.v(this));
 
         // top row: clock + next match on one side, settings on the other
@@ -150,6 +159,7 @@ public class HomeActivity extends Activity {
         hero.setOrientation(LinearLayout.VERTICAL);
         hero.setGravity(Gravity.TOP);
         hero.setPadding(0, px(4), 0, px(2));
+        hero.setClipToPadding(false);
         hero.setClipChildren(false);
         heroBox = hero;
 
@@ -178,6 +188,8 @@ public class HomeActivity extends Activity {
 
         LinearLayout btns = new LinearLayout(this);
         btns.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        btns.setClipChildren(false);
+        btns.setClipToPadding(false);
         btnOpen = heroButton("فتح", true, new Runnable() { public void run() { heroOpen(); } });
         btnOpts = heroButton("خيارات", false, new Runnable() { public void run() { heroOptions(); } });
         btns.addView(btnOpen, new LinearLayout.LayoutParams(-2, px(36)));
@@ -207,6 +219,7 @@ public class HomeActivity extends Activity {
         ac.setMarginStart(px(8));
         appsHead.addView(appsCount, ac);
         col.addView(appsHead, lab);
+        appsHeadView = appsHead;
 
         listApps = new LinearLayout(this);
         listApps.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
@@ -343,6 +356,7 @@ public class HomeActivity extends Activity {
 
     @Override protected void onNewIntent(Intent i) {
         super.onNewIntent(i);
+        if (i != null && i.hasExtra("perf")) { perf = i.getStringExtra("perf"); fill(); return; }
         if (CrashGuard.tripped(this)) { recreate(); return; }
         // Home pressed again: jump back to the top
         lastFocusPkg = null;
@@ -519,10 +533,17 @@ public class HomeActivity extends Activity {
                     }
                     sortApps(list);
                 } catch (Throwable ignored) { }
+                final StringBuilder sg = new StringBuilder();
+                for (App x : list) sg.append(x.pkg).append(',');
                 ui.post(new Runnable() {
                     public void run() {
                         loading = false;
-                        if (!moving) { all = list; fill(); }
+                        if (moving) return;
+                        String sig = sg.toString();
+                        boolean same = sig.equals(sigApps) && listApps.getChildCount() > 0;
+                        sigApps = sig;
+                        all = list;
+                        if (!same) fill();                // unchanged list: keep the screen (no flicker, no work)
                     }
                 });
             }
@@ -635,8 +656,7 @@ public class HomeActivity extends Activity {
             @Override public void onFocusChange(View v, boolean f) {
                 if (f) lastFocusPkg = a.pkg;
                 if (moving && a.pkg.equals(movingPkg)) return;
-                t.animate().scaleX(f ? 1.1f : 1f).scaleY(f ? 1.1f : 1f).setDuration(120).start();
-                t.setElevation(f ? px(10) : 0);
+                if (!perf.contains("nozoom")) t.animate().scaleX(f ? 1.1f : 1f).scaleY(f ? 1.1f : 1f).setDuration(120).start();
                 ring.setAlpha(f ? 255 : 0);
                 if (f) { showHero(a, special); reveal(t); }
             }
@@ -678,6 +698,50 @@ public class HomeActivity extends Activity {
         });
     }
 
+    /** Colour and artwork of the focused app (runs once the focus has settled). */
+    private void applyArtwork() {
+        final App a = pendingArtApp;
+        watermark.animate().cancel();
+        Drawable art = a == null ? null : (a.banner != null ? a.banner : a.icon);
+        if (perf.contains("nowm")) art = null;
+        if (perf.contains("noamb") && a != null) { /* keep the colour still */ } else if (a != null) ambient.follow(a.pkg, art);
+        if (art != null && art.getConstantState() != null) {
+            positionWatermark();
+            watermark.setImageDrawable(art.getConstantState().newDrawable().mutate());
+            watermark.setAlpha(0f);
+            watermark.setTranslationX(-px(12));
+            watermark.animate().alpha(0.34f).translationX(0f).setDuration(260).start();
+        } else {
+            watermark.animate().alpha(0f).setDuration(140).start();
+        }
+    }
+
+    /** Keeps the big artwork inside the hero area: it ends above the "Apps" title and never touches the rows. */
+    private void positionWatermark() {
+        if (appsHeadView == null || watermarkLp == null) return;
+        int[] a = new int[2], r = new int[2];
+        appsHeadView.getLocationInWindow(a);
+        rootView.getLocationInWindow(r);
+        int limit = a[1] - r[1] - px(14);                 // bottom edge allowed
+        int top = px(Safe.v(this) / (int) dn + 66);       // under the top pills
+        int hgt = Math.max(px(110), Math.min(px(190), limit - top));
+        if (appsHeadView.getHeight() == 0 || limit <= top) return;   // not laid out yet: keep the previous box
+        watermarkLp.height = hgt;
+        watermarkLp.width = Math.round(hgt * 16f / 9f);
+        watermarkLp.topMargin = top;
+        watermark.setLayoutParams(watermarkLp);
+    }
+
+    private static String ago(long t) {
+        long m = Math.max(0, (System.currentTimeMillis() - t) / 60000);
+        if (m < 2) return "قبل لحظات";
+        if (m < 60) return "قبل " + m + " دقيقة";
+        long h = m / 60;
+        if (h < 24) return h == 1 ? "قبل ساعة" : h == 2 ? "قبل ساعتين" : "قبل " + h + " ساعات";
+        long d = h / 24;
+        return d == 1 ? "أمس" : d == 2 ? "قبل يومين" : "قبل " + d + " أيام";
+    }
+
     private void showHero(final App a, boolean special) {
         current = a;
         String name = special ? a.label : nameOf(a);
@@ -685,33 +749,37 @@ public class HomeActivity extends Activity {
         if (special) sub = showHidden ? "اضغط OK للرجوع" : "تطبيقات أخفيتها · اضغط OK لإظهارها";
         else if (custom.containsKey(a.pkg) && !custom.get(a.pkg).equals(a.label)) sub = "الاسم الأصلي: " + a.label;
         else sub = a.system ? "تطبيق نظام" : "تطبيق";
+        if (!special) {                                   // what the launcher itself knows: when you last opened it
+            long t = getSharedPreferences("stats", MODE_PRIVATE).getLong(a.pkg + "#t", 0);
+            int n = getSharedPreferences("stats", MODE_PRIVATE).getInt(a.pkg + "#n", 0);
+            if (t > 0) sub += "  ·  آخر فتح " + ago(t) + (n > 2 ? "  ·  " + n + " مرة" : "");
+        }
         if (a.pkg.equals(heroShown)) { heroSub.setText(sub); return; }
         heroShown = a.pkg;
 
-        // colour + artwork follow the focused app
-        Drawable art = special ? null : (a.banner != null ? a.banner : a.icon);
-        ambient.follow(a.pkg, art);
-        watermark.animate().cancel();
-        if (art != null && art.getConstantState() != null) {
-            watermark.setImageDrawable(art.getConstantState().newDrawable().mutate());
-            watermark.setAlpha(0f);
-            watermark.setTranslationX(-px(16));
-            watermark.animate().alpha(0.34f).translationX(0f).setDuration(320).start();
-        } else {
-            watermark.animate().alpha(0f).setDuration(160).start();
-        }
+        // fast scrolling (key held down): text switches instantly and the heavy visuals wait for the focus to settle
+        long now = android.os.SystemClock.uptimeMillis();
+        final boolean fast = now - lastHeroAt < 130;
+        lastHeroAt = now;
+        pendingArtApp = special ? null : a;
+        ui.removeCallbacks(applyArt);
+        if (special) { ambient.setGlow(0xFF1B3A7A); applyArtwork(); } else ui.postDelayed(applyArt, fast ? 150 : 40);
 
-        // the text slides in
         heroName.animate().cancel();
         heroSub.animate().cancel();
         heroName.setText(name);
         heroSub.setText(sub);
-        heroName.setAlpha(0f);
-        heroSub.setAlpha(0f);
-        heroName.setTranslationX(px(18));
-        heroSub.setTranslationX(px(18));
-        heroName.animate().alpha(1f).translationX(0f).setDuration(220).start();
-        heroSub.animate().alpha(1f).translationX(0f).setStartDelay(50).setDuration(220).start();
+        if (fast || perf.contains("notext")) {
+            heroName.setAlpha(1f); heroName.setTranslationX(0f);
+            heroSub.setAlpha(1f); heroSub.setTranslationX(0f);
+        } else {
+            heroName.setAlpha(0f);
+            heroSub.setAlpha(0f);
+            heroName.setTranslationX(px(14));
+            heroSub.setTranslationX(px(14));
+            heroName.animate().alpha(1f).translationX(0f).setDuration(200).start();
+            heroSub.animate().alpha(1f).translationX(0f).setStartDelay(40).setDuration(200).start();
+        }
         ((TextView) ((ViewGroup) btnOpen).getChildAt(0)).setText(special && showHidden ? "رجوع" : special ? "إظهار" : "فتح");
         btnOpts.setVisibility(special ? View.GONE : View.VISIBLE);
     }
@@ -826,6 +894,11 @@ public class HomeActivity extends Activity {
     }
 
     private void launch(App a) {
+        try {                                              // remember it for the "last opened" line
+            android.content.SharedPreferences st = getSharedPreferences("stats", MODE_PRIVATE);
+            st.edit().putLong(a.pkg + "#t", System.currentTimeMillis()).putInt(a.pkg + "#n", st.getInt(a.pkg + "#n", 0) + 1).apply();
+            if (Health.read(this).ramFreeMb < 300) Cleaner.clean(this, a.pkg, null);   // low memory: free background apps first (never this one)
+        } catch (Throwable ignored) { }
         try {
             Intent i = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
                     .setComponent(a.cn).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);

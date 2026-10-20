@@ -33,7 +33,10 @@ final class Cleaner {
         return mi.availMem / (1024 * 1024);
     }
 
-    static void clean(final Context ctx, final Done done) {
+    static void clean(final Context ctx, final Done done) { clean(ctx, null, done); }
+
+    /** @param keep a package that must survive (the app that is about to open). */
+    static void clean(final Context ctx, final String keep, final Done done) {
         final Context c = ctx.getApplicationContext();
         final long before = availMb(c);
         int n = 0;
@@ -47,6 +50,7 @@ final class Cleaner {
             for (ResolveInfo ri : pm.queryIntentActivities(ph, 0)) pkgs.add(ri.activityInfo.packageName);
             outer:
             for (String p : pkgs) {
+                if (p.equals(keep)) continue;
                 for (String s : NEVER) if (p.startsWith(s)) continue outer;
                 try {
                     ApplicationInfo ai = pm.getApplicationInfo(p, 0);

@@ -1,6 +1,5 @@
 package com.albrhi.tvwidget;
 
-import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -9,46 +8,56 @@ import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.RadialGradient;
+import android.graphics.Rect;
 import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
+import android.util.LruCache;
 import android.view.View;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * The home background: a deep navy base and a soft glow that takes the colour of the focused app.
- * The colour is worked out once per app from its own banner (saturated pixels count most), then
- * the glow cross-fades to it.
+ * The home background: a deep navy base with a soft glow in the colour of the focused app.
+ *
+ * Cheap on purpose: each colour is painted ONCE into a small bitmap (320x180, scaled up smoothly by the GPU),
+ * and a change of colour is just a cross-fade between two such bitmaps. The first version re-evaluated two
+ * full-screen gradient shaders on every frame, which was the heaviest thing on screen on this TV.
  */
 final class Ambient extends View {
-    private static final int BASE = 0xFF050816;
-    private static final Map<String, Integer> CACHE = new HashMap<String, Integer>();
+    private static final int BW = 320, BH = 180, BASE = 0xFF050816, DEFAULT = 0xFF1B3A7A;
+    private static final Map<String, Integer> COLORS = new HashMap<String, Integer>();
+    private static final LruCache<Integer, Bitmap> BITMAPS = new LruCache<Integer, Bitmap>(5);
 
-    private final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private int color = 0xFF1B3A7A;
+    private final Paint p = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG);
+    private final Rect dst = new Rect();
+    private Bitmap from, to;
+    private int color;
+    private float mix = 1f;
     private ValueAnimator anim;
-    private Shader glow, floor;
-    private int lastW, lastH, lastColor;
 
     Ambient(Context c) {
         super(c);
         setWillNotDraw(false);
+        to = bitmapFor(DEFAULT);
+        color = DEFAULT;
     }
 
     /** Fades the glow to the colour of this app. */
-    void follow(String key, Drawable art) {
-        setGlow(colorOf(key, art));
-    }
+    void follow(String key, Drawable art) { setGlow(colorOf(key, art)); }
 
     void setGlow(int target) {
-        if (target == color && anim == null) return;
+        if (target == color) return;
         if (anim != null) anim.cancel();
-        anim = ValueAnimator.ofObject(new ArgbEvaluator(), color, target);
-        anim.setDuration(380);
+        from = to;
+        to = bitmapFor(target);
+        color = target;
+        mix = 0f;
+        anim = ValueAnimator.ofFloat(0f, 1f);
+        anim.setDuration(360);
         anim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override public void onAnimationUpdate(ValueAnimator a) {
-                color = (Integer) a.getAnimatedValue();
+                mix = (Float) a.getAnimatedValue();
                 invalidate();
             }
         });
@@ -56,32 +65,43 @@ final class Ambient extends View {
     }
 
     @Override protected void onDraw(Canvas cv) {
-        int w = getWidth(), h = getHeight();
-        if (w == 0) return;
-        cv.drawColor(BASE);
-        if (glow == null || w != lastW || h != lastH || color != lastColor) {
-            int strong = Color.argb(215, Color.red(color), Color.green(color), Color.blue(color));
-            int mid = Color.argb(90, Color.red(color), Color.green(color), Color.blue(color));
-            glow = new RadialGradient(w * 0.76f, h * 0.30f, w * 0.78f, new int[]{strong, mid, 0x00000000}, new float[]{0f, 0.45f, 1f},
-                    Shader.TileMode.CLAMP);
-            floor = new LinearGradient(0, h * 0.40f, 0, h, 0x00000000, 0xEE04060F, Shader.TileMode.CLAMP);
-            lastW = w;
-            lastH = h;
-            lastColor = color;
+        dst.set(0, 0, getWidth(), getHeight());
+        if (from != null && mix < 1f) {
+            p.setAlpha(255);
+            cv.drawBitmap(from, null, dst, p);
+            p.setAlpha(Math.round(mix * 255));
+            cv.drawBitmap(to, null, dst, p);
+        } else {
+            p.setAlpha(255);
+            cv.drawBitmap(to, null, dst, p);
         }
-        p.setShader(glow);
-        cv.drawRect(0, 0, w, h, p);
-        p.setShader(floor);
-        cv.drawRect(0, 0, w, h, p);          // darkens the lower half so the rows stay readable
-        p.setShader(null);
+    }
+
+    // ---- painting a colour once ---------------------------------------------------------------
+
+    private static Bitmap bitmapFor(int c) {
+        Bitmap b = BITMAPS.get(c);
+        if (b != null && !b.isRecycled()) return b;
+        b = Bitmap.createBitmap(BW, BH, Bitmap.Config.ARGB_8888);
+        Canvas cv = new Canvas(b);
+        cv.drawColor(BASE);
+        Paint g = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
+        int r = Color.red(c), gr = Color.green(c), bl = Color.blue(c);
+        g.setShader(new RadialGradient(BW * 0.76f, BH * 0.30f, BW * 0.78f,
+                new int[]{Color.argb(215, r, gr, bl), Color.argb(90, r, gr, bl), 0x00000000}, new float[]{0f, 0.45f, 1f}, Shader.TileMode.CLAMP));
+        cv.drawRect(0, 0, BW, BH, g);
+        g.setShader(new LinearGradient(0, BH * 0.40f, 0, BH, 0x00000000, 0xEE04060F, Shader.TileMode.CLAMP));
+        cv.drawRect(0, 0, BW, BH, g);                 // darkens the lower half so the rows stay readable
+        BITMAPS.put(c, b);
+        return b;
     }
 
     // ---- colour from artwork ----------------------------------------------------------------
 
     private static int colorOf(String key, Drawable art) {
-        Integer hit = CACHE.get(key);
+        Integer hit = COLORS.get(key);
         if (hit != null) return hit;
-        int c = 0xFF1B3A7A;                       // Blaugrana blue as the fallback
+        int c = DEFAULT;                          // Blaugrana blue as the fallback
         try {
             if (art != null && art.getIntrinsicWidth() > 0) {
                 Bitmap b = Bitmap.createBitmap(32, 18, Bitmap.Config.ARGB_8888);
@@ -105,15 +125,14 @@ final class Ambient extends View {
                 }
                 b.recycle();
                 if (wsum > 1.2f) {
-                    int rr = (int) (r / wsum), gg = (int) (g / wsum), bb = (int) (bl / wsum);
-                    Color.RGBToHSV(rr, gg, bb, hsv);
+                    Color.RGBToHSV((int) (r / wsum), (int) (g / wsum), (int) (bl / wsum), hsv);
                     hsv[1] = Math.min(1f, hsv[1] * 1.05f);
                     hsv[2] = Math.min(0.78f, Math.max(0.5f, hsv[2]));      // never so bright it hurts, never so dark it vanishes
                     c = Color.HSVToColor(hsv);
                 }
             }
         } catch (Throwable ignored) { }
-        CACHE.put(key, c);
+        COLORS.put(key, c);
         return c;
     }
 }
