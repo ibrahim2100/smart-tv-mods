@@ -1,0 +1,17 @@
+{
+  "id": "com.albrhi.alert",
+  "version": "1.0.1",
+  "vendor": "Albrhi",
+  "type": "web",
+  "main": "index.html",
+  "title": "Albrhi Alert",
+  "icon": "icon.png",
+  "visible": false,
+  "transparent": true,
+  "defaultWindowType": "overlay",
+  "handlesRelaunch": true,
+  "disableBackHistoryAPI": true,
+  "resolution": "1920x1080",
+  "noSplashOnLaunch": true,
+  "spinnerOnLaunch": false
+}
