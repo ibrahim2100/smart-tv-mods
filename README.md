@@ -1,4 +1,4 @@
-# الجلسة TV · Aljalsa TV
+# WebOS — تعديلات الجلسة · Aljalsa mods for LG webOS
 
 **شاشة رئيسية مخصصة لتلفزيونات LG webOS (بعد الروت)** — تطبيقاتك، المدخلات، المباريات، تنبيهات دوري الأبطال، وشاشة توقف بهوية خاصة.
 **A custom home screen for rooted LG webOS TVs** — your apps, HDMI inputs, match cards, Champions League alerts and a branded screensaver.

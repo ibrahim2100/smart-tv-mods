@@ -10,7 +10,7 @@
 
 ### الخطوات (أول مرة)
 ```bash
-git clone <your-repo> aljalsa-tv && cd aljalsa-tv
+git clone https://github.com/ibrahim2100/WebOS && cd WebOS
 npm install                                   # أدوات webOS CLI (ares-package)
 cp scripts/tv.conf.example scripts/tv.conf    # حط TV_IP=عنوان تلفزيونك
 scripts/check.sh                              # يتأكد إن الروت والاتصال شغّالين (للقراءة فقط)
@@ -44,7 +44,7 @@ scripts/enable-home.sh                        # (اختياري) يجعله ال
 
 ### First-time steps
 ```bash
-git clone <your-repo> aljalsa-tv && cd aljalsa-tv
+git clone https://github.com/ibrahim2100/WebOS && cd WebOS
 npm install                                   # webOS CLI tools (ares-package)
 cp scripts/tv.conf.example scripts/tv.conf    # put TV_IP=your TV's address
 scripts/check.sh                              # read-only: confirms root and connection
