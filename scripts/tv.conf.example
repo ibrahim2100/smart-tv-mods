@@ -1,0 +1,2 @@
+# Copy to tv.conf and put your TV's address (Settings > Network on the TV). tv.conf is ignored by git.
+TV_IP=192.168.1.50
