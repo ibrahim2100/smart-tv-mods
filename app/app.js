@@ -166,7 +166,7 @@
     if (luma(c) > 190) return '#2a2a2a';
     return c;
   }
-  var VERSION = 'v27';
+  var VERSION = 'v28';
   function dbg(m) { if (onTV) svc('log', {m: m}).catch(function () {}); }
   window.addEventListener('error', function (e) { dbg('JS error: ' + e.message + ' @' + (e.filename || '').split('/').pop() + ':' + e.lineno); });
   window.addEventListener('unhandledrejection', function (e) { dbg('promise rejection: ' + (e.reason && (e.reason.message || JSON.stringify(e.reason)))); });
@@ -792,7 +792,7 @@
     var id = null;
     svc('build').then(function (r) { id = r.id; }).catch(function () {});
     setInterval(function () {
-      svc('build').then(function (r) { if (id && r.id && r.id !== id && view === 'home' && !moving) location.reload(); }).catch(function () {});
+      svc('build').then(function (r) { if (!id) { id = r.id; return; } if (r.id && r.id !== id && view === 'home' && !moving) location.reload(); }).catch(function () {});
     }, 15000);
   }
   // style.css loads without blocking (so the loading screen paints first). Measure only once it has applied.
@@ -800,20 +800,25 @@
     var done = false, go = function () { if (done) return; done = true; fn(); };
     if (window.__css) go(); else { window.addEventListener('cssready', go); setTimeout(go, 3000); }
   }
+  var bootFromSvc = false;
   function start(r) {
     MARK.probed = Math.round(performance.now());
-    lists.app = r[0]; lists.sys = r[1]; lists.input = r[2];
+    // If a rescan already got the real list from the service while this slow boot probe was running, keep that one.
+    if (!appsSig || bootFromSvc) { lists.app = r[0]; lists.sys = r[1]; }
+    lists.input = r[2];
     document.body.classList.add('enter');
     render(); MARK.rendered = Math.round(performance.now());
     whenCss(function () {
       all('.strip').forEach(function (s) { s._shift = 0; s.style.transform = ''; });
       var first = all('#appsStrip .f')[0]; if (first) setFocusEl(first);
       watchBuild();
+      // The service starts a few seconds after the page at boot: until it answers, keep asking (so a stale list never stays on screen).
+      if (!appsSig) { var retry = setInterval(function () { if (appsSig) clearInterval(retry); else rescan(); }, 4000); }
       booted(); MARK.booted = Math.round(performance.now()); dbg('boot ' + VERSION + ' id=' + (location.pathname.split('/').slice(-2, -1)[0]) + ' ' + JSON.stringify(MARK)); setTimeout(initAudio, 1500); setTimeout(warm, 1800); setTimeout(function () { document.body.classList.remove('enter'); }, 2600);
     });
   }
   knownApps().then(function (apps) {
-    if (apps) appsSig = apps.map(function (x) { return x.id; }).sort().join(',');
+    if (apps) { appsSig = apps.map(function (x) { return x.id; }).sort().join(','); bootFromSvc = true; }
     var ids = apps ? apps.map(function (x) { return x.id; }) : null;
     return Promise.all([buildApps(apps), probe(C.SYSTEM, ids), C.INPUTS.slice()]);
   }).then(start)
