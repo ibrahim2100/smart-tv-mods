@@ -1,0 +1,21 @@
+# dependencies and build output
+node_modules/
+*.ipk
+# local, per-person
+scripts/tv.conf
+scripts/backups/
+.claude/
+.DS_Store
+# secrets / signing (never commit)
+*.keystore
+*.jks
+*.pem
+# Third-party artwork that is trademarked or copyrighted: rebuilt by scripts/fetch-assets.sh (see docs/ASSETS.md).
+# Making the repository private and want everything in it? Delete these lines.
+app/icons/apps/
+app/icons/logos/
+app/icons/crests/
+alert/crests/
+tools/crests/
+tools/ideas/bg-clasico*.jpg
+tools/ideas/montage.jpg
