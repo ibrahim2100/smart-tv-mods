@@ -1,0 +1,13 @@
+{
+  "name": "aljalsa-tv",
+  "version": "1.0.0",
+  "description": "A custom home screen for rooted LG webOS TVs: apps, inputs, match alerts, screensaver. شاشة رئيسية مخصصة لتلفزيونات LG webOS.",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "node tools/uefa-test.js"
+  },
+  "devDependencies": {
+    "@webos-tools/cli": "^3.2.6"
+  }
+}
