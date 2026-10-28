@@ -393,6 +393,21 @@ final class RemoteServer {
             json(out, 200, new JSONObject().put("ok", true));
             return;
         }
+        if (method.equals("GET") && path.equals("/api/ac")) {
+            json(out, 200, new JSONObject().put("hasToken", Ac.hasToken(ctx)).put("count", Ac.list(ctx).size()));
+            return;
+        }
+        if (method.equals("POST") && path.equals("/api/ac")) {          // the Voice Monkey token goes in here once and stays on the TV
+            JSONObject b = jsonBody(in, len);
+            if (b.has("token")) Ac.setToken(ctx, b.optString("token"));
+            if (!Ac.hasToken(ctx)) { json(out, 200, new JSONObject().put("ok", true).put("count", 0)); return; }
+            try {
+                json(out, 200, new JSONObject().put("ok", true).put("count", Ac.refreshSync(ctx)));
+            } catch (Exception e) {
+                err(out, 400, e.getMessage() == null ? "تعذّر الاتصال" : e.getMessage());
+            }
+            return;
+        }
         if (method.equals("POST") && path.equals("/api/install")) { upload(query, len, in, out); return; }
         if (method.equals("POST") && path.equals("/api/install-url")) { download(jsonBody(in, len).optString("url"), out); return; }
         err(out, 404, "not found");

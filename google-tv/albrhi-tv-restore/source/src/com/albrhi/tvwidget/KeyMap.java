@@ -171,7 +171,9 @@ final class KeyMap {
         Entry m = get(c, code);
         if (m == null) return false;
         synchronized (swallowUp) { swallowUp.add(code); }
-        if (e.getRepeatCount() == 0) launch(c, m.pkg);
+        if (e.getRepeatCount() == 0) {
+            if (isAc(m.pkg)) Ac.send(c, m.pkg.substring(3)); else launch(c, m.pkg);
+        }
         return true;
     }
 
@@ -198,7 +200,16 @@ final class KeyMap {
         return out;
     }
 
+    /** A button can send an air-conditioner command instead of opening an app: its target is "ac:" + the command id. */
+    static boolean isAc(String target) { return target != null && target.startsWith("ac:"); }
+
+    /** "يفتح: Netflix" or "يرسل للمكيف: AC On". */
+    static String actionText(Context c, String target) {
+        return isAc(target) ? "يرسل للمكيف: " + Ac.nameOf(c, target.substring(3)) : "يفتح: " + labelOf(c, target);
+    }
+
     static String labelOf(Context c, String pkg) {
+        if (isAc(pkg)) return "المكيف · " + Ac.nameOf(c, pkg.substring(3));
         try {
             PackageManager pm = c.getPackageManager();
             return String.valueOf(pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)));
@@ -206,6 +217,7 @@ final class KeyMap {
     }
 
     static Drawable iconOf(Context c, String pkg) {
+        if (isAc(pkg)) return null;
         try { return c.getPackageManager().getApplicationIcon(pkg); } catch (Throwable t) { return null; }
     }
 

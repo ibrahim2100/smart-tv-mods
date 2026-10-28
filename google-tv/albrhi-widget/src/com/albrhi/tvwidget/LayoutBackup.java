@@ -89,6 +89,8 @@ final class LayoutBackup {
                 }
                 ue.apply();
             }
+            JSONObject ac = o.optJSONObject("ac");                              // import only: export() never writes the token
+            if (ac != null && ac.optString("token").length() > 0) Ac.setToken(c, ac.optString("token"));
             if (o.has("sportsKey")) c.getSharedPreferences("fx", Context.MODE_PRIVATE).edit().putString("key", o.optString("sportsKey", "123")).apply();
             f.delete();
             return true;

@@ -86,6 +86,14 @@
     </div>
 
     <div class="card">
+      <h2>المكيف</h2>
+      <div class="sub" id="acNote">الصق رمز Voice Monkey (API Token) مرة واحدة. يُحفظ على التلفزيون فقط.</div>
+      <input id="acTok" type="password" dir="ltr" autocomplete="off" placeholder="Voice Monkey token">
+      <button id="acBtn" class="ghost">حفظ وجلب الأوامر</button>
+      <div class="err" id="acMsg"></div>
+    </div>
+
+    <div class="card">
       <h2>التطبيقات</h2>
       <input id="q" type="search" placeholder="ابحث في التطبيقات…">
       <div id="apps"></div>
@@ -124,7 +132,7 @@ async function load(){
     $('#info').innerHTML=[['العنوان',i.ip],['أندرويد',i.android],['الرام المتاحة',fmtMb(i.ramFreeMb)+' / '+fmtMb(i.ramTotalMb)],
       ['التخزين الحر',fmtMb(i.storageFreeMb)+' / '+fmtMb(i.storageTotalMb)],['مدة التشغيل',Math.floor(i.uptimeMin/60)+'h '+i.uptimeMin%60+'m']]
       .map(x=>`<div class="kv"><span>${x[0]}</span><span dir="ltr">${esc(x[1])}</span></div>`).join('');
-    apps=await api('/api/apps'); drawApps(); loadControl();
+    apps=await api('/api/apps'); drawApps(); loadControl(); loadAc();
   }catch(e){}
 }
 function drawApps(){
@@ -169,6 +177,11 @@ $('#wake').addEventListener('click',async()=>{try{await post('/api/power',{actio
 $('#txtBtn').addEventListener('click',async()=>{try{const j=await post('/api/text',{text:$('#txt').value});$('#ctlMsg').textContent=j.ok?'':(j.message||j.error||'')}catch(_){}});
 $('#vurlBtn').addEventListener('click',async()=>{const u=$('#vurl').value.trim();if(!u)return;try{const j=await post('/api/open-url',{url:u});$('#ctlMsg').textContent=j.ok?'':(j.error||'')}catch(_){}});
 async function loadControl(){try{const c=await api('/api/control');$('#ctlNote').textContent=c.ready?'':'خدمة التحكم غير مفعّلة على التلفزيون (شغّل restore.sh)'}catch(_){}}
+async function loadAc(){try{const a=await api('/api/ac');$('#acNote').textContent=a.hasToken?('مربوط · '+a.count+' أوامر. الصق رمزًا جديدًا للتبديل.'):'الصق رمز Voice Monkey (API Token) مرة واحدة. يُحفظ على التلفزيون فقط.'}catch(_){}}
+$('#acBtn').addEventListener('click',async()=>{
+  const t=$('#acTok').value.trim(); $('#acMsg').textContent='جاري الاتصال…';
+  try{const j=await post('/api/ac',t?{token:t}:{});$('#acMsg').textContent=j.ok?('تم · '+j.count+' أوامر'):(j.error||'فشل');if(j.ok){$('#acTok').value='';loadAc()}}catch(_){$('#acMsg').textContent='فشل الاتصال'}
+});
 $('#pairBtn').addEventListener('click',pair);
 $('#pin').addEventListener('keydown',e=>{if(e.key==='Enter')pair()});
 $('#logout').addEventListener('click',()=>logout());

@@ -66,6 +66,8 @@ final class QuickSettings {
                     .value(Theme.NAMES[Theme.index]).tile());
             items.add(Sheet.Item.of("الذاكرة", R.drawable.ic_refresh, new Runnable() { public void run() { cleanMemory(c); } }).value(ram).tile());
             // the rest, as quiet rows
+            items.add(Sheet.Item.of("المكيف", R.drawable.ic_snow, new Runnable() { public void run() { Sheet.chained = true; ac(c, anchor, onClose); } })
+                    .value(!Ac.hasToken(c) ? "غير مربوط" : Ac.list(c).size() + " أوامر"));
             items.add(Sheet.Item.of("أزرار الريموت", R.drawable.ic_apps, new Runnable() { public void run() { Sheet.chained = true; remoteKeys(c, anchor, onClose); } })
                     .value(keyCount == 0 ? "غير مخصصة" : keyCount + " مخصّصة"));
             items.add(Sheet.Item.of("كل إعدادات التلفزيون", R.drawable.ic_gear, open(c, Settings.ACTION_SETTINGS)));
@@ -152,6 +154,39 @@ final class QuickSettings {
     }
 
 
+    // ---- air conditioner (through Alexa) ----------------------------------------------------
+
+    /** The commands you made in Voice Monkey: OK sends one, the panel stays open so you can send another. */
+    private static void ac(final Context c, final View anchor, final Runnable onClose) {
+        Panel.show(c, "المكيف", "أوامر عبر Alexa", new Panel.Builder() { public List<Sheet.Item> items() {
+            List<Sheet.Item> items = Sheet.list();
+            items.add(back(c, anchor, onClose));
+            if (!Ac.hasToken(c)) {
+                items.add(Sheet.Item.header("ما في رمز بعد: افتح صفحة الجوال (الجوال ← الرابط) والصق رمز Voice Monkey في قسم «المكيف»"));
+                return items;
+            }
+            List<Ac.Cmd> cmds = Ac.list(c);
+            items.add(Sheet.Item.header(cmds.isEmpty() ? "ما في أوامر: أنشئ Trigger في Voice Monkey ثم حدّث" : "الأوامر"));
+            for (final Ac.Cmd m : cmds) {
+                items.add(Sheet.Item.of(m.name, R.drawable.ic_snow, new Runnable() { public void run() { Ac.send(c, m.id); } })
+                        .sub("اضغط للإرسال").stay());
+            }
+            items.add(Sheet.Item.header("إدارة"));
+            items.add(Sheet.Item.of("تحديث الأوامر", R.drawable.ic_refresh, new Runnable() { public void run() {
+                Toast.makeText(c, "جاري التحديث…", Toast.LENGTH_SHORT).show();
+                Ac.refresh(c, new Ac.Done() { public void onDone(String error) {
+                    if (error.length() > 0) Toast.makeText(c, "المكيف: " + error, Toast.LENGTH_LONG).show();
+                    Panel.refresh();
+                } });
+            } }).sub("يجلب الأوامر الجديدة من Voice Monkey").stay());
+            items.add(Sheet.Item.of("فصل المكيف", R.drawable.ic_trash, new Runnable() { public void run() {
+                Ac.disconnect(c);
+                Panel.refresh();
+            } }).sub("يمسح الرمز والأوامر من التلفزيون").danger().stay());
+            return items;
+        } }, null, closer(c, onClose));
+    }
+
     // ---- your own remote buttons ------------------------------------------------------------
 
     /** The list of remote buttons you linked to apps, plus "add a button". */
@@ -166,7 +201,7 @@ final class QuickSettings {
                 items.add(Sheet.Item.of(KeyMap.titleOf(e), R.drawable.ic_apps, new Runnable() { public void run() {
                     Sheet.chained = true;
                     keyDetail(c, anchor, onClose, e.code);
-                } }).sub("يفتح: " + KeyMap.labelOf(c, e.pkg)).icon(KeyMap.iconOf(c, e.pkg)));
+                } }).sub(KeyMap.actionText(c, e.pkg)).icon(KeyMap.iconOf(c, e.pkg)));
             }
             items.add(Sheet.Item.header("جديد"));
             items.add(Sheet.Item.of("إضافة زر", R.drawable.ic_edit, new Runnable() { public void run() {
@@ -183,8 +218,7 @@ final class QuickSettings {
             pickApp(c, anchor, onClose, "اختر التطبيق لـ" + KeyMap.titleOf(code0(c, code)), new Runnable() { public void run() { remoteKeys(c, anchor, onClose); } },
                     new PickApp() { public void pick(String pkg) {
                         KeyMap.put(c, code, pkg, null);
-                        Toast.makeText(c, "تم: " + KeyMap.titleOf(code0(c, code)) + " ← " + KeyMap.labelOf(c, pkg), Toast.LENGTH_SHORT).show();
-                        remoteKeys(c, anchor, onClose);
+                        Toast.makeText(c, "تم: " + KeyMap.titleOf(code0(c, code)) + " ← " + KeyMap.labelOf(c, pkg), Toast.LENGTH_SHORT).show();                        remoteKeys(c, anchor, onClose);
                     } });
         } }, new Runnable() { public void run() { remoteKeys(c, anchor, onClose); } });
     }
@@ -207,6 +241,15 @@ final class QuickSettings {
         Panel.show(c, title, "التطبيقات المثبتة", new Panel.Builder() { public List<Sheet.Item> items() {
             List<Sheet.Item> items = Sheet.list();
             items.add(Sheet.Item.of("رجوع", R.drawable.ic_back, new Runnable() { public void run() { Sheet.chained = true; onBack.run(); } }));
+            List<Ac.Cmd> acs = Ac.hasToken(c) ? Ac.list(c) : new java.util.ArrayList<Ac.Cmd>();
+            if (!acs.isEmpty()) {
+                items.add(Sheet.Item.header("المكيف"));
+                for (final Ac.Cmd m : acs) {
+                    items.add(Sheet.Item.of(m.name, R.drawable.ic_snow, new Runnable() { public void run() { Sheet.chained = true; cb.pick("ac:" + m.id); } })
+                            .sub("يرسل الأمر للمكيف"));
+                }
+                items.add(Sheet.Item.header("التطبيقات"));
+            }
             for (final KeyMap.AppRef a : apps) {
                 items.add(Sheet.Item.of(a.label, R.drawable.ic_apps, new Runnable() { public void run() { Sheet.chained = true; cb.pick(a.pkg); } }).icon(a.icon));
             }
@@ -218,7 +261,7 @@ final class QuickSettings {
     private static void keyDetail(final Context c, final View anchor, final Runnable onClose, final int code) {
         final KeyMap.Entry e0 = KeyMap.get(c, code);
         if (e0 == null) { remoteKeys(c, anchor, onClose); return; }
-        Panel.show(c, KeyMap.titleOf(e0), "يفتح: " + KeyMap.labelOf(c, e0.pkg), new Panel.Builder() { public List<Sheet.Item> items() {
+        Panel.show(c, KeyMap.titleOf(e0), KeyMap.actionText(c, e0.pkg), new Panel.Builder() { public List<Sheet.Item> items() {
             final KeyMap.Entry e = KeyMap.get(c, code);
             List<Sheet.Item> items = Sheet.list();
             items.add(Sheet.Item.of("رجوع", R.drawable.ic_back, new Runnable() { public void run() { Sheet.chained = true; remoteKeys(c, anchor, onClose); } }));
