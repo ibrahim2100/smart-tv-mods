@@ -1,13 +1,13 @@
-# build output and local-only files
-albrhi-widget/build/
-albrhi-widget/*.apk
-albrhi-widget/*.idsig
-albrhi-tv-restore/*.apk
-albrhi-tv-restore/backups/
+# build output and local-only files (Google TV project)
+google-tv/albrhi-widget/build/
+google-tv/albrhi-widget/*.apk
+google-tv/albrhi-widget/*.idsig
+google-tv/albrhi-tv-restore/*.apk
+google-tv/albrhi-tv-restore/backups/
 # signing keys never go into version control
 *.keystore
 *.jks
 .claude/settings.local.json
 
-# aljalsa-tv/ is a separate project with its own git repo (LG webOS, published as ibrahim2100/WebOS)
-aljalsa-tv/
+# lg-webos/ is a separate project with its own git repo (published as ibrahim2100/WebOS)
+lg-webos/
