@@ -1,0 +1,67 @@
+<!doctype html><meta charset="utf-8">
+<!-- Clasico wallpaper (bg-clasico.jpg): Real Madrid and Barcelona crests as thick 3D medallions facing each other, over the same
+     gold / copper palette as bg.jpg. Open at 1920x1080 in Chrome, screenshot, convert to JPEG. Static: nothing animates. -->
+<style>
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#0b0907}
+#base,#fx{position:absolute;left:0;top:0}
+#scene{position:absolute;left:0;top:0;width:1920px;height:1080px}
+/* each crest: a 2D stack (extrusion) inside a wrapper that is tilted in perspective */
+.crest{position:absolute;opacity:.4;filter:saturate(.8) brightness(.62) blur(2px)}
+/* ?bright = the same scene at full strength (for a screensaver); default is the calm version that sits behind the home screen UI */
+body.bright .crest{opacity:.95;filter:saturate(.95) brightness(.9);}
+.crest .stack{position:absolute;left:0;top:0;width:100%;height:100%}
+.crest img,.crest .gloss,.crest .rim{position:absolute;left:0;top:0;width:100%;height:100%}
+.crest .gloss,.crest .rim{-webkit-mask-size:contain;-webkit-mask-repeat:no-repeat;-webkit-mask-position:center}
+.crest .gloss{background:linear-gradient(120deg,rgba(255,255,255,.7) 0%,rgba(255,255,255,0) 36%,rgba(255,255,255,0) 64%,rgba(255,236,190,.4) 100%);mix-blend-mode:soft-light}
+.crest .rim{background:linear-gradient(205deg,rgba(255,226,160,0) 45%,rgba(255,226,160,.55) 100%);mix-blend-mode:screen}
+#madrid{left:-330px;top:110px;width:800px;height:1074px;transform:perspective(1900px) rotateY(34deg) rotateX(4deg) rotateZ(-1.5deg)}
+#barca{right:-340px;top:190px;width:860px;height:872px;transform:perspective(1900px) rotateY(-34deg) rotateX(4deg) rotateZ(1.5deg)}
+.shadow{position:absolute;border-radius:50%;background:radial-gradient(ellipse at center,rgba(0,0,0,.65),rgba(0,0,0,0) 70%);filter:blur(5px)}
+.halo{position:absolute;border-radius:50%;filter:blur(30px)}
+.beam{position:absolute;top:-300px;width:240px;height:1700px;transform-origin:50% 0;background:linear-gradient(180deg,rgba(255,226,160,.20),rgba(255,226,160,0) 75%);filter:blur(22px)}
+</style>
+<script>if(/bright/.test(location.search))document.addEventListener('DOMContentLoaded',function(){document.body.classList.add('bright')});</script>
+<canvas id="base" width="1920" height="1080"></canvas>
+<div id="scene">
+  <div class="halo" style="left:-260px;top:120px;width:960px;height:960px;background:radial-gradient(circle,rgba(230,186,96,.38),rgba(230,186,96,0) 65%)"></div>
+  <div class="halo" style="right:-300px;top:150px;width:960px;height:960px;background:radial-gradient(circle,rgba(200,112,52,.36),rgba(200,112,52,0) 65%)"></div>
+  <div class="beam" style="left:260px;transform:rotate(-12deg)"></div><div class="beam" style="left:1380px;transform:rotate(13deg)"></div>
+  <div class="shadow" style="left:-200px;top:960px;width:760px;height:70px"></div>
+  <div class="shadow" style="right:-220px;top:930px;width:780px;height:70px"></div>
+  <div class="crest" id="madrid"></div>
+  <div class="crest" id="barca"></div>
+</div>
+<canvas id="fx" width="1920" height="1080"></canvas>
+<script>
+function build(id, src, depth) {
+  var c = document.getElementById(id), h = '<div class="stack">';
+  for (var i = depth; i >= 1; i--) { // thickness: bronze copies stepped down-left, darker the further back
+    var k = i / depth, br = (0.78 - 0.5 * k).toFixed(2);
+    h += '<img src="' + src + '" style="transform:translate(' + (-i * 1.05) + 'px,' + (i * 1.15) + 'px);filter:brightness(' + br + ') sepia(1) saturate(2.4) hue-rotate(-14deg)">';
+  }
+  h += '<img src="' + src + '">';
+  h += '<div class="gloss" style="-webkit-mask-image:url(' + src + ')"></div><div class="rim" style="-webkit-mask-image:url(' + src + ')"></div></div>';
+  // reflection on the floor: flipped front copy, faded out
+  h += '<img src="' + src + '" style="top:100%;transform:scaleY(-1);opacity:.2;-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,0) 34%);filter:blur(2px)">';
+  c.innerHTML = h;
+}
+build('madrid', 'crests/realmadrid.svg', 26);
+build('barca', 'crests/barcelona.svg', 26);
+
+// base: same palette as bg.jpg (gold top right, copper bottom left, amber core, faint blue)
+var b = document.getElementById('base').getContext('2d'), W = 1920, H = 1080;
+b.fillStyle = '#0b0907'; b.fillRect(0, 0, W, H);
+function glow(x, y, r, rgb, a) { var g = b.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(' + rgb + ',' + a + ')'); g.addColorStop(.45, 'rgba(' + rgb + ',' + a * .35 + ')'); g.addColorStop(1, 'rgba(' + rgb + ',0)'); b.fillStyle = g; b.fillRect(0, 0, W, H); }
+glow(1600, -60, 1200, '224,178,92', .55); glow(-100, 1160, 1100, '196,112,52', .45); glow(900, 620, 900, '120,82,40', .28); glow(120, 20, 800, '64,74,132', .18);
+// glossy floor: a soft lighter plane at the bottom with a gold horizon line
+var fl = b.createLinearGradient(0, 760, 0, 1080); fl.addColorStop(0, 'rgba(255,226,160,0)'); fl.addColorStop(.12, 'rgba(255,226,160,.07)'); fl.addColorStop(1, 'rgba(0,0,0,.55)'); b.fillStyle = fl; b.fillRect(0, 760, W, 320);
+var hl = b.createLinearGradient(0, 0, W, 0); hl.addColorStop(0, 'rgba(255,226,160,0)'); hl.addColorStop(.5, 'rgba(255,226,160,.26)'); hl.addColorStop(1, 'rgba(255,226,160,0)'); b.fillStyle = hl; b.fillRect(0, 772, W, 2);
+
+// fx: dust, bokeh, centre darkening (keeps the middle calm for the UI), vignette, grain
+var f = document.getElementById('fx').getContext('2d'), s = 7;
+function rnd() { s = (s * 16807) % 2147483647; return s / 2147483647; }
+for (var i = 0; i < 90; i++) { var x = rnd() * W, y = rnd() * H, r = .8 + rnd() * 2.4; f.fillStyle = 'rgba(255,226,160,' + (.15 + rnd() * .5) + ')'; f.beginPath(); f.arc(x, y, r, 0, 7); f.fill(); }
+for (var j = 0; j < 14; j++) { var x2 = rnd() * W, y2 = rnd() * H * .9, r2 = 14 + rnd() * 34, g2 = f.createRadialGradient(x2, y2, 0, x2, y2, r2); g2.addColorStop(0, 'rgba(255,226,160,.10)'); g2.addColorStop(.7, 'rgba(255,226,160,.05)'); g2.addColorStop(1, 'rgba(255,226,160,0)'); f.fillStyle = g2; f.beginPath(); f.arc(x2, y2, r2, 0, 7); f.fill(); }
+var c0 = f.createRadialGradient(W / 2, H * .46, 80, W / 2, H * .46, 760); c0.addColorStop(0, 'rgba(8,6,4,.62)'); c0.addColorStop(.6, 'rgba(8,6,4,.34)'); c0.addColorStop(1, 'rgba(8,6,4,0)'); f.fillStyle = c0; f.fillRect(0, 0, W, H);
+var v = f.createRadialGradient(W / 2, H * .52, H * .35, W / 2, H * .52, H * 1.02); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(.62, 'rgba(0,0,0,.16)'); v.addColorStop(1, 'rgba(0,0,0,.6)'); f.fillStyle = v; f.fillRect(0, 0, W, H);
+</script>

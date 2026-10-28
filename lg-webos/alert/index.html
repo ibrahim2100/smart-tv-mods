@@ -1,0 +1,78 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Albrhi Alert</title>
+<!-- The match alert card. The root service launches this overlay app with the event as launch params; it slides in over whatever is on
+     screen, stays a few seconds and closes itself. Only transform/opacity animate, so it is cheap on top of video. -->
+<style>
+@font-face { font-family: Brand; font-weight: 700; src: url(fonts/Amiri-Bold.ttf); }
+@font-face { font-family: Plex; font-weight: 400; src: url(fonts/plex-400.ttf); }
+@font-face { font-family: Plex; font-weight: 500; src: url(fonts/plex-500.ttf); }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; font-family: Plex, sans-serif; color: #f6ecd6; }
+#card { --ac: #e2bc72; position: absolute; left: 50%; top: 50px; width: 1080px; height: 238px; margin-left: -540px; border-radius: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 26px;
+  background: linear-gradient(135deg, rgba(46,35,21,.97), rgba(13,10,7,.97) 70%); border: 2px solid var(--ac);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.6), 0 26px 70px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,236,190,.25), inset 0 0 80px rgba(0,0,0,.35);
+  transform: translateY(-300px); opacity: 0; transition: transform .6s cubic-bezier(.2,.9,.25,1.06), opacity .4s; }
+#card.in { transform: none; opacity: 1; }
+#card.out { transform: translateY(-300px); opacity: 0; transition: transform .45s cubic-bezier(.5,0,.8,.4), opacity .35s; }
+#card.goal { --ac: #e2bc72; } #card.cancel { --ac: #de8660; } #card.red { --ac: #ec4c42; } #card.penalty { --ac: #f09a3a; } #card.var { --ac: #5eaaff; }
+#card.kickoff, #card.phase, #card.full { --ac: #d7ad5f; }
+#comp { position: absolute; left: 50%; top: -17px; transform: translateX(-50%); padding: 3px 22px; border-radius: 18px; font-size: 21px; white-space: nowrap; direction: rtl;
+  background: #14100b; border: 1.5px solid var(--ac); color: var(--ac); }
+.side { width: 250px; text-align: center; flex: none; }
+.crest { width: 118px; height: 118px; margin: 0 auto; display: flex; align-items: center; justify-content: center; border-radius: 50%; position: relative; }
+.crest img { width: 108px; height: 108px; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,.6)); }
+.tn { margin-top: 8px; font-size: 25px; font-weight: 500; line-height: 1.15; direction: rtl; opacity: .9; max-height: 58px; overflow: hidden; }
+.side.hot .crest { box-shadow: 0 0 0 3px var(--ac), 0 0 34px rgba(226,188,114,.45); transform: scale(1.06); transition: transform .5s .35s cubic-bezier(.3,1.5,.5,1); }
+.side.hot .tn { color: var(--ac); opacity: 1; }
+.side.dim .crest { opacity: .62; }
+.mid { flex: 1; text-align: center; padding: 0 8px; min-width: 0; }
+.tag { display: flex; align-items: center; justify-content: center; direction: rtl; font-family: Brand, serif; font-weight: 700; font-size: 50px; line-height: 1.05; color: var(--ac); margin-top: 14px; }
+.ico { display: none; flex: none; margin-left: 16px; }
+.red .ico { display: inline-block; }
+.red .ico { width: 20px; height: 28px; border-radius: 4px; background: var(--ac); transform: rotate(8deg); }
+#min { margin-right: 18px; padding: 0 14px; border-radius: 16px; border: 2px solid var(--ac); font: 500 24px/32px Plex; color: var(--ac); direction: ltr; }
+#min:empty { display: none; }
+#who { margin-top: 6px; font-size: 36px; font-weight: 500; direction: rtl; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #f6ecd6; }
+#who:empty { display: none; }
+#score { margin-top: 2px; display: flex; align-items: center; justify-content: center; direction: ltr; font-size: 76px; font-weight: 500; line-height: 1.05; font-variant-numeric: tabular-nums; }
+#score u { width: 34px; height: 4px; border-radius: 2px; background: var(--ac); margin: 0 26px; }
+#score b { font-weight: 500; min-width: 58px; text-align: center; display: inline-block; }
+#score b.hot { color: var(--ac); }
+#card.in #score b.hot { animation: bump .7s .45s cubic-bezier(.3,1.6,.5,1) both; }
+@keyframes bump { 0% { transform: scale(.55); opacity: .2; } 60% { transform: scale(1.22); opacity: 1; } 100% { transform: none; } }
+#vs { font-size: 64px; color: var(--ac); font-weight: 500; }
+</style></head>
+<body>
+<div id="card"><div id="comp"></div>
+  <div class="side" id="sh"><div class="crest"><img id="lh" alt=""></div><div class="tn" id="nh"></div></div>
+  <div class="mid"><div class="tag"><span id="tag"></span><i class="ico"></i><span id="min"></span></div><div id="who"></div>
+    <div id="score"><b id="h"></b><u></u><b id="a"></b></div><div id="vs" hidden>×</div></div>
+  <div class="side" id="sa"><div class="crest"><img id="la" alt=""></div><div class="tn" id="na"></div></div>
+</div>
+<script>
+var $ = function (id) { return document.getElementById(id); }, hideT, closeT;
+function show(p) {
+  var c = $('card'); clearTimeout(hideT); clearTimeout(closeT);
+  c.className = p.kind || 'goal';
+  $('comp').textContent = p.comp || ''; $('comp').style.display = p.comp ? '' : 'none';
+  $('tag').textContent = p.tag || ''; $('min').textContent = p.minute ? p.minute + "'" : ''; $('who').textContent = p.who || '';
+  $('nh').textContent = p.H || ''; $('na').textContent = p.A || '';
+  [['lh', p.logoH], ['la', p.logoA]].forEach(function (x) { var i = $(x[0]); i.style.visibility = x[1] ? 'visible' : 'hidden'; i.onerror = function () { i.style.visibility = 'hidden'; }; if (x[1]) i.src = x[1]; });
+  $('h').textContent = p.h; $('a').textContent = p.a; $('score').hidden = p.showScore === false; $('vs').hidden = p.showScore !== false;
+  $('h').className = p.side === 'h' ? 'hot' : ''; $('a').className = p.side === 'a' ? 'hot' : '';
+  $('sh').className = 'side' + (p.side === 'h' ? ' hot' : p.side === 'a' ? ' dim' : ''); $('sa').className = 'side' + (p.side === 'a' ? ' hot' : p.side === 'h' ? ' dim' : '');
+  c.classList.add('init'); void c.offsetWidth; c.classList.add('in');
+  var ms = /goal|red|cancel|var|penalty/.test(p.kind) ? 7000 : 5500;
+  hideT = setTimeout(function () { c.classList.remove('in'); c.classList.add('out'); closeT = setTimeout(function () { window.close(); }, 700); }, ms - 700);
+}
+function params() { try { return JSON.parse((window.PalmSystem && window.PalmSystem.launchParams) || '{}'); } catch (e) { return {}; } }
+document.addEventListener('webOSRelaunch', function () { show(params()); });
+var q = /[?&]demo=([a-z]+)/.exec(location.search);   // opened in a browser for a preview: ?demo=goal|red|var|penalty|cancel|kickoff|full
+show(q ? {goal: {kind: 'goal', tag: 'هدف!', who: 'فينيسيوس جونيور', minute: 67, side: 'h', H: 'ريال مدريد', A: 'لايبزيغ', h: 2, a: 1, logoH: 'crests/madrid.png', logoA: 'crests/hilal.png', comp: 'دوري أبطال أوروبا'},
+  red: {kind: 'red', tag: 'بطاقة حمراء', who: 'مارك-أوليفر كيمبف', minute: 84, side: 'a', H: 'كومو', A: 'مانشستر يونايتد', h: 4, a: 0, logoH: 'crests/barcelona.png', logoA: 'crests/nassr.png', comp: 'دوري أبطال أوروبا'},
+  var: {kind: 'var', tag: 'مراجعة VAR', who: 'ركلة جزاء', minute: 71, H: 'ريال مدريد', A: 'لايبزيغ', h: 1, a: 1, logoH: 'crests/madrid.png', logoA: 'crests/hilal.png', comp: 'دوري أبطال أوروبا'},
+  penalty: {kind: 'penalty', tag: 'ركلة جزاء', minute: 58, H: 'برشلونة', A: 'الهلال', h: 0, a: 0, logoH: 'crests/barcelona.png', logoA: 'crests/hilal.png', comp: 'دوري أبطال أوروبا'},
+  cancel: {kind: 'cancel', tag: 'إلغاء هدف', H: 'النصر', A: 'ريال مدريد', h: 1, a: 1, logoH: 'crests/nassr.png', logoA: 'crests/madrid.png', comp: 'دوري أبطال أوروبا'},
+  kickoff: {kind: 'kickoff', tag: 'بدأت المباراة', H: 'ريال مدريد', A: 'لايبزيغ', showScore: false, logoH: 'crests/madrid.png', logoA: 'crests/hilal.png', comp: 'دوري أبطال أوروبا'},
+  full: {kind: 'full', tag: 'نهاية المباراة', H: 'ريال مدريد', A: 'لايبزيغ', h: 3, a: 1, logoH: 'crests/madrid.png', logoA: 'crests/hilal.png', comp: 'دوري أبطال أوروبا'}}[q[1]] : params());
+</script></body></html>

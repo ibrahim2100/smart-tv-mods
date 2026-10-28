@@ -1,0 +1,16 @@
+{
+  "id": "com.albrhi.tvhome",
+  "version": "1.0.0",
+  "vendor": "Albrhi",
+  "type": "web",
+  "main": "index.html",
+  "title": "Albrhi TV",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "bgColor": "#0b0906",
+  "resolution": "1920x1080",
+  "disableBackHistoryAPI": true,
+  "splashBackground": "splash.png",
+  "iconColor": "#0b0906",
+  "handlesRelaunch": true
+}

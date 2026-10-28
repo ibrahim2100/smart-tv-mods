@@ -1,0 +1,33 @@
+<!doctype html><meta charset="utf-8">
+<!-- Generates the home screen wallpaper (bg.jpg). Open in Chrome at 1920x1080, screenshot, convert to JPEG.
+     Dark base, soft gold/copper light from the top right and bottom left, faint silk bands, vignette, fine grain (stops banding). -->
+<style>html,body{margin:0;background:#0a0806}canvas{display:block}</style>
+<canvas id="c" width="1920" height="1080"></canvas>
+<script>
+var c = document.getElementById('c'), g = c.getContext('2d'), W = 1920, H = 1080;
+g.fillStyle = '#0b0907'; g.fillRect(0, 0, W, H);
+function glow(x, y, r, rgb, a) {
+  var gr = g.createRadialGradient(x, y, 0, x, y, r);
+  gr.addColorStop(0, 'rgba(' + rgb + ',' + a + ')'); gr.addColorStop(.45, 'rgba(' + rgb + ',' + a * .35 + ')'); gr.addColorStop(1, 'rgba(' + rgb + ',0)');
+  g.fillStyle = gr; g.fillRect(0, 0, W, H);
+}
+glow(1600, -60, 1200, '224,178,92', .62);      // warm gold, top right
+glow(-100, 1160, 1100, '196,112,52', .48);      // copper, bottom left
+glow(900, 620, 900, '120,82,40', .30);          // deep amber core behind the content
+glow(120, 20, 800, '64,74,132', .22);          // a hint of cool blue top left, for depth
+// silk bands: wide diagonal soft highlights
+function band(x0, y0, x1, y1, w, a) {
+  var gr = g.createLinearGradient(x0, y0, x1, y1);
+  gr.addColorStop(0, 'rgba(255,236,200,0)'); gr.addColorStop(.5, 'rgba(255,236,200,' + a + ')'); gr.addColorStop(1, 'rgba(255,236,200,0)');
+  g.save(); g.translate(W / 2, H / 2); g.rotate(-0.42); g.translate(-W / 2, -H / 2); g.fillStyle = gr; g.fillRect(-300, y0, W + 600, w); g.restore();
+}
+band(0, 100, 0, 420, 320, .07); band(0, 500, 0, 760, 260, .05); band(0, 780, 0, 1100, 320, .06);
+// vignette
+var v = g.createRadialGradient(W / 2, H * .52, H * .35, W / 2, H * .52, H * 1.02);
+v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(.62, 'rgba(0,0,0,.18)'); v.addColorStop(1, 'rgba(0,0,0,.6)');
+g.fillStyle = v; g.fillRect(0, 0, W, H);
+// grain
+var img = g.getImageData(0, 0, W, H), d = img.data, s = 1;
+for (var i = 0; i < d.length; i += 4) { s = (s * 16807) % 2147483647; var n = (s / 2147483647 - .5) * 4; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
+g.putImageData(img, 0, 0);
+</script>
