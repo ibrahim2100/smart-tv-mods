@@ -1,5 +1,9 @@
 # Albrhi TV - shared settings for restore.sh / revert.sh / check.sh
-DEV_DEFAULT="192.168.1.50:5555"
+# The TV's adb address: export ADB_DEVICE=192.168.x.y:5555, or put it on one line in device.conf (not committed), or pass it as the first argument.
+_CONF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+if [ -n "${ADB_DEVICE:-}" ]; then DEV_DEFAULT="$ADB_DEVICE"
+elif [ -f "$_CONF_DIR/device.conf" ]; then DEV_DEFAULT="$(head -1 "$_CONF_DIR/device.conf" | tr -d '[:space:]')"
+else DEV_DEFAULT="192.168.1.50:5555"; fi
 
 APP_PKG="com.albrhi.tvwidget"
 HOME_ACT="com.albrhi.tvwidget/.HomeActivity"

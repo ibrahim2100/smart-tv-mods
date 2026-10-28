@@ -2,13 +2,13 @@
 
 ```
 google-tv/   Haier MatrixTV BE (Google TV, Android 14)  — albrhi-widget/ (source), albrhi-tv-restore/ (restore kit)
-lg-webos/    LG webOS 7.5, rooted                       — own git repo → github.com/ibrahim2100/WebOS
+lg-webos/    LG webOS 7.5, rooted
 ```
 
 | | `google-tv/` | `lg-webos/` |
 |---|---|---|
 | Tools | `adb` at 192.168.1.50:5555, `build.sh`, `restore.sh` | telnet :23, `scripts/*.sh`, `npm test` |
-| Git | this folder's repo (local) | its own repo; the outer repo ignores it |
+| Git | one repo for both: github.com/ibrahim2100/smart-tv-mods (public) | same repo |
 | Docs | `google-tv/README.md` | `lg-webos/CLAUDE.md` (read first), `lg-webos/docs/` |
 | Status | stable: edit only on explicit request | active |
 
@@ -18,3 +18,8 @@ Rules:
 - Never run `adb` scripts against the LG TV or telnet scripts against the Google TV.
 - Keep `albrhi-widget/` and `albrhi-tv-restore/` side by side (`pack.sh` writes to `../albrhi-tv-restore`).
 - "Albrhi TV" in old notes = the Google TV launcher; the LG project is Aljalsa / WebOS.
+
+## Public repo hygiene (the repo is PUBLIC)
+- Never commit: real IPs (use the `*.example` files), `*.keystore`, `backups/`, `*.apk`, tokens, personal email. Commits use the GitHub noreply address `31652152+ibrahim2100@users.noreply.github.com`.
+- Before every push run `git ls-files | grep -iE 'keystore|\.apk|backups|tv\.conf|device\.conf'` (must be empty) and `git grep -nE '192\.168\.(1\.54|8\.112)'` (must be empty).
+- Local machine files stay ignored: `lg-webos/scripts/tv.conf`, `google-tv/albrhi-tv-restore/device.conf`.

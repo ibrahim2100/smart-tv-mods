@@ -9,3 +9,7 @@ google-tv/albrhi-tv-restore/backups/
 *.jks
 .claude/settings.local.json
 
+
+# personal / machine-local files (any project)
+.DS_Store
+google-tv/albrhi-tv-restore/device.conf

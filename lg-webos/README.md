@@ -1,4 +1,6 @@
-# WebOS — تعديلات الجلسة · Aljalsa mods for LG webOS
+# 🔴 LG webOS — الجلسة · Aljalsa
+
+> جزء من مستودع [Smart TV Mods](../README.md) · part of the [Smart TV Mods](../README.md) repository.
 
 **شاشة رئيسية مخصصة لتلفزيونات LG webOS المروّتة** — تطبيقاتك، المدخلات، المباريات، تنبيهات دوري الأبطال فوق أي تطبيق، وشاشة توقف بهوية خاصة.
 **A custom home screen for rooted LG webOS TVs** — your apps, HDMI inputs, match cards, Champions League alerts over any app, and a branded screensaver.
@@ -274,8 +276,8 @@ npm test      # منطق التنبيهات على بيانات UEFA مسجلة 
 ```
 
 ## ملاحظة · Note
-هذا المشروع لتلفزيون **LG webOS** فقط. لا علاقة له بمشروع Google TV (Android) الشخصي لصاحبه، وهو غير مضمّن هنا.
-*This project is for **LG webOS** only. It is unrelated to the owner's separate Google TV (Android) project, which is not included.*
+هذا المشروع لتلفزيون **LG webOS** فقط. في نفس المستودع مشروع منفصل لتلفزيون Google TV في [`../google-tv`](../google-tv)، لا يشترك معه بأي كود.
+*This project is for **LG webOS** only. The same repository has a separate Google TV project in [`../google-tv`](../google-tv); they share no code.*
 
 ## الشكر · Credits
 - فكرة استبدال الهوم وسكربت الإقلاع والخدمة الأولى · home-swap idea, boot script and first helper service: [zzeppieri/webos-custom-home](https://github.com/zzeppieri/webos-custom-home) (MIT).
