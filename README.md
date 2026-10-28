@@ -49,7 +49,7 @@
 مستودع واحد يجمع مشروعين **منفصلين تماماً** (لا كود مشترك، ولا سكربتات مشتركة):
 
 1. **[`lg-webos/`](lg-webos) — الجلسة (WebOS):** يستبدل الشاشة الرئيسية لتلفزيون LG المروّت. تطبيقاتك ومدخلات HDMI والنظام في صفوف مرتبة بحركات ناعمة، بطاقة المباراة القادمة، **تنبيهات دوري أبطال أوروبا** (من UEFA) تظهر فوق أي تطبيق حتى Netflix، شاشة توقف بهوية خاصة، تنظيف ذاكرة، ويوقف إعلانات LG. مجرّب على webOS 7.5.
-2. **[`google-tv/`](google-tv) — Albrhi Home:** لانشر Android لتلفزيون Google TV (Haier MatrixTV BE): واجهة بأسلوب Apple TV، مباريات وتنبيهات، شاشة انتظار، **ريموت وتثبيت تطبيقات من الجوال**، وحزمة سكربتات تعيد كل التعديلات أو ترجع التلفزيون للأصل.
+2. **[`google-tv/`](google-tv) — Albrhi Home:** لانشر Android لتلفزيون Google TV (Haier MatrixTV BE): واجهة هادئة بسمات وإعدادات سريعة، **أزرار ريموت تربطها بأي تطبيق**، **تحكم بالمكيف (أو أجهزة Alexa) من الريموت** مع بطاقة حالة، مباريات وتنبيهات اختيارية، شاشة انتظار، **ريموت وتثبيت تطبيقات من الجوال**، وحزمة سكربتات تعيد كل التعديلات أو ترجع التلفزيون للأصل.
 
 ### كيف أختار؟
 - عندك **LG** (webOS) ← ادخل [`lg-webos/`](lg-webos).
@@ -135,7 +135,7 @@ MIT (انظر [`LICENSE`](LICENSE) و[`lg-webos/LICENSE`](lg-webos/LICENSE)). ا
 One repository with two **completely separate** projects (no shared code, no shared scripts):
 
 1. **[`lg-webos/`](lg-webos) — Aljalsa (WebOS):** replaces the home screen of a rooted LG TV. Apps, HDMI inputs and system apps in tidy rows with smooth animation, a next-match card, **UEFA Champions League alerts** shown over any app (even Netflix), a branded screensaver, a memory cleaner, and LG ads switched off. Tested on webOS 7.5.
-2. **[`google-tv/`](google-tv) — Albrhi Home:** an Android launcher for a Google TV (Haier MatrixTV BE): Apple-TV-style home, matches and alerts, a screensaver, **phone remote and app installs**, plus a script kit that re-applies every change or reverts the TV to stock.
+2. **[`google-tv/`](google-tv) — Albrhi Home:** an Android launcher for a Google TV (Haier MatrixTV BE): a calm home with themes and quick settings, **remote buttons you link to any app**, **air-conditioner (or any Alexa device) commands from the remote** with a status card, optional matches and alerts, a screensaver, **phone remote and app installs**, plus a script kit that re-applies every change or reverts the TV to stock.
 
 ### Which one do I need?
 - You own an **LG** (webOS) TV → go to [`lg-webos/`](lg-webos).
