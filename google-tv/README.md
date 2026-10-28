@@ -53,6 +53,26 @@
 | **ثبات** | شاشة طوارئ لو انهار اللانشر 3 مرات خلال دقيقتين، ونسخة احتياطية يومية اختيارية للترتيب والأسماء والأزرار المخصصة، وخدمة الإتاحة تعيد تفعيل نفسها لو أطفأها النظام. |
 | **تقليل الإعلانات والتطبيقات الزائدة** | يعطّل تطبيقات Haier/MediaTek الزائدة وبعض تطبيقات Google عن المستخدم الحالي. |
 
+### التحكم بالمكيف عبر Alexa (اختياري)
+تشغّل مكيفك (أو أي جهاز عندك في Alexa) من الريموت بدون جوال: **الأخضر** يشغّل، **الأحمر** يطفي، **الأصفر** يضبط الحرارة على 21، مثلاً. وتظهر بطاقة حالة هادئة على الشاشة: «تم تشغيل المكيف»، «تم إطفاء المكيف»، «تم ضبط الحرارة 21°».
+
+**الفكرة:** Alexa ما عندها واجهة رسمية يتحكم بها تطبيق خارجي بأجهزتك، فنستعمل جسراً اسمه [Voice Monkey](https://voicemonkey.io). كل أمر هو «Routine Trigger» تربطه بروتين في Alexa، والتلفزيون يضغطه عبر الإنترنت:
+`زر الريموت ← التلفزيون ← Voice Monkey ← روتين Alexa ← المكيف`
+
+**التجهيز (مرة وحدة):**
+1. سجّل في Voice Monkey وفعّل مهارتهم في تطبيق Alexa (تأكد أن سوق حسابك في قائمة الأسواق المدعومة عندهم).
+2. أنشئ **Trigger** لكل أمر، بأسماء واضحة مثل `AC On` و`AC Off` و`AC 21`.
+3. في تطبيق Alexa: More ← Routines ← **+**. **When** = Smart Home ← Alexa Voice Monkey v3 ← VM Routines ← الـTrigger. **Action** = مكيفك (تشغيل، إطفاء، حرارة…). جرّب أن الروتين يشتغل.
+4. من لوحة Voice Monkey أنشئ **API Token** (عامله ككلمة مرور).
+5. على التلفزيون: افتح صفحة الجوال (الإعدادات السريعة ← الجوال)، وفي قسم **المكيف** الصق الرمز واضغط «حفظ وجلب الأوامر».
+6. اربط الأزرار: الإعدادات السريعة ← **أزرار الريموت** ← «إضافة زر» ← اضغط زر اللون ← اختر أمر المكيف (يظهر فوق التطبيقات). أو افتح **المكيف** من الإعدادات السريعة واضغط أي أمر.
+
+**مهم تعرفه:**
+- الأوامر **باتجاه واحد**: «تم» تعني أن Voice Monkey قبل الطلب وسلّمه لـAlexa، وما تعني أن المكيف نفّذ. ولا تُعرض حرارته الحالية.
+- البطاقة تفهم معنى الأمر من **اسمه** (on/off/تشغيل/إطفاء/رقم بين 16 و30)، فسمِّ أوامرك بأسماء واضحة.
+- تعتمد على سحابتين (Voice Monkey وAlexa) وعلى الإنترنت. كل أمر جديد يحتاج Trigger وروتين يدوياً.
+- الرمز يُحفظ على التلفزيون فقط، ولا يدخل النسخة الاحتياطية ولا هذا المستودع. لو تسرّب احذفه من لوحة Voice Monkey.
+
 ### الأداء (قياس على التلفزيون نفسه)
 المشي بالأسهم على الشاشة الرئيسية (40 ضغطة)، التلفزيون يركّب 4K:
 
@@ -129,6 +149,26 @@ An Android app (plain Java, no Gradle) that replaces the Google TV home screen o
 | **Memory cleaner** | Manual, or automatic before launching an app when free RAM < 300 MB (background apps only). |
 | **Resilience** | Emergency screen if the launcher crashes 3 times in 2 minutes; optional daily backup of layout, names and custom buttons; the accessibility service switches itself back on if Android turns it off. |
 | **Less bloat** | Disables extra Haier/MediaTek apps and some Google apps for the current user. |
+
+### AC control through Alexa (optional)
+Run your air conditioner (or any device in your Alexa account) from the remote, no phone needed: **green** turns it on, **red** turns it off, **yellow** sets 21°, for example. A calm status card appears on screen: "AC turned on", "AC turned off", "Temperature set 21°".
+
+**How:** Alexa has no public API an outside app can use to drive your devices, so we use a bridge called [Voice Monkey](https://voicemonkey.io). Each command is a "Routine Trigger" tied to an Alexa routine, and the TV presses it over the internet:
+`remote button → TV → Voice Monkey → Alexa routine → the AC`
+
+**Setup (once):**
+1. Sign up at Voice Monkey and enable their skill in the Alexa app (check that your account's marketplace is one they support).
+2. Create one **Trigger** per command, with clear names such as `AC On`, `AC Off`, `AC 21`.
+3. In the Alexa app: More → Routines → **+**. **When** = Smart Home → Alexa Voice Monkey v3 → VM Routines → the trigger. **Action** = your AC (power, temperature…). Test that the routine works.
+4. In the Voice Monkey console create an **API Token** (treat it like a password).
+5. On the TV open the phone page (Quick settings → Phone); in the **AC** card paste the token and press "Save and fetch commands".
+6. Link the buttons: Quick settings → **Remote buttons** → "Add a button" → press a colour key → choose the AC command (listed above the apps). Or open **AC** in Quick settings and press any command.
+
+**Good to know:**
+- Commands are **one-way**: "done" means Voice Monkey accepted the request and handed it to Alexa, not that the AC carried it out. The AC's current temperature is not shown.
+- The card works out what a command does from its **name** (on/off/تشغيل/إطفاء/a number from 16 to 30), so name your commands clearly.
+- It depends on two clouds (Voice Monkey and Alexa) and the internet. Every new command needs a trigger and a routine made by hand.
+- The token is kept on the TV only, never in the backup file or in this repository. If it leaks, delete it in the Voice Monkey console.
 
 ### Performance (measured on the TV)
 Walking the home screen with the arrow keys (40 presses) while the TV composes 4K:
