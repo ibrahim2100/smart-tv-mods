@@ -8,3 +8,6 @@ albrhi-tv-restore/backups/
 *.keystore
 *.jks
 .claude/settings.local.json
+
+# aljalsa-tv/ is a separate project with its own git repo (LG webOS, published as ibrahim2100/WebOS)
+aljalsa-tv/
