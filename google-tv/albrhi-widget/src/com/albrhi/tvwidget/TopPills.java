@@ -198,6 +198,12 @@ final class TopPills extends LinearLayout {
         applySports();
     }
 
+    /** Settings changed while the home is on screen: redraw now (clock format, Hijri, weather, accent colour, match pill). */
+    void relook() {
+        update();
+        if (Theme.sports) Fixtures.refresh(getContext(), true);
+    }
+
     /** Shows or hides the match pill (sports setting). */
     void applySports() {
         matchFrame.setVisibility(Theme.sports ? VISIBLE : GONE);
@@ -222,6 +228,7 @@ final class TopPills extends LinearLayout {
         clock.setText(fmt(Theme.timePattern(), GREG, now));
         ampm.setText(fmt("a", GREG, now));
         ampm.setVisibility(Theme.clock24 ? GONE : VISIBLE);
+        ampm.setTextColor(GOLD);
         date.setText(fmt("EEEE d MMMM", GREG, now));
         hijri.setText(fmt("d MMMM y", HIJRI, now) + " هـ");
         hijri.setVisibility(Theme.hijri ? VISIBLE : GONE);

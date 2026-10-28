@@ -20,6 +20,8 @@ final class Theme {
     static boolean follow = true;
     static boolean hijri, weather = true, clock24, sports;
     static String name = "";
+    /** Set by the home screen while it is on screen: called on the UI thread right after any setting changes, so the screen updates at once. */
+    static Runnable onChange;
 
     /** The colour shown for theme i in the picker. */
     static int swatch(int i) { return ACCENT[i]; }
@@ -52,7 +54,10 @@ final class Theme {
     private static void changed(Context c) {
         load(c);
         LayoutBackup.export(c);
+        notifyChanged();
     }
+
+    static void notifyChanged() { Runnable r = onChange; if (r != null) r.run(); }
 
     /** Time pattern for the clock: 12-hour with a small AM/PM, or 24-hour. */
     static String timePattern() { return clock24 ? "HH:mm" : "h:mm"; }

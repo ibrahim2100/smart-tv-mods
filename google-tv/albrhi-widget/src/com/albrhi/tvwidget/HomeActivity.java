@@ -104,7 +104,27 @@ public class HomeActivity extends Activity {
     private int appliedSafe;
     private String appliedLook;
 
-    /** Called when quick settings closes: if the look or screen edges changed, rebuild the screen once. */
+    /** A setting changed while the home is on screen (Quick settings > Appearance): update the screen right now, no rebuild. */
+    private void applyLookLive() {
+        if (header == null) return;
+        boolean edges = Safe.level(this) != appliedSafe;
+        appliedLook = look();
+        ambient.retheme(current != null && !HIDDEN.equals(current.pkg) ? current.pkg : null,
+                current == null ? null : (current.banner != null ? current.banner : current.icon));
+        header.relook();
+        refreshGreeting();
+        if (edges) {                                         // screen margins: padding, name size and tile size all follow
+            appliedSafe = Safe.level(this);
+            contentCol.setPadding(Safe.h(this), Safe.v(this), Safe.h(this), Safe.v(this));
+            heroName.setTextSize(TypedValue.COMPLEX_UNIT_SP, new int[]{38, 35, 32}[Safe.level(this)]);
+            sigApps = "";                                    // tile pictures are sized per level: build them again
+            loadApps();
+        } else {
+            ui.post(applyArt);                               // re-places the artwork (the top block may have changed height)
+        }
+    }
+
+    /** Fallback (settings changed while the home was not on screen): rebuild once. */
     void applyLookIfChanged() {
         Theme.load(this);
         if (header != null && (Safe.level(this) != appliedSafe || !look().equals(appliedLook))) recreate();
@@ -349,6 +369,7 @@ public class HomeActivity extends Activity {
         if (header == null) return;                          // emergency screen is showing
         Theme.load(this);
         if (Safe.level(this) != appliedSafe || !look().equals(appliedLook)) { recreate(); return; }
+        Theme.onChange = new Runnable() { public void run() { applyLookLive(); } };
         ui.postDelayed(calm, 60000);                         // a full calm minute clears the crash counter
         refreshGreeting();
         header.start();
@@ -358,6 +379,7 @@ public class HomeActivity extends Activity {
     }
 
     @Override protected void onPause() {
+        Theme.onChange = null;
         ui.removeCallbacks(calm);
         if (header == null) { super.onPause(); return; }
         if (ctxMenu != null) ctxMenu.dismissNow();

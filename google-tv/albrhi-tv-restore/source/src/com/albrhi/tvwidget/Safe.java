@@ -20,6 +20,7 @@ final class Safe {
     static void setLevel(Context c, int l) {
         c.getSharedPreferences("ui", Context.MODE_PRIVATE).edit().putInt("safe", l).apply();
         LayoutBackup.export(c);
+        Theme.notifyChanged();
     }
 
     /** Horizontal margin from the screen edge, in px. */
