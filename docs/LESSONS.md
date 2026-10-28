@@ -59,3 +59,10 @@ luna-send -n 1 luna://com.webos.service.capture/executeOneShot '{"path":"/tmp/s.
 - **قياس الأداء** على التلفزيون: `app/perf.js`. شغّل مستقبل القياس على الكمبيوتر (بورت 9100) وافتح التطبيق بالمعاملات `{"perf":"<ip الكمبيوتر>"}`؛ يضغط الأسهم تلقائياً ويرسل الإطارات وزمن الاستجابة. *Run a receiver on your computer (port 9100) and launch with `{"perf":"<ip>"}`.*
 - **معاينة على الكمبيوتر:** `python3 -m http.server 8765` داخل `app/` وافتح نافذة 1920×1080؛ أوامر النظام لا تعمل خارج التلفزيون فتظهر رسالة "Would open".
 - لوحة الترس ← «تنبيهات الأهداف»: تشغيل/إيقاف وإرسال بطاقة تجربة.
+
+## دروس لاحقة · Later lessons
+
+- **قائمة قديمة بعد الإقلاع (أُصلحت في v28):** الصفحة تقلع قبل الخدمة بثوانٍ فتبني قائمة تقريبية من `config.js` (فيها تطبيقات محذوفة)، وهذا البناء البطيء كان ينتهي بعد وصول القائمة الحقيقية فيكتب فوقها. الآن القائمة الحقيقية تُحفظ، والصفحة تعيد السؤال كل 4 ثوان لين تجاوب الخدمة. *Stale app list after reboot (fixed in v28): a slow fallback probe overwrote the real list from the service; now the real list wins and the page retries until the service answers.*
+- **إرسال ملفات كبيرة (>25 ميجا) للتلفزيون بـ`nc`** يتوقف نصف الطريق (الرام ضيقة). الحل: قطّع الملف إلى 4 ميجا (`split -b 4194304`)، أرسل كل قطعة بـ`nc >>`، وتحقق من الحجم بعد كل قطعة وأعد المحاولة، ثم قارن `md5sum`. خزّن مؤقتاً في `/media/developer` لا `/tmp`. *Big files stall `nc` at ~25–37 MB: send 4 MB chunks, verify the size after each, compare md5, stage in `/media/developer` (not RAM).*
+- **تثبيت `.ipk` من طرف ثالث:** ارفعه بالقطع ثم `luna-send luna://com.webos.appInstallService/dev/install '{"id":"<app id>","ipkUrl":"/media/developer/x.ipk","subscribe":true}'`، وتأكد بـ`getAppInfo`، ثم احذف الـ`.ipk` المؤقت. *Install a third-party ipk by pushing it in chunks, calling appInstallService, verifying with getAppInfo and deleting the staging file.*
+- بعد إعادة تشغيل التلفزيون يكون الحمل عالياً ~3 دقائق (load ~28)؛ لا تضغط شي أثناءها. *After a reboot the TV is very busy for ~3 minutes; give it time.*
