@@ -267,10 +267,11 @@ final class Panel {
         r.setBackground(fill(dn, false, 16));
 
         final ImageView ic = new ImageView(c);
-        ic.setImageResource(it.icon);
+        final boolean own = it.iconDrawable != null;
+        if (own) ic.setImageDrawable(it.iconDrawable); else ic.setImageResource(it.icon);
         final int idleTint = it.danger ? 0xFFFF8A80 : 0xFFB9C4DD;
-        Sheet.tint(ic, idleTint);
-        LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(Math.round(24 * dn), Math.round(24 * dn));
+        if (!own) Sheet.tint(ic, idleTint);
+        LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(Math.round((own ? 32 : 24) * dn), Math.round((own ? 32 : 24) * dn));
         ip.setMarginEnd(Math.round(14 * dn));
         r.addView(ic, ip);
 
@@ -306,7 +307,7 @@ final class Panel {
         r.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override public void onFocusChange(View v, boolean f) {
                 r.setBackground(fill(dn, f, 16));
-                Sheet.tint(ic, f ? WHITE : idleTint);
+                if (!own) Sheet.tint(ic, f ? WHITE : idleTint);
             }
         });
         r.setOnClickListener(new View.OnClickListener() {

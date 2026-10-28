@@ -23,6 +23,7 @@
 | الميزة | الشرح |
 |---|---|
 | **واجهة رئيسية هادئة** | ساعة كبيرة وتاريخ بدون صناديق، اسم التطبيق المحدد وصورته، وخلفية داكنة ناعمة تتلوّن بلونه. صفوف: تطبيقاتك، أدوات التلفزيون، المدخلات (HDMI) مع حالة الشبكة. |
+| **أزرار الريموت بكيفك** | اربط أي زر في الريموت (يوتيوب، نتفلكس، برايم، شاهد، الألوان، الأرقام…) بأي تطبيق تختاره. الإعدادات السريعة ← **أزرار الريموت** ← «إضافة زر»: اضغط الزر ثم اختر التطبيق. يشتغل مع أي ريموت وعدد أزرار (4 أو أقل أو أكثر)، والأزرار الأساسية (الأسهم، OK، رجوع، Home، الصوت، التشغيل) محمية ولا تُربط. |
 | **المظهر (قابل للتغيير)** | من الإعدادات السريعة ← **المظهر**: 5 سمات ألوان (منتصف الليل، رمادي، محيط، غروب، بنفسجي)، لون الخلفية يتبع التطبيق أو لا، الوقت 12/24 ساعة، التاريخ الهجري، الطقس، والاسم في التحية. كلها تُحفظ مع النسخة الاحتياطية. |
 | **الرياضة (اختيارية، متوقفة افتراضياً)** | شارة المباراة القادمة وقائمة المباريات وتنبيهاتها (قبل المباراة بـ15 دقيقة، الانطلاق، النهاية، تغيّر الموعد). تُفعَّل من المظهر ← المباريات والتنبيهات. وهي متوقفة، لا تحمّل بيانات ولا تنبّه. |
 | **ضغط مطوّل على OK** | نقل، إعادة تسمية، إخفاء، حذف (أو معلومات التطبيق لتطبيقات النظام). الترتيب محفوظ. |
@@ -98,6 +99,7 @@ An Android app (plain Java, no Gradle) that replaces the Google TV home screen o
 | Feature | Details |
 |---|---|
 | **Calm home screen** | A large clock and date with no boxes, the selected app's name and artwork, and a soft dark background tinted with its colour. Rows: your apps, TV tools, inputs (HDMI) with network status. |
+| **Remote buttons, your way** | Link any button on your remote (YouTube, Netflix, Prime, Shahid, colour or number keys…) to any app you choose. Quick settings → **Remote buttons** → "Add a button": press the button, then pick the app. Works with any remote and any number of buttons; the essential keys (arrows, OK, Back, Home, volume, power) are protected and can't be linked. |
 | **Appearance (configurable)** | Quick settings → **Appearance**: 5 colour themes (Midnight, Graphite, Ocean, Sunset, Violet), background follows the app's colour or not, 12/24-hour clock, Hijri date, weather, and the name in the greeting. All saved with the layout backup. |
 | **Sports (optional, off by default)** | Next-match pill, fixtures list and alerts (15 min before, kick-off, full time, fixture changes). Switch on in Appearance → Matches and alerts. While off it downloads nothing and sends no alerts. |
 | **Long-press OK** | Move, rename, hide, delete (or app info for system apps). Order is saved. |

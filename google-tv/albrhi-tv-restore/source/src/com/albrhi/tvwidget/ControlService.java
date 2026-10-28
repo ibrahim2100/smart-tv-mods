@@ -37,6 +37,7 @@ public class ControlService extends AccessibilityService {
      * Every other key is passed on untouched (we only look at its code).
      */
     @Override protected boolean onKeyEvent(KeyEvent e) {
+        try { if (KeyMap.onKey(this, e)) return true; } catch (Throwable ignored) { }      // your own remote buttons; never blocks the other keys
         int k = e.getKeyCode();
         // The Haier remote's gear button sends KEYCODE_NOTIFICATION (83); other remotes send KEYCODE_SETTINGS.
         if (k == KeyEvent.KEYCODE_SETTINGS || k == KeyEvent.KEYCODE_NOTIFICATION) {

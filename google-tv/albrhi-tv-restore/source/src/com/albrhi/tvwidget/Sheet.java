@@ -51,6 +51,7 @@ final class Sheet {
         boolean danger, header, tile, swatches, stay;
         Boolean toggle;                    // non-null: the row shows a switch in this state
         IntPick pick;                      // swatches: called with the chosen index
+        android.graphics.drawable.Drawable iconDrawable;   // an app's own icon (instead of a line icon)
         int selected;
 
         private Item(String title) { this.title = title; }
@@ -86,6 +87,9 @@ final class Sheet {
             i.pick = pick;
             return i;
         }
+
+        /** Shows this picture (an app icon) instead of the line icon. */
+        Item icon(android.graphics.drawable.Drawable d) { iconDrawable = d; return this; }
 
         Item sub(String s) { subtitle = s; return this; }
 

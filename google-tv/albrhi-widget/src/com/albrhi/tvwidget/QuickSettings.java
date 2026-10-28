@@ -41,6 +41,7 @@ final class QuickSettings {
         Health.Info hi = Health.read(c);
         final int paired = RemoteServer.get(c).pairedCount();
         final String ram = hi.ramFreeMb + " MB";
+        final int keyCount = KeyMap.list(c).size();
 
         LinearLayout meters = new LinearLayout(c);
         meters.setOrientation(LinearLayout.HORIZONTAL);
@@ -65,6 +66,8 @@ final class QuickSettings {
                     .value(Theme.NAMES[Theme.index]).tile());
             items.add(Sheet.Item.of("الذاكرة", R.drawable.ic_refresh, new Runnable() { public void run() { cleanMemory(c); } }).value(ram).tile());
             // the rest, as quiet rows
+            items.add(Sheet.Item.of("أزرار الريموت", R.drawable.ic_apps, new Runnable() { public void run() { Sheet.chained = true; remoteKeys(c, anchor, onClose); } })
+                    .value(keyCount == 0 ? "غير مخصصة" : keyCount + " مخصّصة"));
             items.add(Sheet.Item.of("كل إعدادات التلفزيون", R.drawable.ic_gear, open(c, Settings.ACTION_SETTINGS)));
             items.add(Sheet.Item.of("أدوات وصيانة", R.drawable.ic_more, new Runnable() { public void run() { Sheet.chained = true; more(c, anchor, onClose); } }));
             return items;
@@ -144,6 +147,97 @@ final class QuickSettings {
                 CrashGuard.simulate(c);
                 c.startActivity(new Intent(c, HomeActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP));
             } }).sub("للتأكد من خطة الإنقاذ فقط").danger());
+            return items;
+        } }, null, closer(c, onClose));
+    }
+
+
+    // ---- your own remote buttons ------------------------------------------------------------
+
+    /** The list of remote buttons you linked to apps, plus "add a button". */
+    private static void remoteKeys(final Context c, final View anchor, final Runnable onClose) {
+        Panel.show(c, "أزرار الريموت", "اربط أي زر في الريموت بالتطبيق اللي تختاره", new Panel.Builder() { public List<Sheet.Item> items() {
+            List<Sheet.Item> items = Sheet.list();
+            items.add(back(c, anchor, onClose));
+            if (!ControlService.ready()) items.add(Sheet.Item.header("⚠ خدمة الإتاحة (Albrhi Remote Control) غير شغّالة: الأزرار المخصصة لن تعمل. فعّلها من الإعدادات ← إمكانية الوصول"));
+            List<KeyMap.Entry> es = KeyMap.list(c);
+            if (!es.isEmpty()) items.add(Sheet.Item.header("الأزرار المربوطة"));
+            for (final KeyMap.Entry e : es) {
+                items.add(Sheet.Item.of(KeyMap.titleOf(e), R.drawable.ic_apps, new Runnable() { public void run() {
+                    Sheet.chained = true;
+                    keyDetail(c, anchor, onClose, e.code);
+                } }).sub("يفتح: " + KeyMap.labelOf(c, e.pkg)).icon(KeyMap.iconOf(c, e.pkg)));
+            }
+            items.add(Sheet.Item.header("جديد"));
+            items.add(Sheet.Item.of("إضافة زر", R.drawable.ic_edit, new Runnable() { public void run() {
+                Sheet.chained = true;
+                addKey(c, anchor, onClose);
+            } }).sub("اضغط أي زر في الريموت (يوتيوب، نتفلكس، ملوّن، رقم…) ثم اختر تطبيقه"));
+            return items;
+        } }, null, closer(c, onClose));
+    }
+
+    /** Waits for you to press a button on the remote, then asks which app it should open. */
+    private static void addKey(final Context c, final View anchor, final Runnable onClose) {
+        LearnDialog.show(c, new KeyMap.Learn() { @Override public void onKey(final int code) {
+            pickApp(c, anchor, onClose, "اختر التطبيق لـ" + KeyMap.titleOf(code0(c, code)), new Runnable() { public void run() { remoteKeys(c, anchor, onClose); } },
+                    new PickApp() { public void pick(String pkg) {
+                        KeyMap.put(c, code, pkg, null);
+                        Toast.makeText(c, "تم: " + KeyMap.titleOf(code0(c, code)) + " ← " + KeyMap.labelOf(c, pkg), Toast.LENGTH_SHORT).show();
+                        remoteKeys(c, anchor, onClose);
+                    } });
+        } }, new Runnable() { public void run() { remoteKeys(c, anchor, onClose); } });
+    }
+
+    private interface PickApp { void pick(String pkg); }
+
+    /** An entry for this code (a throw-away one before it is saved), so its automatic name can be shown. */
+    private static KeyMap.Entry code0(Context c, int code) {
+        KeyMap.Entry e = KeyMap.get(c, code);
+        if (e != null) return e;
+        e = new KeyMap.Entry();
+        e.code = code;
+        e.name = "";
+        return e;
+    }
+
+    /** Every installed app with its icon; OK picks one. */
+    private static void pickApp(final Context c, final View anchor, final Runnable onClose, String title, final Runnable onBack, final PickApp cb) {
+        final List<KeyMap.AppRef> apps = KeyMap.apps(c);
+        Panel.show(c, title, "التطبيقات المثبتة", new Panel.Builder() { public List<Sheet.Item> items() {
+            List<Sheet.Item> items = Sheet.list();
+            items.add(Sheet.Item.of("رجوع", R.drawable.ic_back, new Runnable() { public void run() { Sheet.chained = true; onBack.run(); } }));
+            for (final KeyMap.AppRef a : apps) {
+                items.add(Sheet.Item.of(a.label, R.drawable.ic_apps, new Runnable() { public void run() { Sheet.chained = true; cb.pick(a.pkg); } }).icon(a.icon));
+            }
+            return items;
+        } }, null, closer(c, onClose));
+    }
+
+    /** One linked button: change its app, rename it, or remove it. */
+    private static void keyDetail(final Context c, final View anchor, final Runnable onClose, final int code) {
+        final KeyMap.Entry e0 = KeyMap.get(c, code);
+        if (e0 == null) { remoteKeys(c, anchor, onClose); return; }
+        Panel.show(c, KeyMap.titleOf(e0), "يفتح: " + KeyMap.labelOf(c, e0.pkg), new Panel.Builder() { public List<Sheet.Item> items() {
+            final KeyMap.Entry e = KeyMap.get(c, code);
+            List<Sheet.Item> items = Sheet.list();
+            items.add(Sheet.Item.of("رجوع", R.drawable.ic_back, new Runnable() { public void run() { Sheet.chained = true; remoteKeys(c, anchor, onClose); } }));
+            if (e == null) return items;
+            items.add(Sheet.Item.of("تغيير التطبيق", R.drawable.ic_apps, new Runnable() { public void run() {
+                Sheet.chained = true;
+                pickApp(c, anchor, onClose, "اختر التطبيق لـ" + KeyMap.titleOf(e), new Runnable() { public void run() { keyDetail(c, anchor, onClose, code); } },
+                        new PickApp() { public void pick(String pkg) { KeyMap.put(c, code, pkg, null); keyDetail(c, anchor, onClose, code); } });
+            } }).value(KeyMap.labelOf(c, e.pkg)).icon(KeyMap.iconOf(c, e.pkg)));
+            items.add(Sheet.Item.of("إعادة تسمية الزر", R.drawable.ic_edit, new Runnable() { public void run() {
+                RenameDialog.show(c, "اسم الزر", e.name == null ? "" : e.name, KeyMap.defaultName(code), false, new RenameDialog.Callback() {
+                    @Override public void onName(String n) { KeyMap.rename(c, code, n); Panel.refresh(); }
+                });
+            } }).value(KeyMap.titleOf(e)).stay());
+            items.add(Sheet.Item.of("حذف الزر", R.drawable.ic_trash, new Runnable() { public void run() {
+                KeyMap.remove(c, code);
+                Sheet.chained = true;
+                remoteKeys(c, anchor, onClose);
+            } }).sub("يرجع الزر لعمله الأصلي في التلفزيون").danger());
             return items;
         } }, null, closer(c, onClose));
     }
