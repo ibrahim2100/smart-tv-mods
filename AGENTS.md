@@ -14,7 +14,7 @@ Authorship note: this repository was written by an AI agent (Anthropic's Claude,
 |---|---|---|
 | Device tested | LG webOS 7.5.8 TV (Chrome 87, 4K, 1.2 GB RAM) | Haier MatrixTV BE, Google TV / Android 14 (4K panel, UI at 1920×1080) |
 | What it is | Web app that replaces the TV's home screen + root Node service + overlay alert app | Native Android launcher (Java, no Gradle) + restore/revert script kit |
-| Access needed | **Root** (Homebrew Channel; needs LG *Developer Mode* as the entry point) + telnet :23 | **Developer options → USB / Wireless debugging** (adb); no root |
+| Access needed | **Root** (Homebrew Channel) + telnet :23. **NOT** LG Developer Mode (remove that app before rooting) | **Developer options → USB / Wireless debugging** (adb); no root |
 | Driver | `lg-webos/scripts/*.sh` over telnet | `google-tv/albrhi-tv-restore/*.sh` over adb |
 | Test without a TV | `cd lg-webos && npm test`; open `app/index.html` or `alert/index.html?demo=goal` in a browser | `google-tv/albrhi-widget/build.sh` (compiles), no emulator needed for a syntax check |
 | Reads first | `lg-webos/CLAUDE.md`, `lg-webos/docs/LESSONS.md`, `lg-webos/docs/ARCHITECTURE.md` | `google-tv/albrhi-tv-restore/README.md` (Arabic, exhaustive), `google-tv/README.md` |
@@ -32,13 +32,13 @@ The two projects share **no code and no scripts**. Never run adb scripts against
 
 ## 2. Prerequisites the *user* must do on the TV (agents cannot do these)
 
-### LG webOS (needs root)
-Developer Mode alone is **not enough** for this project (the home swap, bind mounts, the root service and telnet need root). Path:
-1. On the TV install **"Developer Mode"** from the LG Content Store, sign in with a (free) LG developer account and turn Dev Mode **On** (it expires every 1000 h unless refreshed; the Developer Mode app has a "Key Server"/extend option).
-2. Root the TV with the community tool at <https://e.nya.je/getroot/> (webosbrew project); this installs **Homebrew Channel** and a root shell. Rooting is firmware dependent: read the page for your exact version and make sure your firmware is supported.
-3. Confirm a root shell on the LAN: `nc <tv-ip> 23` gives a `#` prompt (telnet root shell). The project's scripts use exactly this.
-4. Your computer and the TV must be on the same LAN. Write the IP to `lg-webos/scripts/tv.conf` (`TV_IP=...`).
-Risk: telnet :23 is an unauthenticated root shell for the whole LAN; never expose it to the internet (see `lg-webos/docs/SAFETY.md`).
+### LG webOS (needs root — not Developer Mode)
+Do **not** use the LG *Developer Mode* app for this project: it gives no root, needs renewal every ~1000 h, and is not enough for the home swap, bind mounts, the root service and telnet. **Do not keep it installed while rooting or after**: on the owner's TV it was rejected / broke the root. If the TV has it, remove it first. Path:
+1. Check rootability of the exact model + firmware at <https://cani.rootmy.tv>. Methods are firmware dependent and get patched by updates: **don't update the TV first.**
+2. Root using the matching method from <https://www.webosbrew.org/rooting/>. On the owner's webOS 7.5.8 TV the launcher <https://e.nya.je/getroot/> (jsbro / dangbro / wtfbro exploits; you enter firmware version and TV IP and follow its steps) was used. This installs **Homebrew Channel**. The page is only a launcher; the user must do these steps on the TV, an agent cannot.
+3. Confirm a root shell on the LAN: `nc <tv-ip> 23` gives a `#` prompt (telnet root shell from Homebrew Channel). The project's scripts use exactly this.
+4. Computer and TV on the same LAN. Write the IP to `lg-webos/scripts/tv.conf` (`TV_IP=...`).
+Risk: root may vanish after a firmware update; telnet :23 is an unauthenticated root shell for the whole LAN, never expose it to the internet (see `lg-webos/docs/SAFETY.md`).
 
 ### Google TV / Android TV (no root)
 1. Settings → System → About → tap **Build** 7 times to enable Developer options.

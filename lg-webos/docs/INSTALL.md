@@ -3,10 +3,10 @@
 ## العربي
 
 ### المتطلبات
-1. **تلفزيون LG webOS عليه روت** مع [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel). دليل الروت: <https://e.nya.je/getroot/> (على مسؤوليتك؛ قد يلغي الضمان، وتحديث النظام ممكن يشيل الروت).
+1. **تلفزيون LG webOS عليه روت** مع [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel). تحقق من تلفزيونك في <https://cani.rootmy.tv> ثم اتبع [webosbrew.org/rooting](https://www.webosbrew.org/rooting/) (أداة <https://e.nya.je/getroot/> مُطلِق للثغرات) (على مسؤوليتك؛ قد يلغي الضمان، وتحديث النظام ممكن يشيل الروت).
 2. **وصول لشِل الروت من الكمبيوتر.** السكربتات تستخدم **telnet على المنفذ 23** (`nc`)، وهذا اللي توفره طريقة الروت المستخدمة هنا. لو عندك SSH بدله، عدّل دالتي `tv_sh` و`tv_push`/`tv_pull` في [`scripts/config.sh`](../scripts/config.sh).
 3. الكمبيوتر والتلفزيون على نفس الشبكة. macOS أو Linux (السكربتات bash). `node` و`npm`. لسحب الشعارات: Google Chrome (على macOS).
-4. اختياري: وضع المطوّر (Developer Mode) غير مطلوب؛ نثبّت بخدمة `appInstallService` من الشِل الجذري.
+4. **وضع المطوّر (Developer Mode) غير مطلوب، ولا تبقِ التطبيق مثبّتاً**: قد يرفض الروت أو يعطّله. نثبّت بخدمة `appInstallService` من الشِل الجذري.
 
 ### الخطوات (أول مرة)
 ```bash
@@ -37,10 +37,10 @@ scripts/enable-home.sh                        # (اختياري) يجعله ال
 ## English
 
 ### Requirements
-1. **A rooted LG webOS TV** with [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel). Rooting guide: <https://e.nya.je/getroot/> (at your own risk; may void warranty; a firmware update may remove root).
+1. **A rooted LG webOS TV** with [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel). Check your model at <https://cani.rootmy.tv>, then follow [webosbrew.org/rooting](https://www.webosbrew.org/rooting/) (<https://e.nya.je/getroot/> is an exploit launcher) (at your own risk; may void warranty; a firmware update may remove root).
 2. **A root shell reachable from your computer.** The scripts use **telnet on port 23** (via `nc`), which is what the rooting method used here provides. If you have SSH instead, adapt `tv_sh` / `tv_push` / `tv_pull` in [`scripts/config.sh`](../scripts/config.sh).
 3. Computer and TV on the same network. macOS or Linux (bash scripts), `node` and `npm`. Google Chrome (macOS) is needed only to render logos.
-4. Developer Mode is not required: everything is installed through `appInstallService` from the root shell.
+4. **Developer Mode is not required and the app should not stay installed**: it can block or break the root. Everything is installed through `appInstallService` from the root shell.
 
 ### First-time steps
 ```bash

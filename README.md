@@ -75,16 +75,17 @@ cd smart-tv-mods
 - **LG:** `cd lg-webos && npm install && cp scripts/tv.conf.example scripts/tv.conf` وكمّل من [`lg-webos/docs/INSTALL.md`](lg-webos/docs/INSTALL.md).
 - **Google TV:** `cd google-tv/albrhi-widget && ./build.sh && ./pack.sh` ثم `cd ../albrhi-tv-restore && cp device.conf.example device.conf && ./restore.sh` (التفاصيل في [`google-tv/README.md`](google-tv/README.md)).
 
-### المتطلبات: تفعيل وضع المطور / الروت / USB Debugging
+### المتطلبات: الروت (LG) / USB Debugging (Android)
 
-لا يشتغل المشروعان على تلفزيون «على حالته». لازم تفعّل صلاحيات المطور أول:
+لا يشتغل المشروعان على تلفزيون «على حالته». لازم تفتح صلاحيات الوصول أول (روت لـLG، وUSB debugging لـAndroid):
 
-**🔴 LG webOS (يحتاج روت)**
-1. ثبّت من متجر LG تطبيق **Developer Mode** وسجّل بحساب مطوّر LG المجاني وفعّل الوضع (يحتاج تمديداً كل ~1000 ساعة).
-2. اعمل **روت** بأداة المجتمع <https://e.nya.je/getroot/> (مشروع webosbrew): تثبّت **Homebrew Channel** وتعطيك صلاحيات روت. الدعم يعتمد على إصدار نظام تلفزيونك، اقرأ الصفحة أولاً.
-3. تأكد من الاتصال: `nc <ip-التلفزيون> 23` يعطيك `#` (طرفية روت). السكربتات تستخدم هذا المنفذ.
-4. الكمبيوتر والتلفزيون على نفس الشبكة، وضع العنوان في `lg-webos/scripts/tv.conf`.
-> ⚠️ وضع المطور وحده **لا يكفي** لهذا المشروع؛ الاستبدال والخدمة الجذرية يحتاجان روت. وبورت 23 روت بلا كلمة سر لكل من على شبكتك، لا تفتحه للإنترنت.
+**🔴 LG webOS (يحتاج روت، وليس وضع المطور)**
+1. **لا تستخدم تطبيق Developer Mode لهذا المشروع.** وضع المطور (Developer Mode) طريق ثاني محدود: بدون روت، ويحتاج تمديد كل ~1000 ساعة، ولا يكفي للاستبدال والخدمة الجذرية هنا. والأهم: **لا تبقيه مثبّتاً أثناء الروت وبعده** — عندنا التلفزيون رفض/تعطّل معه، وإذا كان محمّلاً يتعطل الروت. لو عندك التطبيق، احذفه قبل الروت.
+2. اعرف هل تلفزيونك قابل للروت: ادخل <https://cani.rootmy.tv> واكتب موديل التلفزيون وإصدار النظام (Settings ← General ← About). الطرق تعتمد على الإصدار ومعظمها يُرقَّع مع التحديثات، فلا تحدّث النظام قبل الروت.
+3. نفّذ الروت بالطريقة المناسبة من [webosbrew.org/rooting](https://www.webosbrew.org/rooting/) (على تلفزيوننا webOS 7.5 استُخدمت أداة <https://e.nya.je/getroot/>، وهي مُطلِق لثغرات jsbro/dangbro/wtfbro: تضع إصدار النظام وIP التلفزيون وتتبع التعليمات). تثبّت الأداة **Homebrew Channel** وتعطيك روت. المحاولة الفاشلة آمنة غالباً، لكن لا تجرّب تغييرات عشوائية على النظام.
+4. تأكد من الاتصال: `nc <ip-التلفزيون> 23` يعطيك `#` (طرفية روت telnet من Homebrew Channel). السكربتات تستخدم هذا المنفذ.
+5. الكمبيوتر والتلفزيون على نفس الشبكة، وضع العنوان في `lg-webos/scripts/tv.conf`.
+> ⚠️ الروت قد يزول بعد تحديث النظام. وبورت 23 روت بلا كلمة سر لكل من على شبكتك، لا تفتحه للإنترنت.
 
 **🟢 Google TV / Android TV (بدون روت)**
 1. الإعدادات ← النظام ← حول ← اضغط **Build** 7 مرات لتفعيل خيارات المطور.
@@ -147,16 +148,17 @@ Then:
 - **LG:** `cd lg-webos && npm install && cp scripts/tv.conf.example scripts/tv.conf`, then continue with [`lg-webos/docs/INSTALL.md`](lg-webos/docs/INSTALL.md).
 - **Google TV:** `cd google-tv/albrhi-widget && ./build.sh && ./pack.sh`, then `cd ../albrhi-tv-restore && cp device.conf.example device.conf && ./restore.sh` (details in [`google-tv/README.md`](google-tv/README.md)).
 
-### Requirements: Developer Mode / root / USB debugging
+### Requirements: root (LG) / USB debugging (Android)
 
-Neither project works on a TV "as shipped". You must enable developer access first:
+Neither project works on a TV "as shipped". You must unlock access first (root for LG, USB debugging for Android):
 
-**🔴 LG webOS (root required)**
-1. Install **Developer Mode** from the LG Content Store, sign in with a free LG developer account and switch it on (it needs extending about every 1000 h).
-2. **Root** the TV with the community tool <https://e.nya.je/getroot/> (webosbrew project): it installs **Homebrew Channel** and gives a root shell. Support depends on your firmware; read the page first.
-3. Check the connection: `nc <tv-ip> 23` should give a `#` prompt (root shell). The scripts use this port.
-4. Computer and TV on the same network; put the address in `lg-webos/scripts/tv.conf`.
-> ⚠️ Developer Mode alone is **not enough** for this project; the home swap and the root service need root. Port 23 is an unauthenticated root shell for everyone on your LAN: never expose it to the internet.
+**🔴 LG webOS (root required, NOT Developer Mode)**
+1. **Do not use the LG Developer Mode app for this project.** Developer Mode is a different, limited path: no root, it must be renewed about every 1000 h, and it is not enough for the home swap and root service. More importantly, **don't keep it installed while rooting or afterwards**: on our TV it was rejected/broke the root. If you have the app, remove it before rooting.
+2. Check that your TV can be rooted: open <https://cani.rootmy.tv> with your model and firmware version (Settings → General → About). Methods depend on the firmware and most get patched by updates, so **don't update the TV before rooting**.
+3. Root with the method that fits from [webosbrew.org/rooting](https://www.webosbrew.org/rooting/). (On our webOS 7.5 TV the tool <https://e.nya.je/getroot/> was used: it is a launcher for the jsbro/dangbro/wtfbro exploits where you enter the firmware version and the TV's IP and follow its steps.) It installs **Homebrew Channel** and gives root. A failed attempt is generally safe, but never make random changes to the system.
+4. Check the connection: `nc <tv-ip> 23` should give a `#` prompt (the telnet root shell provided by Homebrew Channel). The scripts use this port.
+5. Computer and TV on the same network; put the address in `lg-webos/scripts/tv.conf`.
+> ⚠️ Root may be lost after a firmware update. Port 23 is an unauthenticated root shell for everyone on your LAN: never expose it to the internet.
 
 **🟢 Google TV / Android TV (no root)**
 1. Settings → System → About → tap **Build** 7 times to unlock Developer options.

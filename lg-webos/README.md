@@ -58,7 +58,7 @@ LG webOS ── الهوم (com.webos.app.home) ◄── bind-mount ── نس
 الشرح الكامل (الاستبدال، واجهة الخدمة، خط التنبيهات): [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ### 4. المتطلبات
-- تلفزيون **LG webOS** عليه **روت + Homebrew Channel** (دليل: <https://e.nya.je/getroot/>) مع تفعيل telnet.
+- تلفزيون **LG webOS** عليه **روت + Homebrew Channel** (تحقق من الموديل في <https://cani.rootmy.tv> وراجع [webosbrew.org/rooting](https://www.webosbrew.org/rooting/)؛ ويُستخدم مع telnet على بورت 23). **لا تستخدم تطبيق Developer Mode** (احذفه قبل الروت)، التفاصيل في [README الرئيسي](../README.md).
 - جهاز كمبيوتر على نفس الشبكة فيه **Node.js** و`bash` (macOS/Linux).
 - التلفزيون وجهازك على نفس الشبكة المحلية.
 
@@ -171,7 +171,7 @@ LG webOS ── home (com.webos.app.home) ◄── bind-mount ── RAM copy o
 Full explanation (the swap, the service API, the alert pipeline): [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ### 4. Requirements
-- An **LG webOS** TV that is **rooted with Homebrew Channel** (guide: <https://e.nya.je/getroot/>) with telnet enabled.
+- An **LG webOS** TV that is **rooted with Homebrew Channel** (check your model at <https://cani.rootmy.tv> and read [webosbrew.org/rooting](https://www.webosbrew.org/rooting/); telnet on port 23 is used). **Do not use the Developer Mode app** (remove it before rooting); details in the [main README](../README.md).
 - A computer on the same network with **Node.js** and `bash` (macOS/Linux).
 - TV and computer on the same local network.
 

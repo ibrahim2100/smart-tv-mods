@@ -3,7 +3,7 @@
 
 Start here:
 - [AGENTS.md](AGENTS.md): full guide for AI agents: prerequisites, how to run, how to make your own version, safety rules.
-- [README.md](README.md): overview, screenshots, requirements (LG Developer Mode + root; Android USB debugging).
+- [README.md](README.md): overview, screenshots, requirements (LG: root via Homebrew Channel, NOT Developer Mode; Android: USB debugging).
 
 LG webOS (`lg-webos/`):
 - [README](lg-webos/README.md), [Architecture](lg-webos/docs/ARCHITECTURE.md), [Install](lg-webos/docs/INSTALL.md), [Config](lg-webos/docs/CONFIG.md), [Alerts](lg-webos/docs/ALERTS.md), [Lessons](lg-webos/docs/LESSONS.md), [Safety](lg-webos/docs/SAFETY.md), [Developer notes](lg-webos/CLAUDE.md)
