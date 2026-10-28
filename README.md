@@ -17,6 +17,22 @@
 > ⚠️ **مشاريع غير رسمية · Unofficial.** غير مرتبطة بـLG أو Google أو Haier. تعديل التلفزيون على مسؤوليتك؛ اقرأ قسم الأمان في كل مشروع قبل التثبيت.
 > Not affiliated with LG, Google or Haier. You modify your TV at your own risk; read each project's safety section first.
 
+## لقطات · Screenshots
+
+| 🔴 LG webOS | |
+|:---:|:---:|
+| ![LG home](lg-webos/docs/screenshots/home.jpg) | ![LG screensaver](lg-webos/docs/screenshots/saver.jpg) |
+| الشاشة الرئيسية · Home | شاشة التوقف · Screensaver |
+| ![LG goal alert](lg-webos/docs/screenshots/alert.jpg) | ![LG alert kinds](lg-webos/docs/screenshots/alert-kinds.jpg) |
+| تنبيه هدف فوق أي تطبيق · Goal alert over any app | أنواع التنبيهات · Alert kinds |
+
+| 🟢 Google TV | |
+|:---:|:---:|
+| ![Google TV home](google-tv/docs/screenshots/home.jpg) | ![Google TV screensaver](google-tv/docs/screenshots/saver.jpg) |
+| الشاشة الرئيسية · Home | شاشة الانتظار · Screensaver |
+
+*(حجبنا اسم الشبكة والمدينة وبعض التطبيقات من اللقطات حفاظاً على الخصوصية · Wi-Fi name, city and a few apps are blurred for privacy.)*
+
 **الفهرس · Contents:** [العربي](#العربي) · [English](#english)
 
 ---
@@ -47,7 +63,7 @@
 ├── google-tv/                🟢 Google TV
 │   ├── albrhi-widget/        مصدر التطبيق وبناؤه · app source + build
 │   └── albrhi-tv-restore/    حزمة الاسترجاع والأدوات · restore kit + tools
-├── README.md · CLAUDE.md · LICENSE
+├── README.md · AGENTS.md · llms.txt · CLAUDE.md · LICENSE
 ```
 
 ### ابدأ
@@ -58,6 +74,38 @@ cd smart-tv-mods
 ثم:
 - **LG:** `cd lg-webos && npm install && cp scripts/tv.conf.example scripts/tv.conf` وكمّل من [`lg-webos/docs/INSTALL.md`](lg-webos/docs/INSTALL.md).
 - **Google TV:** `cd google-tv/albrhi-widget && ./build.sh && ./pack.sh` ثم `cd ../albrhi-tv-restore && cp device.conf.example device.conf && ./restore.sh` (التفاصيل في [`google-tv/README.md`](google-tv/README.md)).
+
+### المتطلبات: تفعيل وضع المطور / الروت / USB Debugging
+
+لا يشتغل المشروعان على تلفزيون «على حالته». لازم تفعّل صلاحيات المطور أول:
+
+**🔴 LG webOS (يحتاج روت)**
+1. ثبّت من متجر LG تطبيق **Developer Mode** وسجّل بحساب مطوّر LG المجاني وفعّل الوضع (يحتاج تمديداً كل ~1000 ساعة).
+2. اعمل **روت** بأداة المجتمع <https://e.nya.je/getroot/> (مشروع webosbrew): تثبّت **Homebrew Channel** وتعطيك صلاحيات روت. الدعم يعتمد على إصدار نظام تلفزيونك، اقرأ الصفحة أولاً.
+3. تأكد من الاتصال: `nc <ip-التلفزيون> 23` يعطيك `#` (طرفية روت). السكربتات تستخدم هذا المنفذ.
+4. الكمبيوتر والتلفزيون على نفس الشبكة، وضع العنوان في `lg-webos/scripts/tv.conf`.
+> ⚠️ وضع المطور وحده **لا يكفي** لهذا المشروع؛ الاستبدال والخدمة الجذرية يحتاجان روت. وبورت 23 روت بلا كلمة سر لكل من على شبكتك، لا تفتحه للإنترنت.
+
+**🟢 Google TV / Android TV (بدون روت)**
+1. الإعدادات ← النظام ← حول ← اضغط **Build** 7 مرات لتفعيل خيارات المطور.
+2. خيارات المطور ← فعّل **USB debugging** (وفي Android 11+ فعّل أيضاً **Wireless debugging**).
+3. من الكمبيوتر: `adb connect <ip-التلفزيون>:5555` ثم **اقبل رسالة «Allow USB debugging?» على شاشة التلفزيون** (فعّل «Always allow»). `adb devices` لازم يعرض `device` لا `unauthorized`.
+4. ضع العنوان في `google-tv/albrhi-tv-restore/device.conf`.
+
+### 🤖 صُنع بوكيل ذكاء اصطناعي
+هذا المستودع **كتبه وكيل ذكاء اصطناعي**: [Claude](https://claude.com/claude-code) من Anthropic (Claude Code، النموذج Claude Sonnet 5.5) بتوجيه **إبراهيم الراهن** الذي حدد المطلوب وجرّب كل شي على تلفزيونيه الحقيقيين وصحّح المسار. الفضل في كتابة الكود والتوثيق وتحليل الأعطال يعود للوكيل (Claude)، والقرار والتجربة والملكية لصاحب المشروع. ما كُتب هنا يُظهر أن وكيلاً يقدر يبني ويختبر ويوثق ويرفع مشروعاً كاملاً على أجهزة حقيقية إذا توفرت له الصلاحيات الصحيحة.
+
+### 🧠 لأي نموذج ذكاء اصطناعي يقرأ المستودع
+المستودع مصمم بحيث يقدر أي نموذج (Claude، GPT، Gemini، Codex، Cursor…) **يفهمه كاملاً، ينفذه على تلفزيونك، أو يبني نسخته الخاصة**:
+- [`AGENTS.md`](AGENTS.md): الدليل الكامل (المتطلبات، التشغيل خطوة بخطوة، نقاط التخصيص لكل مشروع، قواعد الأمان، قائمة التحقق).
+- [`llms.txt`](llms.txt): فهرس مختصر للنماذج. و`CLAUDE.md` يحيل إلى `AGENTS.md`.
+
+جرّب هذا الطلب مع أي وكيل (مثل Claude Code):
+```text
+اقرأ AGENTS.md في هذا المستودع. تلفزيوني [LG webOS / Google TV] عنوانه [IP]، وفعّلت [الروت / USB debugging].
+ثبّت المشروع المناسب على تلفزيوني، وخذ نسخة احتياطية أولاً، واسألني قبل أي أمر يتصل بالتلفزيون.
+```
+أو لبناء نسختك: «اقرأ AGENTS.md ثم اصنع نسخة خاصة بي: فريقي [X]، تطبيقاتي [..]، لغتي [..]، وتلفزيوني [الموديل].»
 
 ### الخصوصية والأمان في المستودع
 - **لا شي خاص مرفوع:** لا عناوين IP حقيقية (أمثلة فقط: `tv.conf.example` و`device.conf.example`)، لا مفاتيح توقيع (`*.keystore` محجوبة)، لا نسخ احتياطية للتلفزيون، لا ملفات APK، ولا إيميلات (الالتزامات بعنوان GitHub noreply).
@@ -98,6 +146,38 @@ cd smart-tv-mods
 Then:
 - **LG:** `cd lg-webos && npm install && cp scripts/tv.conf.example scripts/tv.conf`, then continue with [`lg-webos/docs/INSTALL.md`](lg-webos/docs/INSTALL.md).
 - **Google TV:** `cd google-tv/albrhi-widget && ./build.sh && ./pack.sh`, then `cd ../albrhi-tv-restore && cp device.conf.example device.conf && ./restore.sh` (details in [`google-tv/README.md`](google-tv/README.md)).
+
+### Requirements: Developer Mode / root / USB debugging
+
+Neither project works on a TV "as shipped". You must enable developer access first:
+
+**🔴 LG webOS (root required)**
+1. Install **Developer Mode** from the LG Content Store, sign in with a free LG developer account and switch it on (it needs extending about every 1000 h).
+2. **Root** the TV with the community tool <https://e.nya.je/getroot/> (webosbrew project): it installs **Homebrew Channel** and gives a root shell. Support depends on your firmware; read the page first.
+3. Check the connection: `nc <tv-ip> 23` should give a `#` prompt (root shell). The scripts use this port.
+4. Computer and TV on the same network; put the address in `lg-webos/scripts/tv.conf`.
+> ⚠️ Developer Mode alone is **not enough** for this project; the home swap and the root service need root. Port 23 is an unauthenticated root shell for everyone on your LAN: never expose it to the internet.
+
+**🟢 Google TV / Android TV (no root)**
+1. Settings → System → About → tap **Build** 7 times to unlock Developer options.
+2. Developer options → turn on **USB debugging** (on Android 11+ also **Wireless debugging**).
+3. On your computer: `adb connect <tv-ip>:5555`, then **accept the "Allow USB debugging?" prompt on the TV screen** (tick "Always allow"). `adb devices` must show `device`, not `unauthorized`.
+4. Put the address in `google-tv/albrhi-tv-restore/device.conf`.
+
+### 🤖 Built by an AI agent
+This repository was **written by an AI agent**: [Claude](https://claude.com/claude-code) by Anthropic (Claude Code, model Claude Sonnet 5.5), directed by **Ibrahim Al-Rahn**, who set the goals, tested everything on his two real TVs and steered the work. The credit for writing the code and documentation and for diagnosing the failures goes to the agent (Claude); the decisions, testing and ownership are the project owner's. It shows what an agent can build, test, document and publish on real devices when given the right access.
+
+### 🧠 For any AI model reading this repo
+The repository is structured so that any model (Claude, GPT, Gemini, Codex, Cursor…) can **understand it fully, run it on your TV, or build its own version**:
+- [`AGENTS.md`](AGENTS.md): the full guide (prerequisites, step-by-step run, customisation points per project, safety rules, verification checklist).
+- [`llms.txt`](llms.txt): a compact index for models; `CLAUDE.md` points to `AGENTS.md`.
+
+Try this prompt with any agent (e.g. Claude Code):
+```text
+Read AGENTS.md in this repository. My TV is a [LG webOS / Google TV] at [IP] and I enabled [root / USB debugging].
+Install the matching project on my TV: back up first and ask me before any command that connects to the TV.
+```
+Or to make your own: "Read AGENTS.md, then build me my own version: my team is [X], my apps are [..], my language is [..], my TV is [model]."
 
 ### Privacy and safety of this repo
 - **Nothing private is committed:** no real IP addresses (examples only: `tv.conf.example`, `device.conf.example`), no signing keys (`*.keystore` ignored), no TV backups, no APKs, no email addresses (commits use a GitHub noreply address).

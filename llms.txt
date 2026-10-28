@@ -1,0 +1,14 @@
+# Smart TV Mods
+> Two open-source projects for two TVs, written by an AI agent (Anthropic Claude via Claude Code) under human direction and tested on real hardware: (1) a custom home screen + alerts for rooted LG webOS TVs, (2) a custom launcher + restore kit for Google TV / Android TV. Bilingual docs (Arabic/English).
+
+Start here:
+- [AGENTS.md](AGENTS.md): full guide for AI agents: prerequisites, how to run, how to make your own version, safety rules.
+- [README.md](README.md): overview, screenshots, requirements (LG Developer Mode + root; Android USB debugging).
+
+LG webOS (`lg-webos/`):
+- [README](lg-webos/README.md), [Architecture](lg-webos/docs/ARCHITECTURE.md), [Install](lg-webos/docs/INSTALL.md), [Config](lg-webos/docs/CONFIG.md), [Alerts](lg-webos/docs/ALERTS.md), [Lessons](lg-webos/docs/LESSONS.md), [Safety](lg-webos/docs/SAFETY.md), [Developer notes](lg-webos/CLAUDE.md)
+
+Google TV (`google-tv/`):
+- [README](google-tv/README.md), [Restore kit reference (Arabic)](google-tv/albrhi-tv-restore/README.md)
+
+Rules: ask the user before running any script that connects to a TV; back up first; never commit IPs, keys, backups or personal data.

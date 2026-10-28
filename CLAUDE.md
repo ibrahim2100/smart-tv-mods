@@ -1,3 +1,7 @@
+# Read AGENTS.md first
+
+The canonical guide for AI agents is [`AGENTS.md`](AGENTS.md) (prerequisites, how to run, how to build your own version, safety). The notes below are the short version.
+
 # Two projects, two top-level folders — never mix them
 
 ```

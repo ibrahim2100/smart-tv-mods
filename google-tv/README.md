@@ -6,6 +6,10 @@
 > هذا المجلد مشروع منفصل عن [`../lg-webos`](../lg-webos). · This folder is separate from [`../lg-webos`](../lg-webos).
 > مشروع مستقر: غير مرتبط بأي خدمة سحابية، ولا يجمع بيانات. · Stable; no cloud service, no data collection.
 
+| الشاشة الرئيسية · Home | شاشة الانتظار · Screensaver |
+|:---:|:---:|
+| ![home](docs/screenshots/home.jpg) | ![screensaver](docs/screenshots/saver.jpg) |
+
 ---
 
 ## العربي
