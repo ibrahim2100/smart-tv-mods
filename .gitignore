@@ -9,5 +9,3 @@ google-tv/albrhi-tv-restore/backups/
 *.jks
 .claude/settings.local.json
 
-# lg-webos/ is a separate project with its own git repo (published as ibrahim2100/WebOS)
-lg-webos/
