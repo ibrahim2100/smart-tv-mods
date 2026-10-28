@@ -49,6 +49,7 @@ final class Sheet {
         int icon;
         Runnable action;
         boolean danger, header, tile, swatches, stay;
+        android.view.View customView;        // a finished view shown as it is (not focusable), e.g. the match card
         Boolean toggle;                    // non-null: the row shows a switch in this state
         IntPick pick;                      // swatches: called with the chosen index
         android.graphics.drawable.Drawable iconDrawable;   // an app's own icon (instead of a line icon)
@@ -60,6 +61,12 @@ final class Sheet {
             Item i = new Item(title);
             i.icon = icon;
             i.action = action;
+            return i;
+        }
+
+        static Item custom(android.view.View v) {
+            Item i = new Item("");
+            i.customView = v;
             return i;
         }
 

@@ -16,6 +16,12 @@
 | المظهر والسمات · Appearance and themes | |
 | ![appearance](docs/screenshots/appearance.jpg) | |
 
+**الرياضة (اختيارية، متوقفة افتراضياً) · Sports (optional, off by default)**
+
+| بطاقة المباراة · Match card | قائمة المباريات · Fixtures panel | شاشة الانتظار · Screensaver |
+|:---:|:---:|:---:|
+| ![match card](docs/screenshots/home-sports.jpg) | ![fixtures](docs/screenshots/matches.jpg) | ![saver with match](docs/screenshots/saver-sports.jpg) |
+
 **خمس سمات ألوان · Five colour themes** (محيط · غروب · بنفسجي · … Ocean · Sunset · Violet · …)
 
 | | | |
@@ -37,7 +43,7 @@
 | **واجهة رئيسية هادئة** | ساعة كبيرة وتاريخ بدون صناديق، اسم التطبيق المحدد وصورته، وخلفية داكنة ناعمة تتلوّن بلونه. صفوف: تطبيقاتك، أدوات التلفزيون، المدخلات (HDMI) مع حالة الشبكة. |
 | **أزرار الريموت بكيفك** | اربط أي زر في الريموت (يوتيوب، نتفلكس، برايم، شاهد، الألوان، الأرقام…) بأي تطبيق تختاره. الإعدادات السريعة ← **أزرار الريموت** ← «إضافة زر»: اضغط الزر ثم اختر التطبيق. يشتغل مع أي ريموت وعدد أزرار (4 أو أقل أو أكثر)، والأزرار الأساسية (الأسهم، OK، رجوع، Home، الصوت، التشغيل) محمية ولا تُربط. |
 | **المظهر (قابل للتغيير)** | من الإعدادات السريعة ← **المظهر**: 5 سمات ألوان (منتصف الليل، رمادي، محيط، غروب، بنفسجي)، لون الخلفية يتبع التطبيق أو لا، الوقت 12/24 ساعة، التاريخ الهجري، الطقس، والاسم في التحية. كلها تُحفظ مع النسخة الاحتياطية. |
-| **الرياضة (اختيارية، متوقفة افتراضياً)** | شارة المباراة القادمة وقائمة المباريات وتنبيهاتها (قبل المباراة بـ15 دقيقة، الانطلاق، النهاية، تغيّر الموعد). تُفعَّل من المظهر ← المباريات والتنبيهات. وهي متوقفة، لا تحمّل بيانات ولا تنبّه. |
+| **الرياضة (اختيارية، متوقفة افتراضياً)** | **بطاقة المباراة القادمة** في الأعلى (الدوري واليوم، الفريقان بشعاريهما، الوقت، والعدّ التنازلي؛ تتلوّن بلون السمة وتُبرز لما تقرب أو تبدأ). OK عليها يفتح **قائمة المباريات**: البطاقة الكبرى، التالية بشعارات الخصوم، آخر نتيجة، وتحديث يدوي. وتنبيهات: قبل المباراة بـ15 دقيقة، الانطلاق، النهاية، تغيّر الموعد. تُفعَّل من المظهر ← المباريات والتنبيهات. وهي متوقفة، لا تحمّل بيانات ولا تنبّه. |
 | **ضغط مطوّل على OK** | نقل، إعادة تسمية، إخفاء، حذف (أو معلومات التطبيق لتطبيقات النظام). الترتيب محفوظ. |
 | **الإعدادات السريعة** | لوحة جانبية هادئة: بلاطات للصورة والصوت والشبكة والجوال والمظهر والذاكرة، ثم صفوف خفيفة (كل إعدادات التلفزيون، أدوات وصيانة)، ومؤشرا الرام والتخزين. مفاتيح تبديل حقيقية ومنتقي ألوان السمة. حواف الشاشة (للتلفزيونات التي تقص الأطراف) تحت المظهر. |
 | **ربط الجوال** | صفحة ويب على شبكة البيت: ريموت كامل (أسهم، OK، صوت، كتابة، تشغيل رابط فيديو، إطفاء الشاشة)، تثبيت وحذف وفتح التطبيقات، ورفع APK. رمز ربط من 6 أرقام لكل جهاز، وكل تثبيت يحتاج تأكيد على التلفزيون. |
@@ -113,7 +119,7 @@ An Android app (plain Java, no Gradle) that replaces the Google TV home screen o
 | **Calm home screen** | A large clock and date with no boxes, the selected app's name and artwork, and a soft dark background tinted with its colour. Rows: your apps, TV tools, inputs (HDMI) with network status. |
 | **Remote buttons, your way** | Link any button on your remote (YouTube, Netflix, Prime, Shahid, colour or number keys…) to any app you choose. Quick settings → **Remote buttons** → "Add a button": press the button, then pick the app. Works with any remote and any number of buttons; the essential keys (arrows, OK, Back, Home, volume, power) are protected and can't be linked. |
 | **Appearance (configurable)** | Quick settings → **Appearance**: 5 colour themes (Midnight, Graphite, Ocean, Sunset, Violet), background follows the app's colour or not, 12/24-hour clock, Hijri date, weather, and the name in the greeting. All saved with the layout backup. |
-| **Sports (optional, off by default)** | Next-match pill, fixtures list and alerts (15 min before, kick-off, full time, fixture changes). Switch on in Appearance → Matches and alerts. While off it downloads nothing and sends no alerts. |
+| **Sports (optional, off by default)** | A **next-match card** on top (league and day, both teams with their crests, the time and a countdown; it follows the theme colour and is highlighted when close or live). OK on it opens the **fixtures panel**: the big card, the following matches with opponents' crests, the last result and a manual refresh. Plus alerts (15 min before, kick-off, full time, fixture changes). Switch on in Appearance → Matches and alerts. While off it downloads nothing and sends no alerts. |
 | **Long-press OK** | Move, rename, hide, delete (or app info for system apps). Order is saved. |
 | **Quick settings** | A calm side panel: tiles for picture, sound, network, phone, appearance and memory, then quiet rows (all TV settings, tools and maintenance) and RAM/storage meters. Real on/off switches and a theme colour picker. Screen edges (for TVs that crop the picture) live under Appearance. |
 | **Phone pairing** | A web page on your home network: full remote (arrows, OK, volume, typing, play a video link, screen off), install/uninstall/open apps, APK upload. A 6-digit pairing code per device, and every install needs confirmation on the TV. |

@@ -188,8 +188,7 @@ public class HomeActivity extends Activity {
         topRow.setClipToPadding(false);
         topRow.setPadding(0, px(4), 0, px(0));
         header = new TopPills(this);
-        topRow.addView(header, new LinearLayout.LayoutParams(-2, -2));
-        topRow.addView(new View(this), new LinearLayout.LayoutParams(0, 1, 1f));
+        topRow.addView(header, new LinearLayout.LayoutParams(0, -2, 1f));
         statusTop = new StatusBar(this, true);
         topRow.addView(statusTop, new LinearLayout.LayoutParams(-2, -2));
         col.addView(topRow, new LinearLayout.LayoutParams(-1, -2));

@@ -43,6 +43,7 @@ final class WidgetView extends LinearLayout {
     private final TextView[] cdNum = new TextView[3];
     private LinearLayout cdRow, listBox, card;
     private View bar;
+    private TextView cdText;
 
     WidgetView(Context c, boolean full) {
         super(c);
@@ -111,7 +112,7 @@ final class WidgetView extends LinearLayout {
         clockRow.setOrientation(HORIZONTAL);
         clockRow.setGravity(Gravity.BOTTOM);
         clockRow.setLayoutDirection(LAYOUT_DIRECTION_LTR);
-        clock = tv(full ? 92 : 40, WHITE, true);
+        clock = tv(full ? (Theme.sports ? 76 : 92) : 40, WHITE, true);
         clock.setTypeface((full ? Fonts.medium : Fonts.bold));
         ampm = tv(full ? 24 : 16, GOLD, true);
         clockRow.addView(clock);
@@ -169,7 +170,7 @@ final class WidgetView extends LinearLayout {
         card = new LinearLayout(getContext());
         card.setOrientation(VERTICAL);
         if (full) {
-            card.setBackground(round(0xCC121B38, 22));
+            card.setBackground(round(0x14FFFFFF, 24));
             card.setPadding(px(18), px(14), px(18), px(14));
         }
         LinearLayout labelRow = new LinearLayout(getContext());
@@ -178,6 +179,7 @@ final class WidgetView extends LinearLayout {
         label.setText("المباراة القادمة");
         league = tv(11, MUTED, false);
         league.setGravity(Gravity.END);
+        league.setPadding(px(12), 0, 0, 0);
         labelRow.addView(label, lpw(1));
         labelRow.addView(league, lp(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
         card.addView(labelRow, lp(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
@@ -189,7 +191,7 @@ final class WidgetView extends LinearLayout {
         bAway = new ImageView(getContext());
         nHome = tv(full ? 13 : 12, WHITE, true);
         nAway = tv(full ? 13 : 12, WHITE, true);
-        row.addView(side(bHome, nHome), lpw(1));
+        row.addView(side(bAway, nAway), lpw(1));          // left to right: away team, the time, home team (home on the right)
         LinearLayout mid = new LinearLayout(getContext());
         mid.setOrientation(VERTICAL);
         mid.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -202,7 +204,7 @@ final class WidgetView extends LinearLayout {
         tp.topMargin = px(2);
         mid.addView(mTime, tp);
         row.addView(mid, lpw(1.15f));
-        row.addView(side(bAway, nAway), lpw(1));
+        row.addView(side(bHome, nHome), lpw(1));
         LinearLayout.LayoutParams rp = lp(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         rp.topMargin = px(full ? 8 : 4);
         card.addView(row, rp);
@@ -234,6 +236,13 @@ final class WidgetView extends LinearLayout {
         cp.topMargin = px(full ? 9 : 5);
         card.addView(cdRow, cp);
 
+        cdText = tv(full ? 17 : 13, MUTED, false);           // the countdown as one calm line (the boxes above are for the small widget)
+        cdText.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams ct = lp(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        ct.topMargin = px(8);
+        card.addView(cdText, ct);
+        cdText.setVisibility(GONE);
+
         venue = tv(11, MUTED, false);
         venue.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams vp = lp(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
@@ -245,7 +254,7 @@ final class WidgetView extends LinearLayout {
 
         // following matches
         listHead = tv(11, MUTED, true);
-        listHead.setText("المباريات اللي بعدها");
+        listHead.setText("ثم");
         LinearLayout.LayoutParams hp = lp(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         hp.topMargin = px(full ? 18 : 2);
         addView(listHead, hp);
@@ -351,9 +360,17 @@ final class WidgetView extends LinearLayout {
         venue.setText(m.venue == null || m.venue.length() == 0 ? "" : "الملعب: " + m.venue);
 
         listBox.removeAllViews();
-        int max = 2;
+        int max = full ? 1 : 2;
         for (int i = 1; i < up.size() && i <= max; i++) listBox.addView(listRow(up.get(i)));
         listHead.setVisibility(full && up.size() > 1 ? VISIBLE : GONE);
+        if (full) {                                          // saver: one line instead of three boxes
+            cdRow.setVisibility(GONE);
+            cdText.setVisibility(VISIBLE);
+            boolean live = !m.postponed && left <= 0;
+            cdText.setText(m.postponed ? "مؤجلة" : live ? "● جارية الآن" : TopPills.countdownText(left));
+            cdText.setTextColor(live ? 0xFFFF453A : (!m.postponed && left < DAY) ? GOLD : MUTED);
+            lastRes.setVisibility(GONE);
+        }
         fillLast();
     }
 
@@ -367,7 +384,7 @@ final class WidgetView extends LinearLayout {
         LinearLayout r = new LinearLayout(getContext());
         r.setOrientation(HORIZONTAL);
         r.setGravity(Gravity.CENTER_VERTICAL);
-        r.setBackground(round(full ? 0x88121B38 : CARD, 10));
+        r.setBackground(round(full ? 0x0FFFFFFF : CARD, 12));
         r.setPadding(px(10), px(full ? 5 : 3), px(10), px(full ? 5 : 3));
         ImageView b = new ImageView(getContext());
         setBadge(b, Fixtures.badge(m.opponentBadge()));

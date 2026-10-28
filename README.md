@@ -34,6 +34,8 @@
 | الإعدادات السريعة · Quick settings | أزرار الريموت بكيفك · Your own remote buttons |
 | ![Google TV appearance](google-tv/docs/screenshots/appearance.jpg) | ![Google TV theme](google-tv/docs/screenshots/theme-sunset.jpg) |
 | المظهر والسمات · Appearance and themes | سمة «غروب» · "Sunset" theme |
+| ![Google TV match card](google-tv/docs/screenshots/home-sports.jpg) | ![Google TV fixtures panel](google-tv/docs/screenshots/matches.jpg) |
+| بطاقة المباراة (اختيارية) · Match card (optional) | قائمة المباريات · Fixtures panel |
 
 *(حجبنا اسم الشبكة والمدينة وبعض التطبيقات من اللقطات حفاظاً على الخصوصية · Wi-Fi name, city and a few apps are blurred for privacy.)*
 

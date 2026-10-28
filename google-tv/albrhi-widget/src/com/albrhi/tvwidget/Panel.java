@@ -124,6 +124,12 @@ final class Panel {
                     }
                     boolean afterGrid = gridRow != null;
                     gridRow = null;
+                    if (it.customView != null) {
+                        LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(-1, -2);
+                        cp.topMargin = Math.round(8 * dn);
+                        list.addView(it.customView, cp);
+                        continue;
+                    }
                     if (it.header) {
                         TextView h = Sheet.text(c, it.title, 12.5f, 0xFF7F8AA3, true);
                         h.setPadding(Math.round(4 * dn), Math.round(18 * dn), 0, Math.round(4 * dn));
@@ -188,7 +194,7 @@ final class Panel {
         for (Sheet.Item it : items) {
             if (it.tile) { tiles++; continue; }
             if (tiles > 0) after = true;
-            other += it.header ? 34 : it.swatches ? 62 : it.subtitle != null ? 56 : 51;
+            other += it.customView != null ? 110 : it.header ? 34 : it.swatches ? 62 : it.subtitle != null ? 56 : 51;
         }
         if (tiles == 0) return 98;
         int rows = (tiles + COLS - 1) / COLS;

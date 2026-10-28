@@ -38,9 +38,9 @@ final class TopPills extends LinearLayout {
     private final Runnable onData = new Runnable() { public void run() { update(); } };
 
     private TextView clock, ampm, date, hijri, weather;
-    private TextView mNames, mWhen;
+    private TextView mMeta, mHome, mAway, mTime, mCount;
     private ImageView bHome, bAway;
-    private GradientDrawable matchBg;
+    private boolean mSoon;
     private FrameLayout matchFrame;
 
     TopPills(Context c) {
@@ -141,61 +141,81 @@ final class TopPills extends LinearLayout {
         block.addView(hijri, hp);
         addView(block, wrap());
 
-        // ---- next-match pill (focusable)
+        // ---- next-match card (focusable): league and day on top, the two teams with the time between them, the countdown under
+        View sp1 = new View(getContext());
+        addView(sp1, new LinearLayout.LayoutParams(0, 1, 1f));            // centres the card in the free space beside the clock
         matchFrame = new FrameLayout(getContext());
         matchFrame.setFocusable(true);
         matchFrame.setClickable(true);
-        LinearLayout mp = new LinearLayout(getContext());
-        mp.setGravity(Gravity.CENTER_VERTICAL);
-        mp.setLayoutDirection(LAYOUT_DIRECTION_LTR);
-        matchBg = pill(0xB30E1530);
-        mp.setBackground(matchBg);
-        mp.setPadding(px(18), px(7), px(22), px(7));
+        final LinearLayout cardBox = new LinearLayout(getContext());
+        cardBox.setOrientation(VERTICAL);
+        cardBox.setLayoutDirection(LAYOUT_DIRECTION_LTR);
+        cardBox.setPadding(px(20), px(9), px(20), px(10));
+        cardBox.setBackground(cardBg(false, false));
 
-        LinearLayout badges = new LinearLayout(getContext());
-        badges.setLayoutDirection(LAYOUT_DIRECTION_LTR);
-        bHome = new ImageView(getContext());
+        mMeta = tv(12.5f, MUTED, false);
+        mMeta.setGravity(Gravity.CENTER);
+        mMeta.setTextAlignment(TEXT_ALIGNMENT_CENTER);
+        cardBox.addView(mMeta, new LinearLayout.LayoutParams(-1, -2));
+
+        LinearLayout row = new LinearLayout(getContext());
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        // left to right: away team, the time, home team (the home team sits on the right, as the Arabic text reads)
         bAway = new ImageView(getContext());
-        badges.addView(bHome, new LinearLayout.LayoutParams(px(34), px(34)));
-        LinearLayout.LayoutParams ab = new LinearLayout.LayoutParams(px(34), px(34));
-        ab.leftMargin = px(-8);
-        badges.addView(bAway, ab);
-        mp.addView(badges, wrap());
+        bHome = new ImageView(getContext());
+        mAway = tv(15, WHITE, true);
+        mHome = tv(15, WHITE, true);
+        mAway.setMaxWidth(px(130));
+        mHome.setMaxWidth(px(130));
+        mHome.setGravity(Gravity.END);
+        mAway.setTextAlignment(TEXT_ALIGNMENT_VIEW_START);
+        mHome.setTextAlignment(TEXT_ALIGNMENT_VIEW_END);
+        mTime = tv(22, WHITE, false);
+        mTime.setTypeface(Fonts.medium);
+        mTime.setGravity(Gravity.CENTER);
+        mTime.setTextAlignment(TEXT_ALIGNMENT_CENTER);
+        row.addView(bAway, new LinearLayout.LayoutParams(px(36), px(36)));
+        LinearLayout.LayoutParams an = new LinearLayout.LayoutParams(0, -2, 1f);
+        an.setMarginStart(px(10));
+        row.addView(mAway, an);
+        LinearLayout.LayoutParams tm = new LinearLayout.LayoutParams(px(104), -2);
+        row.addView(mTime, tm);
+        LinearLayout.LayoutParams hn = new LinearLayout.LayoutParams(0, -2, 1f);
+        hn.setMarginEnd(px(10));
+        row.addView(mHome, hn);
+        row.addView(bHome, new LinearLayout.LayoutParams(px(36), px(36)));
+        LinearLayout.LayoutParams rl = new LinearLayout.LayoutParams(-1, -2);
+        rl.topMargin = px(5);
+        cardBox.addView(row, rl);
 
-        LinearLayout col = new LinearLayout(getContext());
-        col.setOrientation(VERTICAL);
-        mNames = tv(14, WHITE, true);
-        mWhen = tv(12.5f, GOLD, false);
-        mNames.setMaxWidth(px(300));
-        mWhen.setMaxWidth(px(300));
-        col.addView(mNames, wrap());
-        LinearLayout.LayoutParams wp = wrap();
-        wp.topMargin = px(2);
-        col.addView(mWhen, wp);
-        LinearLayout.LayoutParams cl = wrap();
-        cl.setMarginStart(px(12));
-        mp.addView(col, cl);
-        matchFrame.addView(mp);
+        mCount = tv(12.5f, MUTED, false);
+        mCount.setGravity(Gravity.CENTER);
+        mCount.setTextAlignment(TEXT_ALIGNMENT_CENTER);
+        LinearLayout.LayoutParams cl = new LinearLayout.LayoutParams(-1, -2);
+        cl.topMargin = px(4);
+        cardBox.addView(mCount, cl);
+        matchFrame.addView(cardBox, new FrameLayout.LayoutParams(px(450), -2));
 
-        final GradientDrawable ring = new GradientDrawable();
-        ring.setColor(0);
-        ring.setCornerRadius(px(30));
-        ring.setStroke(px(2.5f), 0xFFFFFFFF);
-        ring.setAlpha(0);
-        matchFrame.setForeground(new android.graphics.drawable.InsetDrawable(ring, Math.round(3 * getResources().getDisplayMetrics().density)));
         matchFrame.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override public void onFocusChange(View v, boolean f) {
-                matchFrame.animate().scaleX(f ? 1.04f : 1f).scaleY(f ? 1.04f : 1f).setDuration(120).start();
-                ring.setAlpha(f ? 255 : 0);
-            }
+            @Override public void onFocusChange(View v, boolean f) { cardBox.setBackground(cardBg(f, mSoon)); }
         });
         matchFrame.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) { MatchesDialog.show(getContext(), matchFrame); }
+            @Override public void onClick(View v) { MatchesPanel.show(getContext(), null); }
         });
-        LinearLayout.LayoutParams ml = wrap();
-        ml.setMarginStart(px(34));
-        addView(matchFrame, ml);
+        addView(matchFrame, wrap());
+        View sp2 = new View(getContext());
+        addView(sp2, new LinearLayout.LayoutParams(0, 1, 1f));
         applySports();
+    }
+
+    /** The card's fill: a faint light when idle, brighter with a thin accent line when focused (or soon). */
+    private GradientDrawable cardBg(boolean focused, boolean soon) {
+        GradientDrawable g = new GradientDrawable();
+        g.setColor(focused ? 0x2AFFFFFF : 0x14FFFFFF);
+        g.setCornerRadius(px(22));
+        if (focused) g.setStroke(Math.max(2, px(2)), (Theme.accent & 0x00FFFFFF) | 0xCC000000);
+        else if (soon) g.setStroke(Math.max(1, px(1.5f)), (Theme.accent & 0x00FFFFFF) | 0x77000000);
+        return g;
     }
 
     /** Settings changed while the home is on screen: redraw now (clock format, Hijri, weather, accent colour, match pill). */
@@ -240,22 +260,29 @@ final class TopPills extends LinearLayout {
 
         List<Fixtures.Match> up = Fixtures.upcoming;
         if (up.isEmpty()) {
-            mNames.setText("مباريات برشلونة");
-            mWhen.setText("جاري التحميل…");
+            mMeta.setText("المباراة القادمة");
+            mHome.setText("");
+            mAway.setText("");
+            mTime.setText("…");
+            mCount.setText(Fixtures.lastError != null ? "⚠ تعذّر التحميل" : "جاري التحميل");
+            mSoon = false;
             badge(bHome, null);
             badge(bAway, null);
             return;
         }
         Fixtures.Match m = up.get(0);
         long left = m.start - now;
-        boolean soon = !m.postponed && left < DAY;
-        matchBg.setStroke(Math.max(1, px(soon ? 2 : 1)), soon ? GOLD : 0x33FFFFFF);
+        boolean live = !m.postponed && left <= 0;
+        mSoon = !m.postponed && left < DAY;
+        mMeta.setText(Fixtures.ar(m.league) + (m.postponed ? "" : "  ·  " + dayLabel(m.start)));
+        mHome.setText(Fixtures.ar(m.home));
+        mAway.setText(Fixtures.ar(m.away));
         badge(bHome, Fixtures.badge(m.homeBadge));
         badge(bAway, Fixtures.badge(m.awayBadge));
-        mNames.setText(Fixtures.ar(m.home) + "  ×  " + Fixtures.ar(m.away));
-        if (m.postponed) mWhen.setText("مؤجلة");
-        else if (left <= 0) mWhen.setText("جارية الآن");
-        else mWhen.setText(dayLabel(m.start) + " " + fmt("h:mm a", GREG, m.start) + "  ·  " + countdownText(left));
-        mWhen.setTextColor(soon ? GOLD : MUTED);
+        mTime.setText(m.postponed ? "—" : fmt(Theme.clock24 ? "HH:mm" : "h:mm a", GREG, m.start));
+        mTime.setTextColor(mSoon ? GOLD : WHITE);
+        mCount.setText(m.postponed ? "مؤجلة" : live ? "● جارية الآن" : countdownText(left));
+        mCount.setTextColor(live ? 0xFFFF453A : mSoon ? GOLD : MUTED);
+        if (!matchFrame.isFocused()) ((LinearLayout) matchFrame.getChildAt(0)).setBackground(cardBg(false, mSoon));
     }
 }
