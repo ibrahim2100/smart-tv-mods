@@ -1,43 +1,33 @@
-# Smart TV Mods · تعديلات التلفزيونات الذكية
+<div align="center">
 
-**مشروعان مفتوحا المصدر لتخصيص تلفزيونين: واجهة رئيسية لـ LG webOS، ولانشر لـ Google TV (Android).**
-**Two open-source projects to customise two TVs: a home screen for LG webOS and a launcher for Google TV (Android).**
+# Smart TV Mods
+### تعديلات التلفزيونات الذكية
+
+**من تطوير · by [إبراهيم آل رهن · Ibrahim Al-Rahn](https://github.com/ibrahim2100)**
+*بُني بالكامل بوكيل ذكاء اصطناعي ([Claude](https://claude.com/claude-code)) تحت توجيهه وتجربته على تلفزيونين حقيقيين · built entirely with an AI agent ([Claude](https://claude.com/claude-code)), directed and tested by him on two real TVs*
+
+مشروعان مفتوحا المصدر: **واجهة رئيسية لـ LG webOS** و**لانشر لـ Google TV (Android)**
+Two open-source projects: **a home screen for LG webOS** and **a launcher for Google TV (Android)**
 
 ![LG webOS home](lg-webos/docs/screenshots/home.jpg)
 
-| | 🔴 [`lg-webos/`](lg-webos) | 🟢 [`google-tv/`](google-tv) |
-|---|---|---|
-| **التلفزيون · TV** | LG webOS 7.5، مروّت · rooted (Homebrew Channel) | Haier MatrixTV BE — Google TV / Android 14 |
-| **ما هو · What** | شاشة رئيسية ويب (HTML/JS) + خدمة جذرية + بطاقات تنبيه دوري الأبطال فوق أي تطبيق + شاشة توقف | لانشر Android هادئ (Albrhi Home): سمات ألوان، **أزرار ريموت بكيفك** (اربط أي زر بأي تطبيق)، إعدادات سريعة جانبية، شاشة انتظار، ربط الجوال، وحزمة استرجاع |
-| **اللغة · Stack** | JavaScript (بدون بناء · no build), Node.js | Java (Android SDK بدون Gradle · without Gradle) |
-| **الأدوات · Tooling** | telnet بورت 23، `scripts/*.sh`، `npm test` | `adb`، `build.sh`، `restore.sh` |
-| **الشرح · Docs** | [lg-webos/README.md](lg-webos/README.md) + [`docs/`](lg-webos/docs) | [google-tv/README.md](google-tv/README.md) |
-| **الحالة · Status** | قيد التطوير · active | مستقر · stable |
+</div>
 
-> ⚠️ **مشاريع غير رسمية · Unofficial.** غير مرتبطة بـLG أو Google أو Haier. تعديل التلفزيون على مسؤوليتك؛ اقرأ قسم الأمان في كل مشروع قبل التثبيت.
-> Not affiliated with LG, Google or Haier. You modify your TV at your own risk; read each project's safety section first.
+> ## 🤖 ما تعرف تنفذ بنفسك؟ استعن بوكيل ذكاء اصطناعي · Can't do it yourself? Use an AI agent
+> **ما تحتاج تكون مبرمج.** افتح أي وكيل ذكاء اصطناعي يشتغل على جهازك (Claude Code أو Codex أو Cursor أو Gemini CLI أو غيره)، أعطه رابط هذا المستودع، وقل له وش تبي: **يقرأ [`AGENTS.md`](AGENTS.md) وينفّذ لك** التثبيت على تلفزيونك، أو يبني لك نسختك الخاصة (تطبيقاتك، لغتك، فريقك). وهذا بالضبط الأسلوب اللي انبنى فيه المشروع.
+> **You don't need to be a programmer.** Open any AI coding agent on your computer (Claude Code, Codex, Cursor, Gemini CLI…), give it this repository's link and tell it what you want: **it reads [`AGENTS.md`](AGENTS.md) and does it for you**, either installing on your TV or building your own version (your apps, language, team). This is exactly how the project itself was built.
+>
+> ```text
+> اقرأ AGENTS.md في هذا المستودع. تلفزيوني [LG webOS / Google TV] عنوانه [IP]، وفعّلت [الروت / USB debugging].
+> ثبّت المشروع المناسب على تلفزيوني، وخذ نسخة احتياطية أولاً، واسألني قبل أي أمر يتصل بالتلفزيون.
+> ```
+> ```text
+> Read AGENTS.md in this repository. My TV is a [LG webOS / Google TV] at [IP] and I enabled [root / USB debugging].
+> Install the matching project on my TV: back up first and ask me before any command that connects to the TV.
+> ```
 
-## لقطات · Screenshots
-
-| 🔴 LG webOS | |
-|:---:|:---:|
-| ![LG home](lg-webos/docs/screenshots/home.jpg) | ![LG screensaver](lg-webos/docs/screenshots/saver.jpg) |
-| الشاشة الرئيسية · Home | شاشة التوقف · Screensaver |
-| ![LG goal alert](lg-webos/docs/screenshots/alert.jpg) | ![LG alert kinds](lg-webos/docs/screenshots/alert-kinds.jpg) |
-| تنبيه هدف فوق أي تطبيق · Goal alert over any app | أنواع التنبيهات · Alert kinds |
-
-| 🟢 Google TV | |
-|:---:|:---:|
-| ![Google TV home](google-tv/docs/screenshots/home.jpg) | ![Google TV screensaver](google-tv/docs/screenshots/saver.jpg) |
-| الشاشة الرئيسية · Home | شاشة الانتظار · Screensaver |
-| ![Google TV quick settings](google-tv/docs/screenshots/settings.jpg) | ![Google TV remote buttons](google-tv/docs/screenshots/remote-keys.jpg) |
-| الإعدادات السريعة · Quick settings | أزرار الريموت بكيفك · Your own remote buttons |
-| ![Google TV appearance](google-tv/docs/screenshots/appearance.jpg) | ![Google TV theme](google-tv/docs/screenshots/theme-sunset.jpg) |
-| المظهر والسمات · Appearance and themes | سمة «غروب» · "Sunset" theme |
-| ![Google TV match card](google-tv/docs/screenshots/home-sports.jpg) | ![Google TV fixtures panel](google-tv/docs/screenshots/matches.jpg) |
-| بطاقة المباراة (اختيارية) · Match card (optional) | قائمة المباريات · Fixtures panel |
-
-*(حجبنا اسم الشبكة والمدينة وبعض التطبيقات من اللقطات حفاظاً على الخصوصية · Wi-Fi name, city and a few apps are blurred for privacy.)*
+> ⚠️ **مشاريع غير رسمية · Unofficial.** غير مرتبطة بـLG أو Google أو Haier أو Amazon. تعديل التلفزيون على مسؤوليتك؛ اقرأ قسم الأمان في كل مشروع قبل التثبيت.
+> Not affiliated with LG, Google, Haier or Amazon. You modify your TV at your own risk; read each project's safety section first.
 
 **الفهرس · Contents:** [العربي](#العربي) · [English](#english)
 
@@ -45,33 +35,118 @@
 
 ## العربي
 
-### وش في هذا المستودع؟
-مستودع واحد يجمع مشروعين **منفصلين تماماً** (لا كود مشترك، ولا سكربتات مشتركة):
+### نظرة سريعة
+| | 🔴 [`lg-webos/`](lg-webos) — الجلسة | 🟢 [`google-tv/`](google-tv) — Albrhi Home |
+|---|---|---|
+| **التلفزيون** | LG webOS 7.5 **مروّت** (Homebrew Channel) | Haier MatrixTV BE — Google TV / Android 14 (**بدون روت**) |
+| **ما هو** | شاشة رئيسية ويب + خدمة جذرية + تنبيهات دوري الأبطال فوق أي تطبيق | لانشر Android هادئ: سمات، إعدادات سريعة، أزرار ريموت بكيفك، تحكم بالمكيف، ربط الجوال |
+| **اللغة** | JavaScript (بدون بناء) وNode.js | Java (Android SDK بدون Gradle) |
+| **الأدوات** | telnet بورت 23، `scripts/*.sh`، `npm test` | `adb`، `build.sh`، `restore.sh` |
+| **التفاصيل** | [lg-webos/README.md](lg-webos/README.md) و[`docs/`](lg-webos/docs) | [google-tv/README.md](google-tv/README.md) |
+| **الحالة** | قيد التطوير | مستقر |
 
-1. **[`lg-webos/`](lg-webos) — الجلسة (WebOS):** يستبدل الشاشة الرئيسية لتلفزيون LG المروّت. تطبيقاتك ومدخلات HDMI والنظام في صفوف مرتبة بحركات ناعمة، بطاقة المباراة القادمة، **تنبيهات دوري أبطال أوروبا** (من UEFA) تظهر فوق أي تطبيق حتى Netflix، شاشة توقف بهوية خاصة، تنظيف ذاكرة، ويوقف إعلانات LG. مجرّب على webOS 7.5.
-2. **[`google-tv/`](google-tv) — Albrhi Home:** لانشر Android لتلفزيون Google TV (Haier MatrixTV BE): واجهة هادئة بسمات وإعدادات سريعة، **أزرار ريموت تربطها بأي تطبيق**، **تحكم بالمكيف (أو أجهزة Alexa) من الريموت** مع بطاقة حالة، مباريات وتنبيهات اختيارية، شاشة انتظار، **ريموت وتثبيت تطبيقات من الجوال**، وحزمة سكربتات تعيد كل التعديلات أو ترجع التلفزيون للأصل.
+مستودع واحد لمشروعين **منفصلين تماماً** (لا كود مشترك ولا سكربتات مشتركة). عندك **LG** ← ادخل `lg-webos/`. عندك **Google TV / Android TV** ← ادخل `google-tv/`. شغّل أي سكربت من داخل مجلد مشروعه فقط: سكربتات `adb` لـGoogle TV وسكربتات telnet لـLG.
 
-### ✨ جديد في Google TV: المكيف من الريموت
-اضغط زر **أخضر** يشغّل المكيف، **أحمر** يطفيه، **أصفر** يضبطه على 21، وتطلع بطاقة «تم تشغيل المكيف» على الشاشة. يشتغل مع أي جهاز في Alexa عبر جسر Voice Monkey (أوامر باتجاه واحد، بدون قراءة حالة الجهاز). الشرح الكامل وخطوات التجهيز: [`google-tv/README.md`](google-tv/README.md#التحكم-بالمكيف-عبر-alexa-اختياري).
+### 🟢 Google TV (Albrhi Home): كل الميزات
 
-### كيف أختار؟
-- عندك **LG** (webOS) ← ادخل [`lg-webos/`](lg-webos).
-- عندك **Google TV / Android TV** ← ادخل [`google-tv/`](google-tv).
-- شغّل أي سكربت من داخل مجلد مشروعه فقط؛ سكربتات `adb` لـGoogle TV وسكربتات telnet لـLG.
+**الشاشة الرئيسية**
+- ساعة كبيرة وتاريخ (ميلادي وهجري اختياري) وطقس وتحية باسمك، بتصميم هادئ بدون صناديق.
+- صفوف مرتبة: **تطبيقاتك**، **أدوات التلفزيون**، **المدخلات (HDMI)** مع حالة الشبكة.
+- اسم التطبيق المحدد وصورته، وخلفية داكنة ناعمة **تتلوّن بلون التطبيق** بتلاشي سلس.
+- **ضغط مطوّل على OK:** نقل، إعادة تسمية، إخفاء، حذف (أو معلومات التطبيق لتطبيقات النظام). الترتيب محفوظ.
+- **شاشة انتظار** هادئة بساعة كبيرة تتحرك ببطء لحماية الشاشة.
+
+**الإعدادات السريعة**
+- لوحة جانبية هادئة: بلاطات للصورة والصوت والشبكة والجوال والمظهر والذاكرة، وصفوف خفيفة (كل إعدادات التلفزيون، أدوات وصيانة)، ومؤشرا الرام والتخزين.
+- مفاتيح تبديل حقيقية، **وكل تغيير يُطبَّق لحظياً** (بدون الخروج من اللوحة)، وإلغاؤه فوري.
+
+**المظهر**
+- **5 سمات ألوان:** منتصف الليل، رمادي، محيط، غروب، بنفسجي. لون الخلفية يتبع التطبيق أو لا.
+- الوقت 12/24 ساعة، التاريخ الهجري، الطقس، الاسم في التحية، وحواف الشاشة (للتلفزيونات التي تقص الأطراف).
+
+**أزرار الريموت بكيفك**
+- اربط **أي زر** في الريموت (يوتيوب، نتفلكس، برايم، شاهد، الألوان، الأرقام…) بأي تطبيق تختاره. يشتغل مع أي ريموت وأي عدد أزرار.
+- الإعدادات السريعة ← **أزرار الريموت** ← «إضافة زر» ← اضغط الزر ← اختر التطبيق. الأزرار الأساسية (الأسهم، OK، رجوع، Home، الصوت، التشغيل) محمية.
+
+**🌬️ التحكم بالمكيف (وأجهزة Alexa) من الريموت** *(اختياري)*
+- **الأخضر** يشغّل المكيف، **الأحمر** يطفيه، **الأصفر** يضبط الحرارة على 21 (مثال، وأنت تختار الأزرار والأوامر).
+- بطاقة حالة هادئة على الشاشة: «تم تشغيل المكيف»، «تم إطفاء المكيف»، «تم ضبط الحرارة 21°».
+- لوحة «المكيف» في الإعدادات السريعة بأوامرك، وأي أمر يُربط بأي زر.
+- يمر عبر Voice Monkey وروتين Alexa (لأن Alexa ما عندها واجهة رسمية للتطبيقات الخارجية). أوامر باتجاه واحد: **لا تُقرأ حالة المكيف**.
+- الشرح الكامل وخطوات التجهيز: [google-tv/README.md](google-tv/README.md#التحكم-بالمكيف-عبر-alexa-اختياري).
+
+**ربط الجوال**
+- صفحة ويب على شبكة البيت: **ريموت كامل** (أسهم، OK، صوت، كتابة، تشغيل رابط فيديو، إطفاء الشاشة).
+- تثبيت وحذف وفتح التطبيقات، ورفع APK. رمز ربط من 6 أرقام لكل جهاز، وكل تثبيت يحتاج تأكيد على التلفزيون.
+
+**الرياضة** *(اختيارية، متوقفة افتراضياً)*
+- بطاقة المباراة القادمة بشعارات الفريقين وعدّ تنازلي، وقائمة مباريات، وتنبيهات (قبل المباراة، الانطلاق، النهاية، تغيّر الموعد). وهي متوقفة، لا تحمّل بيانات ولا تنبّه.
+
+**الأداء والثبات**
+- حركات ناعمة (تحريك transform وopacity فقط)، صور بلاطات مرسومة مسبقاً: الشريحة 90 من 32 إلى **25 ms**، والإطارات المتقطعة من 3.0% إلى **0.6%**.
+- **تنظيف الذاكرة** يدوي أو تلقائي قبل فتح تطبيق (يغلق الخلفية فقط).
+- **شاشة طوارئ** لو انهار اللانشر 3 مرات خلال دقيقتين، ونسخة احتياطية يومية اختيارية للترتيب والأسماء والأزرار، وخدمة الإتاحة تعيد تفعيل نفسها لو أطفأها النظام.
+
+**حزمة الاسترجاع (`albrhi-tv-restore/`)**
+- `restore.sh` يعيد كل التعديلات بعد تحديث النظام، و`revert.sh` يرجّع التلفزيون للأصل، و`backup.sh` وسكربتا `check.sh` و`selftest.sh` للفحص والقياس. ويعطّل تطبيقات Haier/MediaTek الزائدة (قابل للتراجع).
+
+### 🔴 LG webOS (الجلسة): كل الميزات
+
+**الواجهة**
+- **صفوف منفصلة:** تطبيقاتك، المدخلات (HDMI بشعارات PlayStation وbeIN وغيرها)، النظام (الأساسية فقط).
+- **اكتشاف تلقائي:** أي تطبيق تنزّله يظهر بأيقونته، وأي تطبيق تحذفه يختفي.
+- **حركات ناعمة:** 55–60 إطار/ثانية، حوالي 25 ms من الضغطة للرسم، ولون التطبيق يغمر الشاشة عند فتحه.
+- **ضغط مطوّل:** نقل، إخفاء، أو **حذف فعلي** من التلفزيون بتأكيد. تطبيقات النظام وHomebrew محمية.
+- **بطاقة المباراة** لفرقك (برشلونة والريال والهلال والنصر افتراضياً) بعدّاد ونتيجة ودقيقة.
+- **طقس** حسب مدينتك، و**أسماء الفرق والدوريات والمدن بالعربي**.
+- **شاشة توقف** بهوية خاصة بعد خمول (شعار، ساعة، طقس، المباراة القادمة) تحل محل شاشة LG وإعلاناتها.
+
+**التنبيهات** *(دوري أبطال أوروبا فقط)*
+- من واجهة **UEFA** الرسمية: بداية، هدف (باسم اللاعب والدقيقة، وعكسي/جزاء)، إلغاء هدف، بطاقة حمراء، ركلة جزاء، VAR، استراحة، نهاية.
+- تظهر ببطاقة فوق **أي تطبيق حتى Netflix**، وتفحص كل 5 ثوان وقت المباراة وتنام بينها.
+
+**الأدوات والنظام**
+- **لوحة إعدادات سريعة (الترس):** شبكة، بلوتوث، مخرج الصوت، مستوى الصوت، وضع الصورة، **إطفاء الشاشة مع بقاء الصوت**، تنبيهات الأهداف، تنظيف الذاكرة.
+- **تنظيف ذاكرة** يدوي وتلقائي.
+- **بلا إعلانات LG** (يطفئ `homePromotion` وإعلانات التوقف)، وسكربت واحد يرجّع كل شي.
+- **تحديث ذاتي** برفع الملفات، **وثبات بعد الإقلاع** (يفتح الواجهة بدل «لا إشارة») وزر Home يعمل من أي تطبيق.
+- مجرّبة على **webOS 7.5** (رام 1.2 جيجا): كل قرار تصميم مبني على ضعف هذا الجهاز.
+
+### لقطات
+
+| 🔴 LG webOS | |
+|:---:|:---:|
+| ![LG home](lg-webos/docs/screenshots/home.jpg) | ![LG screensaver](lg-webos/docs/screenshots/saver.jpg) |
+| الشاشة الرئيسية | شاشة التوقف |
+| ![LG goal alert](lg-webos/docs/screenshots/alert.jpg) | ![LG alert kinds](lg-webos/docs/screenshots/alert-kinds.jpg) |
+| تنبيه هدف فوق أي تطبيق | أنواع التنبيهات |
+
+| 🟢 Google TV | |
+|:---:|:---:|
+| ![Google TV home](google-tv/docs/screenshots/home.jpg) | ![Google TV screensaver](google-tv/docs/screenshots/saver.jpg) |
+| الشاشة الرئيسية | شاشة الانتظار |
+| ![Google TV quick settings](google-tv/docs/screenshots/settings.jpg) | ![Google TV remote buttons](google-tv/docs/screenshots/remote-keys.jpg) |
+| الإعدادات السريعة | أزرار الريموت بكيفك |
+| ![Google TV appearance](google-tv/docs/screenshots/appearance.jpg) | ![Google TV theme](google-tv/docs/screenshots/theme-sunset.jpg) |
+| المظهر والسمات | سمة «غروب» |
+| ![Google TV match card](google-tv/docs/screenshots/home-sports.jpg) | ![Google TV fixtures panel](google-tv/docs/screenshots/matches.jpg) |
+| بطاقة المباراة (اختيارية) | قائمة المباريات |
+
+*(حجبنا اسم الشبكة والمدينة وبعض التطبيقات من اللقطات حفاظاً على الخصوصية.)*
 
 ### هيكل المستودع
 ```
 .
 ├── lg-webos/                 🔴 LG webOS
-│   ├── app/                  الواجهة · the home screen
-│   ├── service/              الخدمة الجذرية وتنبيهات UEFA · root service + UEFA alerts
-│   ├── alert/                تطبيق بطاقة التنبيه · alert overlay app
-│   ├── scripts/              تثبيت ورفع وتراجع · install, deploy, revert
-│   ├── tools/                مولّدات الخلفية والاختبارات · wallpaper generators, tests
-│   └── docs/                 وثائق مفصلة ثنائية اللغة · detailed bilingual docs
+│   ├── app/                  الواجهة
+│   ├── service/              الخدمة الجذرية وتنبيهات UEFA
+│   ├── alert/                تطبيق بطاقة التنبيه
+│   ├── scripts/              تثبيت ورفع وتراجع
+│   ├── tools/                مولّدات الخلفية والاختبارات
+│   └── docs/                 وثائق مفصلة ثنائية اللغة
 ├── google-tv/                🟢 Google TV
-│   ├── albrhi-widget/        مصدر التطبيق وبناؤه · app source + build
-│   └── albrhi-tv-restore/    حزمة الاسترجاع والأدوات · restore kit + tools
+│   ├── albrhi-widget/        مصدر التطبيق وبناؤه
+│   └── albrhi-tv-restore/    حزمة الاسترجاع والأدوات
 ├── README.md · AGENTS.md · llms.txt · CLAUDE.md · LICENSE
 ```
 
@@ -83,6 +158,7 @@ cd smart-tv-mods
 ثم:
 - **LG:** `cd lg-webos && npm install && cp scripts/tv.conf.example scripts/tv.conf` وكمّل من [`lg-webos/docs/INSTALL.md`](lg-webos/docs/INSTALL.md).
 - **Google TV:** `cd google-tv/albrhi-widget && ./build.sh && ./pack.sh` ثم `cd ../albrhi-tv-restore && cp device.conf.example device.conf && ./restore.sh` (التفاصيل في [`google-tv/README.md`](google-tv/README.md)).
+- **أو اترك الوكيل يسويها:** استخدم الطلب اللي في أول الصفحة.
 
 ### المتطلبات: الروت (LG) / USB Debugging (Android)
 
@@ -103,24 +179,19 @@ cd smart-tv-mods
 4. ضع العنوان في `google-tv/albrhi-tv-restore/device.conf`.
 
 ### 🤖 صُنع بوكيل ذكاء اصطناعي
-هذا المستودع **كتبه وكيل ذكاء اصطناعي**: [Claude](https://claude.com/claude-code) من Anthropic (Claude Code، النموذج Claude Sonnet 5.5) بتوجيه **إبراهيم الراهن** الذي حدد المطلوب وجرّب كل شي على تلفزيونيه الحقيقيين وصحّح المسار. الفضل في كتابة الكود والتوثيق وتحليل الأعطال يعود للوكيل (Claude)، والقرار والتجربة والملكية لصاحب المشروع. ما كُتب هنا يُظهر أن وكيلاً يقدر يبني ويختبر ويوثق ويرفع مشروعاً كاملاً على أجهزة حقيقية إذا توفرت له الصلاحيات الصحيحة.
+هذا المستودع **كتبه وكيل ذكاء اصطناعي**: [Claude](https://claude.com/claude-code) من Anthropic (Claude Code) بتوجيه **إبراهيم آل رهن** الذي حدد المطلوب وجرّب كل شي على تلفزيونيه الحقيقيين وصحّح المسار. الفضل في كتابة الكود والتوثيق وتحليل الأعطال يعود للوكيل (Claude)، والقرار والتجربة والملكية لصاحب المشروع. ما كُتب هنا يُظهر أن وكيلاً يقدر يبني ويختبر ويوثق ويرفع مشروعاً كاملاً على أجهزة حقيقية إذا توفرت له الصلاحيات الصحيحة.
 
 ### 🧠 لأي نموذج ذكاء اصطناعي يقرأ المستودع
 المستودع مصمم بحيث يقدر أي نموذج (Claude، GPT، Gemini، Codex، Cursor…) **يفهمه كاملاً، ينفذه على تلفزيونك، أو يبني نسخته الخاصة**:
 - [`AGENTS.md`](AGENTS.md): الدليل الكامل (المتطلبات، التشغيل خطوة بخطوة، نقاط التخصيص لكل مشروع، قواعد الأمان، قائمة التحقق).
 - [`llms.txt`](llms.txt): فهرس مختصر للنماذج. و`CLAUDE.md` يحيل إلى `AGENTS.md`.
 
-جرّب هذا الطلب مع أي وكيل (مثل Claude Code):
-```text
-اقرأ AGENTS.md في هذا المستودع. تلفزيوني [LG webOS / Google TV] عنوانه [IP]، وفعّلت [الروت / USB debugging].
-ثبّت المشروع المناسب على تلفزيوني، وخذ نسخة احتياطية أولاً، واسألني قبل أي أمر يتصل بالتلفزيون.
-```
-أو لبناء نسختك: «اقرأ AGENTS.md ثم اصنع نسخة خاصة بي: فريقي [X]، تطبيقاتي [..]، لغتي [..]، وتلفزيوني [الموديل].»
+لبناء نسختك: «اقرأ AGENTS.md ثم اصنع نسخة خاصة بي: فريقي [X]، تطبيقاتي [..]، لغتي [..]، وتلفزيوني [الموديل].»
 
 ### الخصوصية والأمان في المستودع
-- **لا شي خاص مرفوع:** لا عناوين IP حقيقية (أمثلة فقط: `tv.conf.example` و`device.conf.example`)، لا مفاتيح توقيع (`*.keystore` محجوبة)، لا نسخ احتياطية للتلفزيون، لا ملفات APK، ولا إيميلات (الالتزامات بعنوان GitHub noreply).
+- **لا شي خاص مرفوع:** لا عناوين IP حقيقية (أمثلة فقط: `tv.conf.example` و`device.conf.example`)، لا مفاتيح توقيع (`*.keystore` محجوبة)، لا نسخ احتياطية للتلفزيون، لا ملفات APK، لا رموز (tokens)، ولا إيميلات (الالتزامات بعنوان GitHub noreply).
 - الشعارات والأيقونات (علامات تجارية) **غير مخزّنة**؛ تُسحب بـ`lg-webos/scripts/fetch-assets.sh` عندك محلياً.
-- ملفات إعدادك المحلية (`tv.conf`، `device.conf`) في `.gitignore`.
+- ملفات إعدادك المحلية (`tv.conf`، `device.conf`) في `.gitignore`، ورمز المكيف يبقى على التلفزيون فقط.
 
 ### المساهمة
 - افتح Issue أو Pull Request. اذكر أي تلفزيون وإصدار النظام.
@@ -128,25 +199,110 @@ cd smart-tv-mods
 - ملاحظات للمطوّر ولـClaude: [`CLAUDE.md`](CLAUDE.md).
 
 ### الرخصة والشكر
-MIT (انظر [`LICENSE`](LICENSE) و[`lg-webos/LICENSE`](lg-webos/LICENSE)). الخطوط: IBM Plex Sans Arabic وAmiri (SIL OFL 1.1). فكرة استبدال الهوم في webOS مأخوذة من [zzeppieri/webos-custom-home](https://github.com/zzeppieri/webos-custom-home) (MIT)؛ الروت عبر [webosbrew](https://github.com/webosbrew) ودليل <https://e.nya.je/getroot/>. البيانات: UEFA وESPN وOpen-Meteo وipwho.is. الشعارات علامات تجارية لأصحابها.
+MIT (انظر [`LICENSE`](LICENSE) و[`lg-webos/LICENSE`](lg-webos/LICENSE)). الخطوط: IBM Plex Sans Arabic وAmiri (SIL OFL 1.1). فكرة استبدال الهوم في webOS مأخوذة من [zzeppieri/webos-custom-home](https://github.com/zzeppieri/webos-custom-home) (MIT)؛ الروت عبر [webosbrew](https://github.com/webosbrew) ودليل <https://e.nya.je/getroot/>. البيانات: UEFA وESPN وOpen-Meteo وipwho.is. التحكم بالمكيف عبر [Voice Monkey](https://voicemonkey.io) وAlexa. الشعارات علامات تجارية لأصحابها.
 
 ---
 
 ## English
 
-### What's in this repository?
-One repository with two **completely separate** projects (no shared code, no shared scripts):
+### At a glance
+| | 🔴 [`lg-webos/`](lg-webos) — Aljalsa | 🟢 [`google-tv/`](google-tv) — Albrhi Home |
+|---|---|---|
+| **TV** | LG webOS 7.5, **rooted** (Homebrew Channel) | Haier MatrixTV BE — Google TV / Android 14 (**no root**) |
+| **What** | A web home screen + a root service + Champions League alerts over any app | A calm Android launcher: themes, quick settings, your own remote buttons, AC control, phone pairing |
+| **Stack** | JavaScript (no build) and Node.js | Java (Android SDK, no Gradle) |
+| **Tooling** | telnet port 23, `scripts/*.sh`, `npm test` | `adb`, `build.sh`, `restore.sh` |
+| **Docs** | [lg-webos/README.md](lg-webos/README.md) and [`docs/`](lg-webos/docs) | [google-tv/README.md](google-tv/README.md) |
+| **Status** | active | stable |
 
-1. **[`lg-webos/`](lg-webos) — Aljalsa (WebOS):** replaces the home screen of a rooted LG TV. Apps, HDMI inputs and system apps in tidy rows with smooth animation, a next-match card, **UEFA Champions League alerts** shown over any app (even Netflix), a branded screensaver, a memory cleaner, and LG ads switched off. Tested on webOS 7.5.
-2. **[`google-tv/`](google-tv) — Albrhi Home:** an Android launcher for a Google TV (Haier MatrixTV BE): a calm home with themes and quick settings, **remote buttons you link to any app**, **air-conditioner (or any Alexa device) commands from the remote** with a status card, optional matches and alerts, a screensaver, **phone remote and app installs**, plus a script kit that re-applies every change or reverts the TV to stock.
+One repository, two **completely separate** projects (no shared code or scripts). You own an **LG** → go to `lg-webos/`. You own a **Google TV / Android TV** → go to `google-tv/`. Run scripts only from inside their own project: `adb` scripts are for Google TV, telnet scripts for LG.
 
-### ✨ New on Google TV: the AC from the remote
-Press **green** to turn the AC on, **red** to turn it off, **yellow** to set 21°, and a "AC turned on" card appears on screen. It works with any device in Alexa through a Voice Monkey bridge (one-way commands; the device's state is not read back). Full guide and setup: [`google-tv/README.md`](google-tv/README.md#ac-control-through-alexa-optional).
+### 🟢 Google TV (Albrhi Home): every feature
 
-### Which one do I need?
-- You own an **LG** (webOS) TV → go to [`lg-webos/`](lg-webos).
-- You own a **Google TV / Android TV** → go to [`google-tv/`](google-tv).
-- Run scripts only from inside their own project: `adb` scripts are for Google TV, telnet scripts for LG.
+**Home screen**
+- A large clock and date (Hijri optional), weather and a greeting with your name, in a calm design with no boxes.
+- Tidy rows: **your apps**, **TV tools**, **inputs (HDMI)** with network status.
+- The selected app's name and artwork, and a soft dark background that **takes the app's colour** with a smooth cross-fade.
+- **Long-press OK:** move, rename, hide, delete (or app info for system apps). Order is saved.
+- A calm **screensaver**: a large clock drifting slowly to protect the panel.
+
+**Quick settings**
+- A calm side panel: tiles for picture, sound, network, phone, appearance and memory, quiet rows (all TV settings, tools and maintenance), and RAM/storage meters.
+- Real on/off switches, and **every change applies instantly** (the panel stays open), and cancelling is instant too.
+
+**Appearance**
+- **5 colour themes:** Midnight, Graphite, Ocean, Sunset, Violet. The background follows the app's colour or not.
+- 12/24-hour clock, Hijri date, weather, the name in the greeting, and screen edges (for TVs that crop the picture).
+
+**Remote buttons, your way**
+- Link **any button** on your remote (YouTube, Netflix, Prime, Shahid, colour keys, numbers…) to any app you choose. Works with any remote and any number of buttons.
+- Quick settings → **Remote buttons** → "Add a button" → press it → pick the app. The essential keys (arrows, OK, Back, Home, volume, power) are protected.
+
+**🌬️ AC (and Alexa device) control from the remote** *(optional)*
+- **Green** turns the AC on, **red** turns it off, **yellow** sets 21° (an example: you choose the buttons and commands).
+- A calm status card on screen: "AC turned on", "AC turned off", "Temperature set 21°".
+- An "AC" panel in quick settings with your commands, and any command can be linked to any button.
+- It goes through Voice Monkey and an Alexa routine (Alexa has no public API for outside apps). Commands are one-way: **the AC's state is not read back**.
+- Full guide and setup: [google-tv/README.md](google-tv/README.md#ac-control-through-alexa-optional).
+
+**Phone pairing**
+- A web page on your home network: a **full remote** (arrows, OK, volume, typing, play a video link, screen off).
+- Install, uninstall and open apps, and APK upload. A 6-digit pairing code per device, and every install needs confirmation on the TV.
+
+**Sports** *(optional, off by default)*
+- A next-match card with both crests and a countdown, a fixtures panel, and alerts (before the match, kick-off, full time, fixture changes). While off it downloads nothing and sends no alerts.
+
+**Performance and resilience**
+- Smooth motion (only transform and opacity are animated) and pre-rendered tile pictures: 90th percentile frame time from 32 to **25 ms**, janky frames from 3.0% to **0.6%**.
+- **Memory cleaner**, manual or automatic before launching an app (background apps only).
+- An **emergency screen** if the launcher crashes 3 times in 2 minutes, an optional daily backup of layout, names and buttons, and an accessibility service that switches itself back on if Android turns it off.
+
+**Restore kit (`albrhi-tv-restore/`)**
+- `restore.sh` re-applies everything after a system update, `revert.sh` returns the TV to stock, `backup.sh`, and `check.sh` / `selftest.sh` to verify and measure. It also disables extra Haier/MediaTek apps (reversible).
+
+### 🔴 LG webOS (Aljalsa): every feature
+
+**Interface**
+- **Separate rows:** your apps, inputs (HDMI with PlayStation, beIN and other logos), system (essentials only).
+- **Auto-discovery:** an app you install shows up with its icon, an app you delete disappears.
+- **Smooth motion:** 55–60 fps, about 25 ms from key press to paint, and the app's colour floods the screen when you open it.
+- **Long-press:** move, hide, or **really delete** from the TV with confirmation. System apps and Homebrew are protected.
+- A **match card** for your teams (Barcelona, Real Madrid, Al-Hilal and Al-Nassr by default) with a countdown, score and minute.
+- **Weather** for your city, and **Arabic names** for teams, leagues and cities.
+- A branded **screensaver** after idling (logo, clock, weather, next match) that replaces LG's own and its ads.
+
+**Alerts** *(Champions League only)*
+- From the official **UEFA** feed: kick-off, goal (with player and minute, own goal or penalty), goal cancelled, red card, penalty, VAR, half-time, full time.
+- Shown as a card over **any app, even Netflix**; it polls every 5 seconds during a match and sleeps in between.
+
+**Tools and system**
+- **Quick-settings panel (gear):** network, Bluetooth, sound output, volume, picture mode, **screen off while the sound keeps playing**, goal alerts, memory cleaning.
+- **Memory cleaner**, manual and automatic.
+- **No LG ads** (turns off `homePromotion` and screensaver ads), and one script puts everything back.
+- **Self-updating** deploys, and **boot persistence** (opens the interface instead of "no signal") with the Home button working from any app.
+- Tested on **webOS 7.5** (1.2 GB RAM): every design decision is built around that device's weakness.
+
+### Screenshots
+
+| 🔴 LG webOS | |
+|:---:|:---:|
+| ![LG home](lg-webos/docs/screenshots/home.jpg) | ![LG screensaver](lg-webos/docs/screenshots/saver.jpg) |
+| Home | Screensaver |
+| ![LG goal alert](lg-webos/docs/screenshots/alert.jpg) | ![LG alert kinds](lg-webos/docs/screenshots/alert-kinds.jpg) |
+| Goal alert over any app | Alert kinds |
+
+| 🟢 Google TV | |
+|:---:|:---:|
+| ![Google TV home](google-tv/docs/screenshots/home.jpg) | ![Google TV screensaver](google-tv/docs/screenshots/saver.jpg) |
+| Home | Screensaver |
+| ![Google TV quick settings](google-tv/docs/screenshots/settings.jpg) | ![Google TV remote buttons](google-tv/docs/screenshots/remote-keys.jpg) |
+| Quick settings | Your own remote buttons |
+| ![Google TV appearance](google-tv/docs/screenshots/appearance.jpg) | ![Google TV theme](google-tv/docs/screenshots/theme-sunset.jpg) |
+| Appearance and themes | "Sunset" theme |
+| ![Google TV match card](google-tv/docs/screenshots/home-sports.jpg) | ![Google TV fixtures panel](google-tv/docs/screenshots/matches.jpg) |
+| Match card (optional) | Fixtures panel |
+
+*(The Wi-Fi name, city and a few apps are blurred in the screenshots for privacy.)*
 
 ### Repository layout
 (see the tree above.)
@@ -159,6 +315,7 @@ cd smart-tv-mods
 Then:
 - **LG:** `cd lg-webos && npm install && cp scripts/tv.conf.example scripts/tv.conf`, then continue with [`lg-webos/docs/INSTALL.md`](lg-webos/docs/INSTALL.md).
 - **Google TV:** `cd google-tv/albrhi-widget && ./build.sh && ./pack.sh`, then `cd ../albrhi-tv-restore && cp device.conf.example device.conf && ./restore.sh` (details in [`google-tv/README.md`](google-tv/README.md)).
+- **Or let an agent do it:** use the prompt at the top of this page.
 
 ### Requirements: root (LG) / USB debugging (Android)
 
@@ -179,24 +336,19 @@ Neither project works on a TV "as shipped". You must unlock access first (root f
 4. Put the address in `google-tv/albrhi-tv-restore/device.conf`.
 
 ### 🤖 Built by an AI agent
-This repository was **written by an AI agent**: [Claude](https://claude.com/claude-code) by Anthropic (Claude Code, model Claude Sonnet 5.5), directed by **Ibrahim Al-Rahn**, who set the goals, tested everything on his two real TVs and steered the work. The credit for writing the code and documentation and for diagnosing the failures goes to the agent (Claude); the decisions, testing and ownership are the project owner's. It shows what an agent can build, test, document and publish on real devices when given the right access.
+This repository was **written by an AI agent**: [Claude](https://claude.com/claude-code) by Anthropic (Claude Code), directed by **Ibrahim Al-Rahn**, who set the goals, tested everything on his two real TVs and steered the work. The credit for writing the code and documentation and for diagnosing the failures goes to the agent (Claude); the decisions, testing and ownership are the project owner's. It shows what an agent can build, test, document and publish on real devices when given the right access.
 
 ### 🧠 For any AI model reading this repo
 The repository is structured so that any model (Claude, GPT, Gemini, Codex, Cursor…) can **understand it fully, run it on your TV, or build its own version**:
 - [`AGENTS.md`](AGENTS.md): the full guide (prerequisites, step-by-step run, customisation points per project, safety rules, verification checklist).
 - [`llms.txt`](llms.txt): a compact index for models; `CLAUDE.md` points to `AGENTS.md`.
 
-Try this prompt with any agent (e.g. Claude Code):
-```text
-Read AGENTS.md in this repository. My TV is a [LG webOS / Google TV] at [IP] and I enabled [root / USB debugging].
-Install the matching project on my TV: back up first and ask me before any command that connects to the TV.
-```
-Or to make your own: "Read AGENTS.md, then build me my own version: my team is [X], my apps are [..], my language is [..], my TV is [model]."
+To make your own: "Read AGENTS.md, then build me my own version: my team is [X], my apps are [..], my language is [..], my TV is [model]."
 
 ### Privacy and safety of this repo
-- **Nothing private is committed:** no real IP addresses (examples only: `tv.conf.example`, `device.conf.example`), no signing keys (`*.keystore` ignored), no TV backups, no APKs, no email addresses (commits use a GitHub noreply address).
+- **Nothing private is committed:** no real IP addresses (examples only: `tv.conf.example`, `device.conf.example`), no signing keys (`*.keystore` ignored), no TV backups, no APKs, no tokens, no email addresses (commits use a GitHub noreply address).
 - Logos and icons (trademarks) are **not stored**; pull them locally with `lg-webos/scripts/fetch-assets.sh`.
-- Your local config files (`tv.conf`, `device.conf`) are git-ignored.
+- Your local config files (`tv.conf`, `device.conf`) are git-ignored, and the AC token stays on the TV only.
 
 ### Contributing
 - Open an issue or pull request; say which TV and OS version you use.
@@ -204,4 +356,4 @@ Or to make your own: "Read AGENTS.md, then build me my own version: my team is [
 - Developer / Claude notes: [`CLAUDE.md`](CLAUDE.md).
 
 ### License and credits
-MIT (see [`LICENSE`](LICENSE) and [`lg-webos/LICENSE`](lg-webos/LICENSE)). Fonts: IBM Plex Sans Arabic and Amiri (SIL OFL 1.1). The webOS home-swap idea comes from [zzeppieri/webos-custom-home](https://github.com/zzeppieri/webos-custom-home) (MIT); rooting via [webosbrew](https://github.com/webosbrew) and <https://e.nya.je/getroot/>. Data: UEFA, ESPN, Open-Meteo, ipwho.is. Logos are trademarks of their owners.
+MIT (see [`LICENSE`](LICENSE) and [`lg-webos/LICENSE`](lg-webos/LICENSE)). Fonts: IBM Plex Sans Arabic and Amiri (SIL OFL 1.1). The webOS home-swap idea comes from [zzeppieri/webos-custom-home](https://github.com/zzeppieri/webos-custom-home) (MIT); rooting via [webosbrew](https://github.com/webosbrew) and <https://e.nya.je/getroot/>. Data: UEFA, ESPN, Open-Meteo, ipwho.is. AC control through [Voice Monkey](https://voicemonkey.io) and Alexa. Logos are trademarks of their owners.

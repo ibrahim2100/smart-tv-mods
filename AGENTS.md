@@ -4,7 +4,7 @@
 >
 > **EN:** Written for any AI model reading this repo. After reading it you can **understand both projects end to end, run them on the user's TV, or build a version of your own for the user's TV.**
 
-Authorship note: this repository was written by an AI agent (Anthropic's Claude, via Claude Code) under the direction and hardware testing of its owner, Ibrahim Al-Rahn. Treat the code as AI-written and human-tested on the real devices below.
+Authorship note: this repository was written by an AI agent (Anthropic's Claude, via Claude Code) under the direction and hardware testing of its owner, Ibrahim Al-Rahn (إبراهيم آل رهن). Treat the code as AI-written and human-tested on the real devices below.
 
 ---
 
