@@ -22,6 +22,8 @@ A "appops set $APP_PKG SYSTEM_ALERT_WINDOW allow"
 A "appops set $APP_PKG SCHEDULE_EXACT_ALARM allow"
 # phone install/uninstall (the TV still asks you to confirm each one with the remote)
 A "appops set $APP_PKG REQUEST_INSTALL_PACKAGES allow"
+# lets the launcher switch its own accessibility service back on if Android turns it off (your remote buttons depend on it)
+A "pm grant $APP_PKG android.permission.WRITE_SECURE_SETTINGS" 2>/dev/null
 # phone remote control (accessibility actions: focus, OK, back, home, typing)
 A "settings put secure enabled_accessibility_services $APP_PKG/$APP_PKG.ControlService"
 A "settings put secure accessibility_enabled 1"

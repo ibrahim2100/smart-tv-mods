@@ -18,6 +18,23 @@ public class ControlService extends AccessibilityService {
 
     static boolean ready() { return inst != null; }
 
+    /**
+     * Android switches an accessibility service off when its app is force-stopped. With the permission that restore.sh grants
+     * (WRITE_SECURE_SETTINGS) the launcher switches it back on by itself, so your remote buttons never stay dead.
+     */
+    static void ensureEnabled(android.content.Context c) {
+        try {
+            if (c.checkSelfPermission("android.permission.WRITE_SECURE_SETTINGS") != android.content.pm.PackageManager.PERMISSION_GRANTED) return;
+            String me = c.getPackageName() + "/" + ControlService.class.getName();
+            android.content.ContentResolver cr = c.getContentResolver();
+            String cur = android.provider.Settings.Secure.getString(cr, android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+            if (cur != null && cur.contains(me)) return;
+            android.provider.Settings.Secure.putString(cr, android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+                    cur == null || cur.length() == 0 ? me : cur + ":" + me);
+            android.provider.Settings.Secure.putInt(cr, android.provider.Settings.Secure.ACCESSIBILITY_ENABLED, 1);
+        } catch (Throwable ignored) { }
+    }
+
     static ControlService get() { return inst; }
 
     @Override protected void onServiceConnected() {

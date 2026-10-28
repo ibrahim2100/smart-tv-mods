@@ -369,6 +369,7 @@ public class HomeActivity extends Activity {
         if (header == null) return;                          // emergency screen is showing
         Theme.load(this);
         if (Safe.level(this) != appliedSafe || !look().equals(appliedLook)) { recreate(); return; }
+        ControlService.ensureEnabled(this);
         Theme.onChange = new Runnable() { public void run() { applyLookLive(); } };
         ui.postDelayed(calm, 60000);                         // a full calm minute clears the crash counter
         refreshGreeting();

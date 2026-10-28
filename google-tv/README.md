@@ -6,11 +6,23 @@
 > هذا المجلد مشروع منفصل عن [`../lg-webos`](../lg-webos). · This folder is separate from [`../lg-webos`](../lg-webos).
 > مشروع مستقر: غير مرتبط بأي خدمة سحابية، ولا يجمع بيانات. · Stable; no cloud service, no data collection.
 
+## لقطات · Screenshots
+
 | الشاشة الرئيسية · Home | شاشة الانتظار · Screensaver |
 |:---:|:---:|
 | ![home](docs/screenshots/home.jpg) | ![screensaver](docs/screenshots/saver.jpg) |
-| الإعدادات السريعة · Quick settings | |
-| ![settings](docs/screenshots/settings.jpg) | |
+| الإعدادات السريعة · Quick settings | أزرار الريموت بكيفك · Your own remote buttons |
+| ![settings](docs/screenshots/settings.jpg) | ![remote buttons](docs/screenshots/remote-keys.jpg) |
+| المظهر والسمات · Appearance and themes | |
+| ![appearance](docs/screenshots/appearance.jpg) | |
+
+**خمس سمات ألوان · Five colour themes** (محيط · غروب · بنفسجي · … Ocean · Sunset · Violet · …)
+
+| | | |
+|:---:|:---:|:---:|
+| ![ocean](docs/screenshots/theme-ocean.jpg) | ![sunset](docs/screenshots/theme-sunset.jpg) | ![violet](docs/screenshots/theme-violet.jpg) |
+
+*(حجبنا اسم الشبكة والمدينة وتطبيقاً شخصياً من اللقطات · Wi-Fi name, city and a personal app are blurred for privacy.)*
 
 ---
 
@@ -31,7 +43,7 @@
 | **ربط الجوال** | صفحة ويب على شبكة البيت: ريموت كامل (أسهم، OK، صوت، كتابة، تشغيل رابط فيديو، إطفاء الشاشة)، تثبيت وحذف وفتح التطبيقات، ورفع APK. رمز ربط من 6 أرقام لكل جهاز، وكل تثبيت يحتاج تأكيد على التلفزيون. |
 | **شاشة الانتظار** | Albrhi Barca (اسمها القديم): ساعة كبيرة هادئة بألوان السمة تتحرك ببطء لحماية الشاشة. |
 | **تنظيف الذاكرة** | يدوي أو تلقائي قبل فتح تطبيق لو الرام الحرة أقل من 300 ميجا (يغلق الخلفية فقط). |
-| **ثبات** | شاشة طوارئ لو انهار اللانشر 3 مرات خلال دقيقتين، ونسخة احتياطية يومية اختيارية للترتيب والأسماء. |
+| **ثبات** | شاشة طوارئ لو انهار اللانشر 3 مرات خلال دقيقتين، ونسخة احتياطية يومية اختيارية للترتيب والأسماء والأزرار المخصصة، وخدمة الإتاحة تعيد تفعيل نفسها لو أطفأها النظام. |
 | **تقليل الإعلانات والتطبيقات الزائدة** | يعطّل تطبيقات Haier/MediaTek الزائدة وبعض تطبيقات Google عن المستخدم الحالي. |
 
 ### الأداء (قياس على التلفزيون نفسه)
@@ -107,7 +119,7 @@ An Android app (plain Java, no Gradle) that replaces the Google TV home screen o
 | **Phone pairing** | A web page on your home network: full remote (arrows, OK, volume, typing, play a video link, screen off), install/uninstall/open apps, APK upload. A 6-digit pairing code per device, and every install needs confirmation on the TV. |
 | **Screensaver** | Albrhi Barca (its old name): a large calm clock in the theme colours, drifting slowly to protect the panel. |
 | **Memory cleaner** | Manual, or automatic before launching an app when free RAM < 300 MB (background apps only). |
-| **Resilience** | Emergency screen if the launcher crashes 3 times in 2 minutes; optional daily backup of layout and names. |
+| **Resilience** | Emergency screen if the launcher crashes 3 times in 2 minutes; optional daily backup of layout, names and custom buttons; the accessibility service switches itself back on if Android turns it off. |
 | **Less bloat** | Disables extra Haier/MediaTek apps and some Google apps for the current user. |
 
 ### Performance (measured on the TV)
