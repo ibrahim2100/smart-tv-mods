@@ -41,12 +41,17 @@ final class Sheet {
 
     static final int FOCUS_A = 0xFF0B5CC4, FOCUS_B = 0xFF1E88E5, DANGER_A = 0xFF9E2A24, DANGER_B = 0xFFE5484D;
 
+    interface IntPick { void pick(int i); }
+
     static final class Item {
         final String title;
         String subtitle, value;
         int icon;
         Runnable action;
-        boolean danger, header;
+        boolean danger, header, tile, swatches;
+        Boolean toggle;                    // non-null: the row shows a switch in this state
+        IntPick pick;                      // swatches: called with the chosen index
+        int selected;
 
         private Item(String title) { this.title = title; }
 
@@ -60,6 +65,21 @@ final class Sheet {
         static Item header(String title) {
             Item i = new Item(title);
             i.header = true;
+            return i;
+        }
+
+        /** A square quick tile (icon, name, short value); consecutive tiles form a grid in the Panel. */
+        Item tile() { tile = true; return this; }
+
+        /** Shows an on/off switch at the end of the row instead of a value. */
+        Item toggle(boolean on) { toggle = on; return this; }
+
+        /** A row of colour choices (used for the theme). */
+        static Item swatches(String title, int selected, IntPick pick) {
+            Item i = new Item(title);
+            i.swatches = true;
+            i.selected = selected;
+            i.pick = pick;
             return i;
         }
 

@@ -26,25 +26,25 @@ final class QuickSettings {
 
     static void show(Context c) { show(c, null, null); }
 
-    /** @param onClose runs when the whole sheet is closed (not when it just moves to "more"). */
+    /** @param onClose runs when the whole panel is closed (not when it just moves to a sub-page). */
     static void show(final Context c, final View anchor, final Runnable onClose) {
         final float dn = c.getResources().getDisplayMetrics().density;
         Health.Info hi = Health.read(c);
         int paired = RemoteServer.get(c).pairedCount();
         List<Sheet.Item> items = Sheet.list();
-        items.add(Sheet.Item.of("الصورة", R.drawable.ic_picture, open(c, Settings.ACTION_DISPLAY_SETTINGS)));
-        items.add(Sheet.Item.of("الصوت", R.drawable.ic_sound, open(c, Settings.ACTION_SOUND_SETTINGS)));
-        items.add(Sheet.Item.of("الشبكة والإنترنت", R.drawable.ic_wifi, open(c, Settings.ACTION_WIFI_SETTINGS)).value(networkSummary(c)));
-        items.add(Sheet.Item.of("ربط الجوال", R.drawable.ic_phone, new Runnable() { public void run() { RemoteDialog.show(c); } })
-                .value(paired == 0 ? "غير مربوط" : paired + (paired == 1 ? " جهاز" : " أجهزة")));
-        items.add(Sheet.Item.of("تنظيف الذاكرة", R.drawable.ic_refresh, new Runnable() { public void run() { cleanMemory(c); } })
-                .value(hi.ramFreeMb + " MB حرة"));
+        // the things you reach for most: a grid of tiles
+        items.add(Sheet.Item.of("الصورة", R.drawable.ic_picture, open(c, Settings.ACTION_DISPLAY_SETTINGS)).tile());
+        items.add(Sheet.Item.of("الصوت", R.drawable.ic_sound, open(c, Settings.ACTION_SOUND_SETTINGS)).tile());
+        items.add(Sheet.Item.of("الشبكة", R.drawable.ic_wifi, open(c, Settings.ACTION_WIFI_SETTINGS)).value(networkName(c)).tile());
+        items.add(Sheet.Item.of("الجوال", R.drawable.ic_phone, new Runnable() { public void run() { RemoteDialog.show(c); } })
+                .value(paired == 0 ? "غير مربوط" : paired + (paired == 1 ? " جهاز" : " أجهزة")).tile());
         items.add(Sheet.Item.of("المظهر", R.drawable.ic_eye, new Runnable() { public void run() { Sheet.chained = true; appearance(c, anchor, onClose); } })
-                .value(Theme.NAMES[Theme.index]));
-        items.add(Sheet.Item.of("حواف الشاشة", R.drawable.ic_tv, new Runnable() { public void run() { cycleEdges(c); } })
-                .value(Safe.NAMES[Safe.level(c)]));
-        items.add(Sheet.Item.of("كل الإعدادات", R.drawable.ic_gear, open(c, Settings.ACTION_SETTINGS)));
-        items.add(Sheet.Item.of("المزيد", R.drawable.ic_more, new Runnable() { public void run() { Sheet.chained = true; more(c, anchor, onClose); } }));
+                .value(Theme.NAMES[Theme.index]).tile());
+        items.add(Sheet.Item.of("الذاكرة", R.drawable.ic_refresh, new Runnable() { public void run() { cleanMemory(c); } })
+                .value(hi.ramFreeMb + " MB").tile());
+        // the rest, as quiet rows
+        items.add(Sheet.Item.of("كل إعدادات التلفزيون", R.drawable.ic_gear, open(c, Settings.ACTION_SETTINGS)));
+        items.add(Sheet.Item.of("أدوات وصيانة", R.drawable.ic_more, new Runnable() { public void run() { Sheet.chained = true; more(c, anchor, onClose); } }));
 
         LinearLayout meters = new LinearLayout(c);
         meters.setOrientation(LinearLayout.HORIZONTAL);
@@ -57,46 +57,52 @@ final class QuickSettings {
         sp.setMarginStart(Math.round(18 * dn));
         meters.addView(st, sp);
 
-        Dropdown.show(c, anchor, null, null, items, meters, 380, onClose);
+        Panel.show(c, "الإعدادات السريعة", null, items, meters, onClose);
+    }
+
+    private static Sheet.Item back(final Context c, final View anchor, final Runnable onClose) {
+        return Sheet.Item.of("رجوع", R.drawable.ic_back, new Runnable() { public void run() { Sheet.chained = true; show(c, anchor, onClose); } });
     }
 
     /** Look and details: theme colours, clock format, Hijri date, weather, the name in the greeting, and sports (off by default). */
     private static void appearance(final Context c, final View anchor, final Runnable onClose) {
         List<Sheet.Item> items = Sheet.list();
-        items.add(Sheet.Item.of("القائمة المختصرة", R.drawable.ic_back, new Runnable() { public void run() { Sheet.chained = true; show(c, anchor, onClose); } })
-                .sub("الرجوع للخيارات الأساسية"));
-        items.add(Sheet.Item.header("الألوان"));
-        items.add(Sheet.Item.of("السمة", R.drawable.ic_picture, new Runnable() { public void run() {
-            Theme.set(c, "theme", (Theme.index + 1) % Theme.NAMES.length);
+        items.add(back(c, anchor, onClose));
+        items.add(Sheet.Item.header("السمة"));
+        items.add(Sheet.Item.swatches(Theme.NAMES[Theme.index], Theme.index, new Sheet.IntPick() { public void pick(int i) {
+            Theme.set(c, "theme", i);
             applied(c, "السمة: " + Theme.NAMES[Theme.index]);
-        } }).value(Theme.NAMES[Theme.index]).sub("منتصف الليل · رمادي · محيط · غروب · بنفسجي"));
-        items.add(onOff(c, "لون الخلفية من التطبيق", "follow", Theme.follow, "الخلفية تتلوّن بلون التطبيق المحدد"));
+        } }));
+        items.add(onOff(c, "لون الخلفية يتبع التطبيق", "follow", Theme.follow, null));
+        items.add(Sheet.Item.header("الشاشة"));
+        items.add(Sheet.Item.of("حواف الشاشة", R.drawable.ic_tv, new Runnable() { public void run() { cycleEdges(c); } })
+                .value(Safe.NAMES[Safe.level(c)]).sub("لو التلفزيون يقص أطراف الصورة"));
         items.add(Sheet.Item.header("الشريط العلوي"));
-        items.add(Sheet.Item.of("صيغة الوقت", R.drawable.ic_refresh, new Runnable() { public void run() {
+        items.add(Sheet.Item.of("الوقت بنظام 24 ساعة", R.drawable.ic_refresh, new Runnable() { public void run() {
             Theme.set(c, "clock24", !Theme.clock24);
             applied(c, Theme.clock24 ? "الوقت: 24 ساعة" : "الوقت: 12 ساعة");
-        } }).value(Theme.clock24 ? "24 ساعة" : "12 ساعة"));
+        } }).toggle(Theme.clock24));
         items.add(onOff(c, "التاريخ الهجري", "hijri", Theme.hijri, null));
         items.add(onOff(c, "الطقس", "weather", Theme.weather, "حسب موقعك من الـIP"));
         items.add(Sheet.Item.of("الاسم في التحية", R.drawable.ic_edit, new Runnable() { public void run() {
             RenameDialog.show(c, Theme.name, "", new RenameDialog.Callback() {
                 @Override public void onName(String n) { Theme.set(c, "name", n == null ? "" : n.trim()); applied(c, "تم حفظ الاسم"); }
             });
-        } }).value(Theme.name.length() == 0 ? "بدون" : Theme.name).sub("فارغ = بدون تحية"));
+        } }).value(Theme.name.length() == 0 ? "بدون" : Theme.name));
         items.add(Sheet.Item.header("الرياضة"));
         items.add(Sheet.Item.of("المباريات والتنبيهات", R.drawable.ic_ball, new Runnable() { public void run() {
             Theme.set(c, "sports", !Theme.sports);
             Alerts.schedule(c);                    // arms or cancels the match alarms
             applied(c, Theme.sports ? "الرياضة: مفعّلة" : "الرياضة: متوقفة");
-        } }).value(Theme.sports ? "مفعّلة" : "متوقفة").sub("بطاقة المباراة وتنبيهاتها (متوقفة افتراضيًا)"));
-        Dropdown.show(c, anchor, "المظهر", "الألوان والتفاصيل", items, null, 420, onClose);
+        } }).toggle(Theme.sports).sub("بطاقة المباراة وتنبيهاتها"));
+        Panel.show(c, "المظهر", "الألوان والتفاصيل", items, null, onClose);
     }
 
     private static Sheet.Item onOff(final Context c, final String title, final String key, final boolean on, String sub) {
         Sheet.Item it = Sheet.Item.of(title, R.drawable.ic_eye, new Runnable() { public void run() {
             Theme.set(c, key, !on);
             applied(c, title + (on ? ": متوقف" : ": مفعّل"));
-        } }).value(on ? "مفعّل" : "متوقف");
+        } }).toggle(on);
         return sub == null ? it : it.sub(sub);
     }
 
@@ -108,8 +114,7 @@ final class QuickSettings {
 
     private static void more(final Context c, final View anchor, final Runnable onClose) {
         List<Sheet.Item> items = Sheet.list();
-        items.add(Sheet.Item.of("القائمة المختصرة", R.drawable.ic_back, new Runnable() { public void run() { Sheet.chained = true; show(c, anchor, onClose); } })
-                .sub("الرجوع للخيارات الأساسية"));
+        items.add(back(c, anchor, onClose));
         if (Theme.sports) {
             items.add(Sheet.Item.header("المباريات"));
             items.add(Sheet.Item.of("تحديث المباريات الآن", R.drawable.ic_refresh, new Runnable() { public void run() {
@@ -131,7 +136,14 @@ final class QuickSettings {
             CrashGuard.simulate(c);
             c.startActivity(new Intent(c, HomeActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP));
         } }).sub("للتأكد من خطة الإنقاذ فقط").danger());
-        Dropdown.show(c, anchor, "المزيد", "أدوات وصيانة", items, null, 420, onClose);
+        Panel.show(c, "أدوات وصيانة", null, items, null, onClose);
+    }
+
+    /** Just the network's name, short enough for a tile. */
+    private static String networkName(Context c) {
+        String s = networkSummary(c);
+        int i = s.indexOf("  ·  ");
+        return i > 0 ? s.substring(0, i) : s;
     }
 
     /** Ends background apps (never the one on screen) and tells you how much memory came back. */

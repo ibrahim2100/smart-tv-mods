@@ -30,6 +30,8 @@
 |:---:|:---:|
 | ![Google TV home](google-tv/docs/screenshots/home.jpg) | ![Google TV screensaver](google-tv/docs/screenshots/saver.jpg) |
 | الشاشة الرئيسية · Home | شاشة الانتظار · Screensaver |
+| ![Google TV quick settings](google-tv/docs/screenshots/settings.jpg) | |
+| الإعدادات السريعة · Quick settings | |
 
 *(حجبنا اسم الشبكة والمدينة وبعض التطبيقات من اللقطات حفاظاً على الخصوصية · Wi-Fi name, city and a few apps are blurred for privacy.)*
 

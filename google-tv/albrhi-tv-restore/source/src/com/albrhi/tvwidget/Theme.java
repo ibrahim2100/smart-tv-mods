@@ -21,6 +21,9 @@ final class Theme {
     static boolean hijri, weather = true, clock24, sports;
     static String name = "";
 
+    /** The colour shown for theme i in the picker. */
+    static int swatch(int i) { return ACCENT[i]; }
+
     static SharedPreferences prefs(Context c) { return c.getSharedPreferences("ui", Context.MODE_PRIVATE); }
 
     static void load(Context c) {

@@ -9,6 +9,8 @@
 | الشاشة الرئيسية · Home | شاشة الانتظار · Screensaver |
 |:---:|:---:|
 | ![home](docs/screenshots/home.jpg) | ![screensaver](docs/screenshots/saver.jpg) |
+| الإعدادات السريعة · Quick settings | |
+| ![settings](docs/screenshots/settings.jpg) | |
 
 ---
 
@@ -24,7 +26,7 @@
 | **المظهر (قابل للتغيير)** | من الإعدادات السريعة ← **المظهر**: 5 سمات ألوان (منتصف الليل، رمادي، محيط، غروب، بنفسجي)، لون الخلفية يتبع التطبيق أو لا، الوقت 12/24 ساعة، التاريخ الهجري، الطقس، والاسم في التحية. كلها تُحفظ مع النسخة الاحتياطية. |
 | **الرياضة (اختيارية، متوقفة افتراضياً)** | شارة المباراة القادمة وقائمة المباريات وتنبيهاتها (قبل المباراة بـ15 دقيقة، الانطلاق، النهاية، تغيّر الموعد). تُفعَّل من المظهر ← المباريات والتنبيهات. وهي متوقفة، لا تحمّل بيانات ولا تنبّه. |
 | **ضغط مطوّل على OK** | نقل، إعادة تسمية، إخفاء، حذف (أو معلومات التطبيق لتطبيقات النظام). الترتيب محفوظ. |
-| **الإعدادات السريعة** | الشبكة، الصورة، الصوت، التطبيقات، الموقع، الكيبورد، حواف الشاشة (للتلفزيونات التي تقص الأطراف)، تنظيف الذاكرة، تجربة التنبيه، رجوع لواجهة Google TV. |
+| **الإعدادات السريعة** | لوحة جانبية هادئة: بلاطات للصورة والصوت والشبكة والجوال والمظهر والذاكرة، ثم صفوف خفيفة (كل إعدادات التلفزيون، أدوات وصيانة)، ومؤشرا الرام والتخزين. مفاتيح تبديل حقيقية ومنتقي ألوان السمة. حواف الشاشة (للتلفزيونات التي تقص الأطراف) تحت المظهر. |
 | **ربط الجوال** | صفحة ويب على شبكة البيت: ريموت كامل (أسهم، OK، صوت، كتابة، تشغيل رابط فيديو، إطفاء الشاشة)، تثبيت وحذف وفتح التطبيقات، ورفع APK. رمز ربط من 6 أرقام لكل جهاز، وكل تثبيت يحتاج تأكيد على التلفزيون. |
 | **شاشة الانتظار** | Albrhi Barca (اسمها القديم): ساعة كبيرة هادئة بألوان السمة تتحرك ببطء لحماية الشاشة. |
 | **تنظيف الذاكرة** | يدوي أو تلقائي قبل فتح تطبيق لو الرام الحرة أقل من 300 ميجا (يغلق الخلفية فقط). |
@@ -99,7 +101,7 @@ An Android app (plain Java, no Gradle) that replaces the Google TV home screen o
 | **Appearance (configurable)** | Quick settings → **Appearance**: 5 colour themes (Midnight, Graphite, Ocean, Sunset, Violet), background follows the app's colour or not, 12/24-hour clock, Hijri date, weather, and the name in the greeting. All saved with the layout backup. |
 | **Sports (optional, off by default)** | Next-match pill, fixtures list and alerts (15 min before, kick-off, full time, fixture changes). Switch on in Appearance → Matches and alerts. While off it downloads nothing and sends no alerts. |
 | **Long-press OK** | Move, rename, hide, delete (or app info for system apps). Order is saved. |
-| **Quick settings** | Network, picture, sound, apps, location, keyboard, screen margins (for TVs that crop edges), memory cleaner, alert test, back to the stock Google TV launcher. |
+| **Quick settings** | A calm side panel: tiles for picture, sound, network, phone, appearance and memory, then quiet rows (all TV settings, tools and maintenance) and RAM/storage meters. Real on/off switches and a theme colour picker. Screen edges (for TVs that crop the picture) live under Appearance. |
 | **Phone pairing** | A web page on your home network: full remote (arrows, OK, volume, typing, play a video link, screen off), install/uninstall/open apps, APK upload. A 6-digit pairing code per device, and every install needs confirmation on the TV. |
 | **Screensaver** | Albrhi Barca (its old name): a large calm clock in the theme colours, drifting slowly to protect the panel. |
 | **Memory cleaner** | Manual, or automatic before launching an app when free RAM < 300 MB (background apps only). |
