@@ -20,9 +20,9 @@ import java.util.List;
 import static com.albrhi.tvwidget.WidgetView.*;
 
 /**
- * The two rounded pills at the top of the home screen:
- *  - the clock pill (time, date, Hijri date, weather), informational;
- *  - the next-match pill (Barcelona), focusable: OK opens the fixtures sheet.
+ * The top-left of the home screen: a large, quiet clock with the date (and, if switched on, the Hijri date and weather)
+ * written straight on the background. With "sports" switched on (Quick settings > Appearance) the next-match pill
+ * (focusable, OK opens the fixtures sheet) sits beside it.
  */
 final class TopPills extends LinearLayout {
     private final float dn;
@@ -49,7 +49,8 @@ final class TopPills extends LinearLayout {
         build();
     }
 
-    View matchView() { return matchFrame; }
+    /** The next-match pill, or null while sports are off. */
+    View matchView() { return Theme.sports ? matchFrame : null; }
 
     void start() {
         Fixtures.listeners.add(onData);
@@ -104,40 +105,41 @@ final class TopPills extends LinearLayout {
         setClipChildren(false);
         setClipToPadding(false);
 
-        // ---- clock pill
-        LinearLayout cp = new LinearLayout(getContext());
-        cp.setGravity(Gravity.CENTER_VERTICAL);
-        cp.setLayoutDirection(LAYOUT_DIRECTION_LTR);
-        cp.setBackground(pill(0xB30E1530));
-        cp.setPadding(px(22), px(8), px(22), px(9));
+        // ---- clock block: time on the first line, date and details under it (no box, no border)
+        LinearLayout block = new LinearLayout(getContext());
+        block.setOrientation(VERTICAL);
+        block.setLayoutDirection(LAYOUT_DIRECTION_LTR);
 
         LinearLayout timeRow = new LinearLayout(getContext());
         timeRow.setLayoutDirection(LAYOUT_DIRECTION_LTR);
         timeRow.setGravity(Gravity.BOTTOM);
-        clock = tv(25, WHITE, true);
-        ampm = tv(13, GOLD, true);
+        clock = tv(42, WHITE, false);
+        clock.setTypeface(Fonts.medium);
+        ampm = tv(15, GOLD, true);
         timeRow.addView(clock);
         LinearLayout.LayoutParams ap = wrap();
-        ap.leftMargin = px(5);
-        ap.bottomMargin = px(3);
+        ap.leftMargin = px(7);
+        ap.bottomMargin = px(7);
         timeRow.addView(ampm, ap);
-        cp.addView(timeRow, wrap());
-        cp.addView(divider());
+        block.addView(timeRow, wrap());
 
-        LinearLayout dates = new LinearLayout(getContext());
-        dates.setOrientation(VERTICAL);
-        date = tv(14, WHITE, true);
-        hijri = tv(12, GOLD, false);
-        dates.addView(date, wrap());
+        LinearLayout line = new LinearLayout(getContext());          // date and weather on one line
+        line.setLayoutDirection(LAYOUT_DIRECTION_LTR);
+        line.setGravity(Gravity.CENTER_VERTICAL);
+        date = tv(16, WHITE, true);
+        weather = tv(14, MUTED, false);
+        line.addView(date, wrap());
+        LinearLayout.LayoutParams wl = wrap();
+        wl.setMarginStart(px(14));
+        line.addView(weather, wl);
+        LinearLayout.LayoutParams dp = wrap();
+        dp.topMargin = px(2);
+        block.addView(line, dp);
+        hijri = tv(13, MUTED, false);
         LinearLayout.LayoutParams hp = wrap();
-        hp.topMargin = px(2);
-        dates.addView(hijri, hp);
-        cp.addView(dates, wrap());
-        cp.addView(divider());
-
-        weather = tv(14.5f, WHITE, false);
-        cp.addView(weather, wrap());
-        addView(cp, wrap());
+        hp.topMargin = px(3);
+        block.addView(hijri, hp);
+        addView(block, wrap());
 
         // ---- next-match pill (focusable)
         matchFrame = new FrameLayout(getContext());
@@ -191,8 +193,15 @@ final class TopPills extends LinearLayout {
             @Override public void onClick(View v) { MatchesDialog.show(getContext(), matchFrame); }
         });
         LinearLayout.LayoutParams ml = wrap();
-        ml.setMarginStart(px(14));
+        ml.setMarginStart(px(34));
         addView(matchFrame, ml);
+        applySports();
+    }
+
+    /** Shows or hides the match pill (sports setting). */
+    void applySports() {
+        matchFrame.setVisibility(Theme.sports ? VISIBLE : GONE);
+        matchFrame.setFocusable(Theme.sports);
     }
 
     static String countdownText(long left) {
@@ -210,12 +219,17 @@ final class TopPills extends LinearLayout {
 
     void update() {
         long now = System.currentTimeMillis();
-        clock.setText(fmt("h:mm", GREG, now));
+        clock.setText(fmt(Theme.timePattern(), GREG, now));
         ampm.setText(fmt("a", GREG, now));
+        ampm.setVisibility(Theme.clock24 ? GONE : VISIBLE);
         date.setText(fmt("EEEE d MMMM", GREG, now));
         hijri.setText(fmt("d MMMM y", HIJRI, now) + " هـ");
-        weather.setText(Weather.text == null ? "" : Weather.text);
-        weather.setVisibility(Weather.text == null ? GONE : VISIBLE);
+        hijri.setVisibility(Theme.hijri ? VISIBLE : GONE);
+        boolean wx = Theme.weather && Weather.text != null;
+        weather.setText(wx ? Weather.text : "");
+        weather.setVisibility(wx ? VISIBLE : GONE);
+        applySports();
+        if (!Theme.sports) return;
 
         List<Fixtures.Match> up = Fixtures.upcoming;
         if (up.isEmpty()) {

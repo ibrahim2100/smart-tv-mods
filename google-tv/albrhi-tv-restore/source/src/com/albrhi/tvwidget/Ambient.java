@@ -12,6 +12,8 @@ import android.graphics.Rect;
 import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
 import android.util.LruCache;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.view.View;
 
 import java.util.HashMap;
@@ -24,78 +26,67 @@ import java.util.Map;
  * and a change of colour is just a cross-fade between two such bitmaps. The first version re-evaluated two
  * full-screen gradient shaders on every frame, which was the heaviest thing on screen on this TV.
  */
-final class Ambient extends View {
-    private static final int BW = 320, BH = 180, BASE = 0xFF050816, DEFAULT = 0xFF1B3A7A;
+final class Ambient extends FrameLayout {
+    private static final int BW = 320, BH = 180;
     private static final Map<String, Integer> COLORS = new HashMap<String, Integer>();
     private static final LruCache<Integer, Bitmap> BITMAPS = new LruCache<Integer, Bitmap>(5);
 
-    private final Paint p = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG);
-    private final Rect dst = new Rect();
-    private Bitmap from, to;
+    private final ImageView front, back;       // a cross-fade is just the alpha of `back`, run by the render thread (no redraw per frame)
     private int color;
-    private float mix = 1f;
-    private ValueAnimator anim;
 
     Ambient(Context c) {
         super(c);
-        setWillNotDraw(false);
-        to = bitmapFor(DEFAULT);
-        color = DEFAULT;
+        front = layer(c);
+        back = layer(c);
+        back.setAlpha(0f);
+        color = Theme.glow;
+        front.setImageBitmap(bitmapFor(color));
+    }
+
+    private ImageView layer(Context c) {
+        ImageView v = new ImageView(c);
+        v.setScaleType(ImageView.ScaleType.FIT_XY);
+        addView(v, new FrameLayout.LayoutParams(-1, -1));
+        return v;
     }
 
     /** The colour the glow is heading to (also used for the artwork's rim light). */
     int currentColor() { return color; }
 
     /** Fades the glow to the colour of this app. */
-    void follow(String key, Drawable art) { setGlow(colorOf(key, art)); }
+    void follow(String key, Drawable art) { setGlow(Theme.follow ? colorOf(key, art) : Theme.glow); }
 
     void setGlow(int target) {
         if (target == color) return;
-        if (anim != null) anim.cancel();
-        from = to;
-        to = bitmapFor(target);
         color = target;
-        mix = 0f;
-        anim = ValueAnimator.ofFloat(0f, 1f);
-        anim.setDuration(360);
-        anim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override public void onAnimationUpdate(ValueAnimator a) {
-                mix = (Float) a.getAnimatedValue();
-                invalidate();
-            }
-        });
-        anim.start();
-    }
-
-    @Override protected void onDraw(Canvas cv) {
-        dst.set(0, 0, getWidth(), getHeight());
-        if (from != null && mix < 1f) {
-            p.setAlpha(255);
-            cv.drawBitmap(from, null, dst, p);
-            p.setAlpha(Math.round(mix * 255));
-            cv.drawBitmap(to, null, dst, p);
-        } else {
-            p.setAlpha(255);
-            cv.drawBitmap(to, null, dst, p);
-        }
+        back.animate().cancel();
+        Bitmap next = bitmapFor(target);
+        if (back.getAlpha() > 0.5f) front.setImageDrawable(back.getDrawable());     // an unfinished fade: settle on where it was heading
+        back.setImageBitmap(next);
+        back.setAlpha(0f);
+        final Bitmap landed = next;
+        back.animate().alpha(1f).setDuration(260).withEndAction(new Runnable() {
+            public void run() { front.setImageBitmap(landed); back.setAlpha(0f); }
+        }).start();
     }
 
     // ---- painting a colour once ---------------------------------------------------------------
 
     private static Bitmap bitmapFor(int c) {
-        Bitmap b = BITMAPS.get(c);
+        final int key = c ^ (Theme.base * 31);           // the cache key includes the theme's base colour
+        Bitmap b = BITMAPS.get(key);
         if (b != null && !b.isRecycled()) return b;
         b = Bitmap.createBitmap(BW, BH, Bitmap.Config.ARGB_8888);
         Canvas cv = new Canvas(b);
-        cv.drawColor(BASE);
+        cv.drawColor(Theme.base);
         Paint g = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
         int r = Color.red(c), gr = Color.green(c), bl = Color.blue(c);
         g.setShader(new RadialGradient(BW * 0.76f, BH * 0.30f, BW * 0.78f,
-                new int[]{Color.argb(215, r, gr, bl), Color.argb(90, r, gr, bl), 0x00000000}, new float[]{0f, 0.45f, 1f}, Shader.TileMode.CLAMP));
+                new int[]{Color.argb(170, r, gr, bl), Color.argb(60, r, gr, bl), 0x00000000}, new float[]{0f, 0.45f, 1f}, Shader.TileMode.CLAMP));
         cv.drawRect(0, 0, BW, BH, g);
-        g.setShader(new LinearGradient(0, BH * 0.40f, 0, BH, 0x00000000, 0xEE04060F, Shader.TileMode.CLAMP));
+        g.setShader(new LinearGradient(0, BH * 0.40f, 0, BH, 0x00000000, (0xEE000000 | (Theme.base & 0x00FFFFFF)), Shader.TileMode.CLAMP));
         cv.drawRect(0, 0, BW, BH, g);                 // darkens the lower half so the rows stay readable
-        BITMAPS.put(c, b);
+        BITMAPS.put(key, b);
         return b;
     }
 
@@ -104,7 +95,7 @@ final class Ambient extends View {
     private static int colorOf(String key, Drawable art) {
         Integer hit = COLORS.get(key);
         if (hit != null) return hit;
-        int c = DEFAULT;                          // Blaugrana blue as the fallback
+        int c = Theme.glow;                       // the theme's own colour as the fallback
         try {
             if (art != null && art.getIntrinsicWidth() > 0) {
                 Bitmap b = Bitmap.createBitmap(32, 18, Bitmap.Config.ARGB_8888);

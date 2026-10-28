@@ -30,7 +30,7 @@ FREE=$(A "df /data | tail -1" | awk '{print $4}')
 note "free storage: $FREE"
 
 echo "== Stability"
-CR=$(A "logcat -d *:E" | grep -c "FATAL EXCEPTION.*\|Process: $APP_PKG")
+CR=$(A "logcat -d *:E" | grep -c "Process: $APP_PKG")
 [ "$CR" -eq 0 ] && ok "no crash of the launcher in the log" || bad "$CR crash line(s) in the log (adb logcat -d *:E | grep -A8 'FATAL EXCEPTION')"
 for p in $DISABLE_PKGS; do A 'pm list packages -d --user 0' | grep -q "$p" || { bad "$p got re-enabled (run ./restore.sh)"; BAD_PKG=1; }; done
 [ -z "$BAD_PKG" ] && ok "Haier / MediaTek apps still disabled"

@@ -8,7 +8,7 @@
 | | 🔴 [`lg-webos/`](lg-webos) | 🟢 [`google-tv/`](google-tv) |
 |---|---|---|
 | **التلفزيون · TV** | LG webOS 7.5، مروّت · rooted (Homebrew Channel) | Haier MatrixTV BE — Google TV / Android 14 |
-| **ما هو · What** | شاشة رئيسية ويب (HTML/JS) + خدمة جذرية + بطاقات تنبيه دوري الأبطال فوق أي تطبيق + شاشة توقف | لانشر Android (Albrhi Home) + شاشة انتظار + ربط الجوال + حزمة استرجاع |
+| **ما هو · What** | شاشة رئيسية ويب (HTML/JS) + خدمة جذرية + بطاقات تنبيه دوري الأبطال فوق أي تطبيق + شاشة توقف | لانشر Android هادئ (Albrhi Home) بسمات ألوان قابلة للتغيير + شاشة انتظار + ربط الجوال + حزمة استرجاع |
 | **اللغة · Stack** | JavaScript (بدون بناء · no build), Node.js | Java (Android SDK بدون Gradle · without Gradle) |
 | **الأدوات · Tooling** | telnet بورت 23، `scripts/*.sh`، `npm test` | `adb`، `build.sh`، `restore.sh` |
 | **الشرح · Docs** | [lg-webos/README.md](lg-webos/README.md) + [`docs/`](lg-webos/docs) | [google-tv/README.md](google-tv/README.md) |

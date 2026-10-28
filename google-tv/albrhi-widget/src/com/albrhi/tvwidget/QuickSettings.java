@@ -39,6 +39,8 @@ final class QuickSettings {
                 .value(paired == 0 ? "غير مربوط" : paired + (paired == 1 ? " جهاز" : " أجهزة")));
         items.add(Sheet.Item.of("تنظيف الذاكرة", R.drawable.ic_refresh, new Runnable() { public void run() { cleanMemory(c); } })
                 .value(hi.ramFreeMb + " MB حرة"));
+        items.add(Sheet.Item.of("المظهر", R.drawable.ic_eye, new Runnable() { public void run() { Sheet.chained = true; appearance(c, anchor, onClose); } })
+                .value(Theme.NAMES[Theme.index]));
         items.add(Sheet.Item.of("حواف الشاشة", R.drawable.ic_tv, new Runnable() { public void run() { cycleEdges(c); } })
                 .value(Safe.NAMES[Safe.level(c)]));
         items.add(Sheet.Item.of("كل الإعدادات", R.drawable.ic_gear, open(c, Settings.ACTION_SETTINGS)));
@@ -58,17 +60,65 @@ final class QuickSettings {
         Dropdown.show(c, anchor, null, null, items, meters, 380, onClose);
     }
 
+    /** Look and details: theme colours, clock format, Hijri date, weather, the name in the greeting, and sports (off by default). */
+    private static void appearance(final Context c, final View anchor, final Runnable onClose) {
+        List<Sheet.Item> items = Sheet.list();
+        items.add(Sheet.Item.of("القائمة المختصرة", R.drawable.ic_back, new Runnable() { public void run() { Sheet.chained = true; show(c, anchor, onClose); } })
+                .sub("الرجوع للخيارات الأساسية"));
+        items.add(Sheet.Item.header("الألوان"));
+        items.add(Sheet.Item.of("السمة", R.drawable.ic_picture, new Runnable() { public void run() {
+            Theme.set(c, "theme", (Theme.index + 1) % Theme.NAMES.length);
+            applied(c, "السمة: " + Theme.NAMES[Theme.index]);
+        } }).value(Theme.NAMES[Theme.index]).sub("منتصف الليل · رمادي · محيط · غروب · بنفسجي"));
+        items.add(onOff(c, "لون الخلفية من التطبيق", "follow", Theme.follow, "الخلفية تتلوّن بلون التطبيق المحدد"));
+        items.add(Sheet.Item.header("الشريط العلوي"));
+        items.add(Sheet.Item.of("صيغة الوقت", R.drawable.ic_refresh, new Runnable() { public void run() {
+            Theme.set(c, "clock24", !Theme.clock24);
+            applied(c, Theme.clock24 ? "الوقت: 24 ساعة" : "الوقت: 12 ساعة");
+        } }).value(Theme.clock24 ? "24 ساعة" : "12 ساعة"));
+        items.add(onOff(c, "التاريخ الهجري", "hijri", Theme.hijri, null));
+        items.add(onOff(c, "الطقس", "weather", Theme.weather, "حسب موقعك من الـIP"));
+        items.add(Sheet.Item.of("الاسم في التحية", R.drawable.ic_edit, new Runnable() { public void run() {
+            RenameDialog.show(c, Theme.name, "", new RenameDialog.Callback() {
+                @Override public void onName(String n) { Theme.set(c, "name", n == null ? "" : n.trim()); applied(c, "تم حفظ الاسم"); }
+            });
+        } }).value(Theme.name.length() == 0 ? "بدون" : Theme.name).sub("فارغ = بدون تحية"));
+        items.add(Sheet.Item.header("الرياضة"));
+        items.add(Sheet.Item.of("المباريات والتنبيهات", R.drawable.ic_ball, new Runnable() { public void run() {
+            Theme.set(c, "sports", !Theme.sports);
+            Alerts.schedule(c);                    // arms or cancels the match alarms
+            applied(c, Theme.sports ? "الرياضة: مفعّلة" : "الرياضة: متوقفة");
+        } }).value(Theme.sports ? "مفعّلة" : "متوقفة").sub("بطاقة المباراة وتنبيهاتها (متوقفة افتراضيًا)"));
+        Dropdown.show(c, anchor, "المظهر", "الألوان والتفاصيل", items, null, 420, onClose);
+    }
+
+    private static Sheet.Item onOff(final Context c, final String title, final String key, final boolean on, String sub) {
+        Sheet.Item it = Sheet.Item.of(title, R.drawable.ic_eye, new Runnable() { public void run() {
+            Theme.set(c, key, !on);
+            applied(c, title + (on ? ": متوقف" : ": مفعّل"));
+        } }).value(on ? "مفعّل" : "متوقف");
+        return sub == null ? it : it.sub(sub);
+    }
+
+    /** A change is saved: the home screen (and the screensaver, next time) pick it up. */
+    private static void applied(Context c, String what) {
+        Toast.makeText(c, what, Toast.LENGTH_SHORT).show();
+        if (c instanceof HomeActivity) ((HomeActivity) c).recreate();      // others pick it up when Home comes back
+    }
+
     private static void more(final Context c, final View anchor, final Runnable onClose) {
         List<Sheet.Item> items = Sheet.list();
         items.add(Sheet.Item.of("القائمة المختصرة", R.drawable.ic_back, new Runnable() { public void run() { Sheet.chained = true; show(c, anchor, onClose); } })
                 .sub("الرجوع للخيارات الأساسية"));
-        items.add(Sheet.Item.header("المباريات"));
-        items.add(Sheet.Item.of("تحديث المباريات الآن", R.drawable.ic_refresh, new Runnable() { public void run() {
-            Toast.makeText(c, "جاري تحديث المباريات…", Toast.LENGTH_SHORT).show();
-            Fixtures.refresh(c, true);
-        } }).sub("إعادة تحميل المواعيد والنتائج"));
-        items.add(Sheet.Item.of("تجربة تنبيه المباراة", R.drawable.ic_bell, new Runnable() { public void run() { AppService.testAlert(c); } })
-                .sub("يعرض الإشعار كما سيظهر قبل المباراة"));
+        if (Theme.sports) {
+            items.add(Sheet.Item.header("المباريات"));
+            items.add(Sheet.Item.of("تحديث المباريات الآن", R.drawable.ic_refresh, new Runnable() { public void run() {
+                Toast.makeText(c, "جاري تحديث المباريات…", Toast.LENGTH_SHORT).show();
+                Fixtures.refresh(c, true);
+            } }).sub("إعادة تحميل المواعيد والنتائج"));
+            items.add(Sheet.Item.of("تجربة تنبيه المباراة", R.drawable.ic_bell, new Runnable() { public void run() { AppService.testAlert(c); } })
+                    .sub("يعرض الإشعار كما سيظهر قبل المباراة"));
+        }
         items.add(Sheet.Item.header("النظام"));
         items.add(Sheet.Item.of("التطبيقات", R.drawable.ic_apps, open(c, Settings.ACTION_APPLICATION_SETTINGS)).sub("إدارة التطبيقات المثبتة"));
         items.add(Sheet.Item.of("الموقع", R.drawable.ic_pin, open(c, Settings.ACTION_LOCATION_SOURCE_SETTINGS)).sub("لازم يكون شغّال لإظهار اسم الواي فاي"));

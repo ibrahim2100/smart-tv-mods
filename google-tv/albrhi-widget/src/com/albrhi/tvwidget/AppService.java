@@ -40,7 +40,7 @@ public class AppService extends Service {
         nm.createNotificationChannel(new NotificationChannel(CHANNEL, "Albrhi TV", NotificationManager.IMPORTANCE_MIN));
         Notification n = new Notification.Builder(this, CHANNEL)
                 .setSmallIcon(android.R.drawable.ic_menu_info_details)
-                .setContentTitle("Albrhi TV").setContentText("تنبيهات المباريات").build();
+                .setContentTitle("Albrhi TV").setContentText("الواجهة وربط الجوال").build();
         try {
             startForeground(1, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
         } catch (Throwable t) {
@@ -149,7 +149,7 @@ public class AppService extends Service {
     }
 
     private void pollOnce() {
-        final Fixtures.Match m = liveMatch();
+        final Fixtures.Match m = Theme.sports ? liveMatch() : null;
         if (m == null) { polling = false; return; }
         new Thread(new Runnable() {
             public void run() {

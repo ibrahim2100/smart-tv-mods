@@ -21,6 +21,7 @@ final class Alerts {
         if (am == null) return;
         am.cancel(pending(c, ACTION_PRE, 0));
         am.cancel(pending(c, ACTION_KICK, 0));
+        if (!Theme.sports) return;
         long now = System.currentTimeMillis();
         List<Fixtures.Match> up = Fixtures.upcoming;
         Fixtures.Match m = null;

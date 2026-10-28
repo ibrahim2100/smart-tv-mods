@@ -8,7 +8,12 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
 import android.graphics.Outline;
+import android.graphics.Paint;
+import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -68,6 +73,7 @@ public class HomeActivity extends Activity {
         String label, pkg;
         ComponentName cn;
         Drawable banner, icon;
+        Bitmap tile;               // the tile picture, pre-scaled and pre-rounded once (no clipping or big-texture scaling while navigating)
         boolean system;
     }
 
@@ -96,6 +102,9 @@ public class HomeActivity extends Activity {
     private App pendingArtApp;
     private final Runnable applyArt = new Runnable() { public void run() { applyArtwork(); } };
     private int appliedSafe;
+    private String appliedLook;
+
+    private static String look() { return Theme.index + "|" + Theme.sports + Theme.hijri + Theme.weather + Theme.clock24 + Theme.follow + "|" + Theme.name; }
     private float dn;
     private boolean loading, showHidden, moving;
     private String movingPkg, lastFocusPkg;
@@ -110,6 +119,8 @@ public class HomeActivity extends Activity {
         dn = getResources().getDisplayMetrics().density;
         if (CrashGuard.tripped(this)) { showEmergency(); return; }
         appliedSafe = Safe.level(this);
+        Theme.load(this);
+        appliedLook = look();
         prefs = getSharedPreferences("layout", MODE_PRIVATE);
         LayoutBackup.importPending(this);     // a layout.json pushed from the Mac (see restore.sh)
         loadHidden();
@@ -166,24 +177,18 @@ public class HomeActivity extends Activity {
         hero.setClipChildren(false);
         heroBox = hero;
 
+        heroGreet = text(15, 0xFF8E9AB8, false);
         LinearLayout greetRow = new LinearLayout(this);
-        greetRow.setGravity(Gravity.CENTER_VERTICAL);
         greetRow.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
-        View dash = new View(this);
-        dash.setBackgroundColor(GARNET);
-        LinearLayout.LayoutParams dl = new LinearLayout.LayoutParams(px(22), px(3));
-        dl.setMarginEnd(px(10));
-        greetRow.addView(dash, dl);
-        heroGreet = text(14.5f, 0xFFDCE6FF, false);
         greetRow.addView(heroGreet);
         hero.addView(greetRow, new LinearLayout.LayoutParams(-2, -2));
 
-        heroName = text(new int[]{36, 34, 30}[Safe.level(this)], 0xFFFFFFFF, true);
+        heroName = text(new int[]{38, 35, 32}[Safe.level(this)], 0xFFFFFFFF, true);
         heroName.setMaxWidth(px(620));
         LinearLayout.LayoutParams nl = new LinearLayout.LayoutParams(-2, -2);
         nl.topMargin = px(2);
         hero.addView(heroName, nl);
-        heroSub = text(14, 0xCCFFFFFF, false);
+        heroSub = text(14.5f, 0xB3FFFFFF, false);
         heroSub.setMaxWidth(px(620));
         LinearLayout.LayoutParams sl = new LinearLayout.LayoutParams(-2, -2);
         sl.topMargin = px(3);
@@ -212,15 +217,12 @@ public class HomeActivity extends Activity {
         LinearLayout appsHead = new LinearLayout(this);
         appsHead.setGravity(Gravity.CENTER_VERTICAL);
         appsHead.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
-        TextView ah = text(15, 0xFFB8C4E0, true);
+        TextView ah = text(13, 0xFF8E9AB8, true);
         ah.setText("التطبيقات");
         appsHead.addView(ah);
-        appsCount = text(12, 0xFFDCE6FF, true);
-        appsCount.setPadding(px(8), px(2), px(8), px(3));
-        appsCount.setBackground(roundBg(0x33FFFFFF, 9));
-        LinearLayout.LayoutParams ac = new LinearLayout.LayoutParams(-2, -2);
-        ac.setMarginStart(px(8));
-        appsHead.addView(appsCount, ac);
+        appsCount = text(12, 0xFF8E9AB8, false);               // kept for the code below; not shown
+        appsCount.setVisibility(View.GONE);
+        appsHead.addView(appsCount);
         col.addView(appsHead, lab);
         appsHeadView = appsHead;
 
@@ -230,7 +232,7 @@ public class HomeActivity extends Activity {
         rowApps = hscroll(listApps);
         col.addView(rowApps, new LinearLayout.LayoutParams(-1, -2));
 
-        toolsLabel = text(15, 0xFFB8C4E0, true);
+        toolsLabel = text(13, 0xFF8E9AB8, true);
         toolsLabel.setText("أدوات التلفزيون");
         LinearLayout.LayoutParams tlab = new LinearLayout.LayoutParams(-2, -2);
         tlab.topMargin = px(2);
@@ -254,6 +256,7 @@ public class HomeActivity extends Activity {
         refreshGreeting();
 
         setContentView(root);
+        getWindow().setBackgroundDrawable(null);          // the background view paints every pixel: no window background underneath (less overdraw)
     }
 
     private TextView text(float sp, int color, boolean bold) {
@@ -321,6 +324,7 @@ public class HomeActivity extends Activity {
 
     private void refreshGreeting() {
         heroGreet.setText(greeting(java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)));
+        heroGreet.setVisibility(Theme.name.length() > 0 ? View.VISIBLE : View.GONE);     // a greeting only when you gave a name
     }
 
     private void heroOpen() {
@@ -337,7 +341,8 @@ public class HomeActivity extends Activity {
     @Override protected void onResume() {
         super.onResume();
         if (header == null) return;                          // emergency screen is showing
-        if (Safe.level(this) != appliedSafe) { recreate(); return; }
+        Theme.load(this);
+        if (Safe.level(this) != appliedSafe || !look().equals(appliedLook)) { recreate(); return; }
         ui.postDelayed(calm, 60000);                         // a full calm minute clears the crash counter
         refreshGreeting();
         header.start();
@@ -535,6 +540,8 @@ public class HomeActivity extends Activity {
                         list.add(a);
                     }
                     sortApps(list);
+                    int tw = 116 - 14 * Safe.level(c);
+                    for (App a : list) a.tile = makeTile(a, px(tw), px(tw * 9 / 16f));
                 } catch (Throwable ignored) { }
                 final StringBuilder sg = new StringBuilder();
                 for (App x : list) sg.append(x.pkg).append(',');
@@ -595,11 +602,47 @@ public class HomeActivity extends Activity {
         if (target != null) { target.requestFocus(); reveal(target); }
     }
 
+    /** Draws the app's banner (or its icon on a plain card) at the exact tile size with rounded corners. */
+    private Bitmap makeTile(App a, int w, int h) {
+        try {
+            Bitmap src = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            Canvas sc = new Canvas(src);
+            sc.drawColor(0xFF1A1E2B);
+            Drawable d = a.banner != null ? a.banner : a.icon;
+            if (d != null) {
+                int dw = d.getIntrinsicWidth(), dh = d.getIntrinsicHeight();
+                if (dw <= 0 || dh <= 0) { dw = w; dh = h; }
+                int padX = a.banner != null ? 0 : px(14), padY = a.banner != null ? 0 : px(9);
+                float k = a.banner != null ? Math.max((float) w / dw, (float) h / dh)
+                        : Math.min((float) (w - 2 * padX) / dw, (float) (h - 2 * padY) / dh);
+                int tw = Math.round(dw * k), th = Math.round(dh * k);
+                int l = (w - tw) / 2, t = (h - th) / 2;
+                if (d instanceof android.graphics.drawable.BitmapDrawable && ((android.graphics.drawable.BitmapDrawable) d).getBitmap() != null) {
+                    Bitmap b = ((android.graphics.drawable.BitmapDrawable) d).getBitmap();
+                    while (b.getWidth() > tw * 2 && b.getHeight() > th * 2) b = Bitmap.createScaledBitmap(b, b.getWidth() / 2, b.getHeight() / 2, true);   // gentle downscale
+                    Paint bp = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG);
+                    sc.drawBitmap(b, null, new android.graphics.Rect(l, t, l + tw, t + th), bp);
+                } else {
+                    d.setBounds(l, t, l + tw, t + th);
+                    d.draw(sc);
+                }
+            }
+            Bitmap out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            Paint p = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+            p.setShader(new BitmapShader(src, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP));
+            new Canvas(out).drawRoundRect(0, 0, w, h, px(14), px(14), p);
+            src.recycle();
+            return out;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
     private View tile(final App a) {
         final boolean special = HIDDEN.equals(a.pkg);
         final boolean dim = !special && hidden.contains(a.pkg);
         final boolean isMoving = moving && a.pkg.equals(movingPkg);
-        final int tw = 112 - 14 * Safe.level(this);
+        final int tw = 116 - 14 * Safe.level(this);
         final int w = px(tw), h = px(tw * 9 / 16f);
 
         LinearLayout cell = new LinearLayout(this);
@@ -616,16 +659,20 @@ public class HomeActivity extends Activity {
         t.setTag(a.pkg);
         t.setAlpha(dim ? 0.4f : 1f);
         GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFF151D38);
-        bg.setCornerRadius(px(12));
-        t.setBackground(bg);
-        t.setClipToOutline(true);
-        t.setOutlineProvider(new ViewOutlineProvider() {
-            @Override public void getOutline(View v, Outline o) { o.setRoundRect(0, 0, v.getWidth(), v.getHeight(), px(12)); }
-        });
+        bg.setColor(0xFF1A1E2B);
+        bg.setCornerRadius(px(14));
+        if (a.tile == null) {          // no prepared picture: fall back to clipping the live drawable
+            t.setBackground(bg);
+            t.setClipToOutline(true);
+            t.setOutlineProvider(new ViewOutlineProvider() {
+                @Override public void getOutline(View v, Outline o) { o.setRoundRect(0, 0, v.getWidth(), v.getHeight(), px(14)); }
+            });
+        }
 
         if (special) {
-            t.setBackground(new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{0xFF2A3358, 0xFF1B2240}));
+            GradientDrawable sg = new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{0xFF2A2F3F, 0xFF1B1F2B});
+            sg.setCornerRadius(px(14));
+            t.setBackground(sg);
             TextView g = new TextView(this);
             g.setText(showHidden ? "رجوع" : hidden.size() + " مخفية");
             g.setTextColor(0xFFFFFFFF);
@@ -633,6 +680,11 @@ public class HomeActivity extends Activity {
             g.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17);
             g.setGravity(Gravity.CENTER);
             t.addView(g, new FrameLayout.LayoutParams(-1, -1));
+        } else if (a.tile != null) {
+            ImageView iv = new ImageView(this);
+            iv.setImageBitmap(a.tile);
+            iv.setScaleType(ImageView.ScaleType.FIT_XY);
+            t.addView(iv, new FrameLayout.LayoutParams(-1, -1));
         } else {
             ImageView iv = new ImageView(this);
             if (a.banner != null) {
@@ -648,7 +700,7 @@ public class HomeActivity extends Activity {
 
         final GradientDrawable ring = new GradientDrawable();   // drawn over the tile, never changes its size
         ring.setColor(0);
-        ring.setCornerRadius(px(12));
+        ring.setCornerRadius(px(14));
         ring.setStroke(px(2.5f), isMoving ? GOLD : 0xFFFFFFFF);
         ring.setAlpha(isMoving ? 255 : 0);
         t.setForeground(new android.graphics.drawable.InsetDrawable(ring, Math.round(3 * getResources().getDisplayMetrics().density)));
@@ -667,7 +719,7 @@ public class HomeActivity extends Activity {
                     }
                 }
                 if (moving && a.pkg.equals(movingPkg)) return;
-                if (!perf.contains("nozoom")) t.animate().scaleX(f ? 1.1f : 1f).scaleY(f ? 1.1f : 1f).setDuration(120).start();
+                if (!perf.contains("nozoom")) t.animate().scaleX(f ? 1.08f : 1f).scaleY(f ? 1.08f : 1f).setDuration(140).start();
                 ring.setAlpha(f ? 255 : 0);
                 if (f) { showHero(a, special); reveal(t); }
             }
@@ -724,13 +776,13 @@ public class HomeActivity extends Activity {
             rim.setColor(0);
             rim.setCornerRadius(px(30));
             int c = ambient.currentColor();
-            rim.setStroke(px(2), (c & 0x00FFFFFF) | 0x99000000);
+            rim.setStroke(px(1), (c & 0x00FFFFFF) | 0x66000000);
             watermark.setForeground(rim);
             watermark.setAlpha(0f);
             watermark.setScaleX(0.94f);
             watermark.setScaleY(0.94f);
             watermark.setTranslationX(travel);                        // arrives from the side you are moving towards
-            watermark.animate().alpha(0.40f).scaleX(1f).scaleY(1f).translationX(0f).setDuration(280)
+            watermark.animate().alpha(0.34f).scaleX(1f).scaleY(1f).translationX(0f).setDuration(280)
                     .setInterpolator(new android.view.animation.DecelerateInterpolator(1.5f)).start();
         } else {
             watermark.animate().alpha(0f).setDuration(140).start();
@@ -746,16 +798,15 @@ public class HomeActivity extends Activity {
         int[] a = new int[2], r = new int[2], m = new int[2];
         appsHeadView.getLocationInWindow(a);
         rootView.getLocationInWindow(r);
-        View pill = header.matchView();
-        pill.getLocationInWindow(m);
-        if (appsHeadView.getHeight() == 0 || pill.getWidth() == 0) return;       // not laid out yet: keep the previous box
-        int bandTop = m[1] - r[1] + pill.getHeight();                             // bottom of the pills
+        header.getLocationInWindow(m);
+        if (appsHeadView.getHeight() == 0 || header.getHeight() == 0) return;     // not laid out yet: keep the previous box
+        int bandTop = m[1] - r[1] + header.getHeight();                           // bottom of the clock block
         int bandBottom = a[1] - r[1];                                              // top of the "Apps" title
-        int pad = px(16);
-        int hgt = Math.max(px(100), Math.min(px(190), bandBottom - bandTop - 2 * pad));
+        int pad = px(14);
+        int hgt = Math.max(px(100), Math.min(px(200), bandBottom - bandTop - 2 * pad));
         int wdt = Math.round(hgt * 16f / 9f);
-        int cx = m[0] - r[0] + pill.getWidth() / 2;
-        int left = Math.max(Safe.h(this), Math.min(rootView.getWidth() - Safe.h(this) - wdt, cx - wdt / 2));
+        int right = rootView.getWidth() - Safe.h(this);
+        int left = Math.max(Safe.h(this), right - wdt - px(30));                  // on the right, opposite the name
         watermarkLp.gravity = Gravity.LEFT | Gravity.TOP;
         watermarkLp.leftMargin = left;
         watermarkLp.rightMargin = 0;
@@ -802,7 +853,7 @@ public class HomeActivity extends Activity {
         lastHeroAt = now;
         pendingArtApp = special ? null : a;
         ui.removeCallbacks(applyArt);
-        if (special) { ambient.setGlow(0xFF1B3A7A); applyArtwork(); } else ui.postDelayed(applyArt, fast ? 150 : 40);
+        if (special) { ambient.setGlow(Theme.glow); applyArtwork(); } else ui.postDelayed(applyArt, fast ? 150 : 40);
 
         heroName.animate().cancel();
         heroSub.animate().cancel();

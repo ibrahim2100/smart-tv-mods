@@ -93,7 +93,9 @@ Revert: `./revert.sh` (add `--full` for a deeper revert) puts back Google TV lau
 - App package `com.albrhi.tvwidget`; `HomeActivity` declares the HOME category. `restore.sh` runs `cmd package set-home-activity`, then **disables** the stock launcher `com.google.android.apps.tv.launcherx` and `com.google.android.tungsten.setupwraith` (`pm disable-user --user 0`, reversible) so the HOME button lands on ours.
 - Screensaver: `BarcaDream` set via `settings put secure screensaver_components`. `PreviewActivity` shows it as a normal screen (`adb shell am start -n com.albrhi.tvwidget/.PreviewActivity`) — useful for screenshots.
 - Phone control: `RemoteServer` (HTTP, port 8765, 6-digit PIN pairing → token) + `ControlService` (accessibility service for keys/typing). Installs go through `Installer`/`InstallReceiver`; the TV still asks for confirmation.
-- Matches/weather: `Fixtures.java` (TheSportsDB; `TEAM_ID`), `Weather.java` (Open-Meteo, IP geolocation), `Alerts.java` + `AlarmReceiver` (exact alarms, overlay banner).
+- Look and options: `Theme.java` (5 palettes + toggles in the `ui` prefs; `WidgetView.GOLD/GARNET/BLUE` are now mutable and set from the theme; changing a setting re-creates the home). Quick settings → Appearance is built in `QuickSettings.appearance()`.
+- Matches/weather: `Fixtures.java` (TheSportsDB; `TEAM_ID`), `Weather.java` (Open-Meteo, IP geolocation), `Alerts.java` + `AlarmReceiver` (exact alarms, overlay banner). **Sports are OFF by default** (`Theme.sports`): `Fixtures.refresh`, `Alerts.schedule` and the live poll in `AppService` all return early when it is off.
+- Smoothness: tile pictures are pre-rendered once (`HomeActivity.makeTile`, rounded, exact size); `Ambient` cross-fades two ImageViews with render-thread alpha. Measure with `albrhi-tv-restore/selftest.sh` (frame stats from `dumpsys gfxinfo`).
 - Layout persistence: `LayoutBackup.java` ⇄ `backup.sh` / `restore.sh` import path `/sdcard/Android/data/com.albrhi.tvwidget/files/import/layout.json`.
 - `albrhi-widget/` is the source of truth; `albrhi-tv-restore/source/` is a copy refreshed by `pack.sh`. Keep the two folders side by side.
 
@@ -119,7 +121,8 @@ Follow this loop: **inspect device → change variation points → verify locall
 | Want | Change |
 |---|---|
 | Your identity | package `com.albrhi.tvwidget` appears in `AndroidManifest.xml`, `src/com/albrhi/tvwidget/` (rename the directory + `package` lines), `res/xml`, and `albrhi-tv-restore/config.sh` (`APP_PKG`, `HOME_ACT`, `DREAM`) |
-| Your team/fixtures | `Fixtures.java` `TEAM_ID` (TheSportsDB team id) and its labels |
+| Your look | `Theme.java` palettes (`BASE`/`GLOW`/`ACCENT` arrays) and defaults; text colours are in `WidgetView` |
+| Your team/fixtures (optional) | `Fixtures.java` `TEAM_ID` (TheSportsDB team id) and its labels; users switch sports on in Appearance |
 | Which vendor apps to disable | `config.sh` lists `DISABLE_PKGS`, `REMOVE_SYSTEM_PKGS`, `REMOVE_USER_PKGS`. **Build your own from the device**: `adb shell pm list packages -s` (system), `-3` (user), `adb shell dumpsys package <pkg> | head`. Only disable what you recognise; `pm disable-user --user 0 <pkg>` is reversible with `pm enable`. |
 | Different stock launcher | find it with `adb shell cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME`. Android TV (not Google TV) uses `com.google.android.tvlauncher`; Google TV uses `com.google.android.apps.tv.launcherx`. Set `GTV_LAUNCHER`/`GTV_HOME_ACT` accordingly. |
 | SDK level | `build.sh` uses `--min-sdk-version 26 --target-sdk-version 34`; match your TV (`adb shell getprop ro.build.version.sdk`). |

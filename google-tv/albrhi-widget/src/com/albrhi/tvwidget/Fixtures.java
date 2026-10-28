@@ -94,6 +94,7 @@ final class Fixtures {
 
     static void refresh(final Context ctx, boolean force) {
         final Context c = ctx.getApplicationContext();
+        if (!Theme.sports) return;          // sports are off: no downloads, no alerts
         init(c);
         if (!badgesQueued) {              // paint the cached badges once per process, even when no download is due
             badgesQueued = true;

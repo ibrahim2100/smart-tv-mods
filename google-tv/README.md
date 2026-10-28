@@ -20,16 +20,28 @@
 ### المزايا
 | الميزة | الشرح |
 |---|---|
-| **واجهة رئيسية** | بطل كبير بأسلوب Apple TV: اسم التطبيق المحدد وصورته والخلفية تتلوّن بلونه. صفوف: تطبيقاتك، أدوات التلفزيون، المدخلات (HDMI) مع حالة الشبكة. |
-| **الشريط العلوي** | ساعة، تاريخ ميلادي وهجري، طقس (موقع تلقائي من الـIP، Open-Meteo)، وشارة المباراة القادمة. |
-| **المباريات** | قائمة مباريات الفرق، عدّ تنازلي، وتنبيهات: قبل المباراة بـ15 دقيقة، عند الانطلاق، عند الانتهاء، وعند تغيّر الموعد. بانر فوق أي تطبيق. |
+| **واجهة رئيسية هادئة** | ساعة كبيرة وتاريخ بدون صناديق، اسم التطبيق المحدد وصورته، وخلفية داكنة ناعمة تتلوّن بلونه. صفوف: تطبيقاتك، أدوات التلفزيون، المدخلات (HDMI) مع حالة الشبكة. |
+| **المظهر (قابل للتغيير)** | من الإعدادات السريعة ← **المظهر**: 5 سمات ألوان (منتصف الليل، رمادي، محيط، غروب، بنفسجي)، لون الخلفية يتبع التطبيق أو لا، الوقت 12/24 ساعة، التاريخ الهجري، الطقس، والاسم في التحية. كلها تُحفظ مع النسخة الاحتياطية. |
+| **الرياضة (اختيارية، متوقفة افتراضياً)** | شارة المباراة القادمة وقائمة المباريات وتنبيهاتها (قبل المباراة بـ15 دقيقة، الانطلاق، النهاية، تغيّر الموعد). تُفعَّل من المظهر ← المباريات والتنبيهات. وهي متوقفة، لا تحمّل بيانات ولا تنبّه. |
 | **ضغط مطوّل على OK** | نقل، إعادة تسمية، إخفاء، حذف (أو معلومات التطبيق لتطبيقات النظام). الترتيب محفوظ. |
 | **الإعدادات السريعة** | الشبكة، الصورة، الصوت، التطبيقات، الموقع، الكيبورد، حواف الشاشة (للتلفزيونات التي تقص الأطراف)، تنظيف الذاكرة، تجربة التنبيه، رجوع لواجهة Google TV. |
 | **ربط الجوال** | صفحة ويب على شبكة البيت: ريموت كامل (أسهم، OK، صوت، كتابة، تشغيل رابط فيديو، إطفاء الشاشة)، تثبيت وحذف وفتح التطبيقات، ورفع APK. رمز ربط من 6 أرقام لكل جهاز، وكل تثبيت يحتاج تأكيد على التلفزيون. |
-| **شاشة الانتظار** | Albrhi Barca بدل شاشة Google الأصلية. |
+| **شاشة الانتظار** | Albrhi Barca (اسمها القديم): ساعة كبيرة هادئة بألوان السمة تتحرك ببطء لحماية الشاشة. |
 | **تنظيف الذاكرة** | يدوي أو تلقائي قبل فتح تطبيق لو الرام الحرة أقل من 300 ميجا (يغلق الخلفية فقط). |
 | **ثبات** | شاشة طوارئ لو انهار اللانشر 3 مرات خلال دقيقتين، ونسخة احتياطية يومية اختيارية للترتيب والأسماء. |
 | **تقليل الإعلانات والتطبيقات الزائدة** | يعطّل تطبيقات Haier/MediaTek الزائدة وبعض تطبيقات Google عن المستخدم الحالي. |
+
+### الأداء (قياس على التلفزيون نفسه)
+المشي بالأسهم على الشاشة الرئيسية (40 ضغطة)، التلفزيون يركّب 4K:
+
+| | قبل التصميم الجديد | بعده |
+|---|---|---|
+| وسيط زمن الإطار | 31 ms | **21 ms** |
+| الشريحة 90 | 32 ms | **25 ms** |
+| الشريحة 99 | 53 ms | **30 ms** |
+| إطارات متقطعة | 3.0% | **0.6%** |
+
+ما تغيّر: صور التطبيقات تُرسم مرة وحدة بحجم البلاطة وبحواف مدوّرة (بدون قصّ في كل إطار)، والخلفية تتبدّل بتلاشي على خيط الرسم، وبلا طبقة خلفية للنافذة. القياس بنفسك: `albrhi-tv-restore/selftest.sh`.
 
 ### المتطلبات
 - تلفزيون Android/Google TV مع تفعيل **Developer options ← Wireless debugging / USB debugging**.
@@ -83,16 +95,28 @@ An Android app (plain Java, no Gradle) that replaces the Google TV home screen o
 ### Features
 | Feature | Details |
 |---|---|
-| **Home screen** | Apple-TV-style hero: the selected app's name and artwork, background tinted with its colour. Rows: your apps, TV tools, inputs (HDMI) with network status. |
-| **Top bar** | Clock, Gregorian and Hijri date, weather (location from IP, Open-Meteo), next-match pill. |
-| **Matches** | Team fixtures list, countdown, and alerts: 15 min before, at kick-off, at full time, and when a fixture moves. Banner over any app. |
+| **Calm home screen** | A large clock and date with no boxes, the selected app's name and artwork, and a soft dark background tinted with its colour. Rows: your apps, TV tools, inputs (HDMI) with network status. |
+| **Appearance (configurable)** | Quick settings → **Appearance**: 5 colour themes (Midnight, Graphite, Ocean, Sunset, Violet), background follows the app's colour or not, 12/24-hour clock, Hijri date, weather, and the name in the greeting. All saved with the layout backup. |
+| **Sports (optional, off by default)** | Next-match pill, fixtures list and alerts (15 min before, kick-off, full time, fixture changes). Switch on in Appearance → Matches and alerts. While off it downloads nothing and sends no alerts. |
 | **Long-press OK** | Move, rename, hide, delete (or app info for system apps). Order is saved. |
 | **Quick settings** | Network, picture, sound, apps, location, keyboard, screen margins (for TVs that crop edges), memory cleaner, alert test, back to the stock Google TV launcher. |
 | **Phone pairing** | A web page on your home network: full remote (arrows, OK, volume, typing, play a video link, screen off), install/uninstall/open apps, APK upload. A 6-digit pairing code per device, and every install needs confirmation on the TV. |
-| **Screensaver** | Albrhi Barca replaces Google's. |
+| **Screensaver** | Albrhi Barca (its old name): a large calm clock in the theme colours, drifting slowly to protect the panel. |
 | **Memory cleaner** | Manual, or automatic before launching an app when free RAM < 300 MB (background apps only). |
 | **Resilience** | Emergency screen if the launcher crashes 3 times in 2 minutes; optional daily backup of layout and names. |
 | **Less bloat** | Disables extra Haier/MediaTek apps and some Google apps for the current user. |
+
+### Performance (measured on the TV)
+Walking the home screen with the arrow keys (40 presses) while the TV composes 4K:
+
+| | before the redesign | after |
+|---|---|---|
+| median frame time | 31 ms | **21 ms** |
+| 90th percentile | 32 ms | **25 ms** |
+| 99th percentile | 53 ms | **30 ms** |
+| janky frames | 3.0% | **0.6%** |
+
+What changed: app pictures are drawn once at tile size with rounded corners (no per-frame clipping), the background cross-fades on the render thread, and there is no window background underneath. Measure yourself with `albrhi-tv-restore/selftest.sh`.
 
 ### Requirements
 - An Android/Google TV with **Developer options → Wireless/USB debugging** on.

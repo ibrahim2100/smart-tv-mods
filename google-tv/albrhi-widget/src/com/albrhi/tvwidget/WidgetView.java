@@ -23,8 +23,9 @@ import java.util.List;
  * Same view is used small on top of the home screen and large as the screensaver.
  */
 final class WidgetView extends LinearLayout {
-    static final int WHITE = 0xFFF4F6FB, MUTED = 0xFF9AA5C0, GOLD = 0xFFEDBB00,
-            GARNET = 0xFFA50044, BLUE = 0xFF004D98, CARD = 0xFF121B38, BOX = 0xFF1B2547;
+    static final int WHITE = 0xFFF4F6FB, MUTED = 0xFF9AA5C0, CARD = 0xFF121B38, BOX = 0xFF1B2547;
+    /** Theme colours (see Theme.load): the accent, a second accent for gradients, and the theme's glow. */
+    static int GOLD = 0xFF7FA8FF, GARNET = 0xFF7FA8FF, BLUE = 0xFF2A4A8C;
     static final String GREG = "ar_SA@calendar=gregorian;numbers=latn";
     static final String HIJRI = "ar_SA@calendar=islamic-umalqura;numbers=latn";
     static final long DAY = 86400000L, HOUR = 3600000L, MIN = 60000L;
@@ -41,6 +42,7 @@ final class WidgetView extends LinearLayout {
     private ImageView bHome, bAway;
     private final TextView[] cdNum = new TextView[3];
     private LinearLayout cdRow, listBox, card;
+    private View bar;
 
     WidgetView(Context c, boolean full) {
         super(c);
@@ -109,9 +111,9 @@ final class WidgetView extends LinearLayout {
         clockRow.setOrientation(HORIZONTAL);
         clockRow.setGravity(Gravity.BOTTOM);
         clockRow.setLayoutDirection(LAYOUT_DIRECTION_LTR);
-        clock = tv(full ? 60 : 40, WHITE, true);
+        clock = tv(full ? 92 : 40, WHITE, true);
         clock.setTypeface((full ? Fonts.medium : Fonts.bold));
-        ampm = tv(16, GOLD, true);
+        ampm = tv(full ? 24 : 16, GOLD, true);
         clockRow.addView(clock);
         LinearLayout.LayoutParams ap = lp(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         ap.leftMargin = px(6);
@@ -120,18 +122,20 @@ final class WidgetView extends LinearLayout {
 
         LinearLayout dateCol = new LinearLayout(getContext());
         dateCol.setOrientation(VERTICAL);
-        greet = tv(13, MUTED, false);
-        weather = tv(13, WHITE, false);
-        date = tv(16, WHITE, true);
-        hijri = tv(13, GOLD, false);
-        dateCol.addView(greet);
-        LinearLayout.LayoutParams wp = lp(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        wp.topMargin = px(2);
-        dateCol.addView(weather, wp);
+        greet = tv(full ? 17 : 13, MUTED, false);
+        weather = tv(full ? 17 : 13, MUTED, false);
+        date = tv(full ? 24 : 16, WHITE, true);
+        hijri = tv(full ? 16 : 13, MUTED, false);
+        dateCol.addView(greet);                                 // only shown when you gave a name (Appearance > name)
         LinearLayout.LayoutParams dp = lp(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        dp.topMargin = px(3);
+        dp.topMargin = px(full ? 8 : 3);
         dateCol.addView(date, dp);
-        dateCol.addView(hijri, dp);
+        LinearLayout.LayoutParams wp = lp(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        wp.topMargin = px(full ? 6 : 2);
+        dateCol.addView(weather, wp);
+        LinearLayout.LayoutParams hp0 = lp(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        hp0.topMargin = px(3);
+        dateCol.addView(hijri, hp0);
 
         if (full) {
             setGravity(Gravity.CENTER_HORIZONTAL);
@@ -151,8 +155,8 @@ final class WidgetView extends LinearLayout {
             addView(head, lp(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         }
 
-        // Blaugrana accent line
-        View bar = new View(getContext());
+        // thin accent line in the theme colours
+        bar = new View(getContext());
         GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.RIGHT_LEFT, new int[]{GARNET, BLUE});
         g.setCornerRadius(px(2));
         bar.setBackground(g);
@@ -285,20 +289,29 @@ final class WidgetView extends LinearLayout {
         return fmt("EEEE d MMM", GREG, t);
     }
 
-    static String greeting(int hour) {
-        return (hour >= 4 && hour < 12) ? "صباح الخير يا إبراهيم" : "مساء الخير يا إبراهيم";
-    }
+    static String greeting(int hour) { return Theme.greeting(hour); }
 
     void update() {
         long now = System.currentTimeMillis();
         Calendar cal = Calendar.getInstance();
-        clock.setText(fmt("h:mm", GREG, now));
+        clock.setText(fmt(Theme.timePattern(), GREG, now));
         ampm.setText(fmt("a", GREG, now));
+        ampm.setVisibility(Theme.clock24 ? GONE : VISIBLE);
         greet.setText(greeting(cal.get(Calendar.HOUR_OF_DAY)));
-        weather.setText(Weather.text == null ? "" : Weather.text);
-        weather.setVisibility(Weather.text == null ? GONE : VISIBLE);
+        greet.setVisibility(Theme.name.length() > 0 ? VISIBLE : GONE);
+        boolean wx = Theme.weather && Weather.text != null;
+        weather.setText(wx ? Weather.text : "");
+        weather.setVisibility(wx ? VISIBLE : GONE);
         date.setText(fmt("EEEE d MMMM", GREG, now));
         hijri.setText(fmt("d MMMM y", HIJRI, now) + " هـ");
+        hijri.setVisibility(Theme.hijri ? VISIBLE : GONE);
+        int sp = Theme.sports ? VISIBLE : GONE;               // the match card, list and last result only with sports on
+        card.setVisibility(sp);
+        listHead.setVisibility(sp);
+        listBox.setVisibility(sp);
+        lastRes.setVisibility(Theme.sports && full ? VISIBLE : GONE);
+        bar.setVisibility(Theme.sports ? VISIBLE : GONE);
+        if (!Theme.sports) return;
 
         List<Fixtures.Match> up = Fixtures.upcoming;
         if (up.isEmpty()) {

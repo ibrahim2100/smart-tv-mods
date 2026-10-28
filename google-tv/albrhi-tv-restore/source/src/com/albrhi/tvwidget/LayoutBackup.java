@@ -34,6 +34,9 @@ final class LayoutBackup {
             o.put("hidden", l.getString("hidden", ""));
             o.put("names", l.getString("names", "{}"));
             o.put("safe", c.getSharedPreferences("ui", Context.MODE_PRIVATE).getInt("safe", 0));
+            JSONObject ui = new JSONObject();                                   // theme, clock format, name, sports...
+            for (java.util.Map.Entry<String, ?> e : c.getSharedPreferences("ui", Context.MODE_PRIVATE).getAll().entrySet()) ui.put(e.getKey(), e.getValue());
+            o.put("ui", ui);
             o.put("sportsKey", c.getSharedPreferences("fx", Context.MODE_PRIVATE).getString("key", "123"));
             JSONObject names = new JSONObject();
             for (String k : h.getAll().keySet()) names.put(k, String.valueOf(h.getAll().get(k)));
@@ -70,6 +73,19 @@ final class LayoutBackup {
             }
             e.apply();
             if (o.has("safe")) c.getSharedPreferences("ui", Context.MODE_PRIVATE).edit().putInt("safe", o.optInt("safe", 0)).apply();
+            JSONObject ui = o.optJSONObject("ui");
+            if (ui != null) {
+                SharedPreferences.Editor ue = c.getSharedPreferences("ui", Context.MODE_PRIVATE).edit();
+                java.util.Iterator<String> ki = ui.keys();
+                while (ki.hasNext()) {
+                    String k = ki.next();
+                    Object v = ui.opt(k);
+                    if (v instanceof Boolean) ue.putBoolean(k, (Boolean) v);
+                    else if (v instanceof Integer) ue.putInt(k, (Integer) v);
+                    else if (v instanceof String) ue.putString(k, (String) v);
+                }
+                ue.apply();
+            }
             if (o.has("sportsKey")) c.getSharedPreferences("fx", Context.MODE_PRIVATE).edit().putString("key", o.optString("sportsKey", "123")).apply();
             f.delete();
             return true;
