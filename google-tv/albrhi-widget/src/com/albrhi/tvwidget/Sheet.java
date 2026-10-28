@@ -48,7 +48,7 @@ final class Sheet {
         String subtitle, value;
         int icon;
         Runnable action;
-        boolean danger, header, tile, swatches;
+        boolean danger, header, tile, swatches, stay;
         Boolean toggle;                    // non-null: the row shows a switch in this state
         IntPick pick;                      // swatches: called with the chosen index
         int selected;
@@ -71,13 +71,17 @@ final class Sheet {
         /** A square quick tile (icon, name, short value); consecutive tiles form a grid in the Panel. */
         Item tile() { tile = true; return this; }
 
+        /** The panel stays open after OK and redraws itself (switches, values, colour choices). */
+        Item stay() { stay = true; return this; }
+
         /** Shows an on/off switch at the end of the row instead of a value. */
-        Item toggle(boolean on) { toggle = on; return this; }
+        Item toggle(boolean on) { toggle = on; stay = true; return this; }
 
         /** A row of colour choices (used for the theme). */
         static Item swatches(String title, int selected, IntPick pick) {
             Item i = new Item(title);
             i.swatches = true;
+            i.stay = true;
             i.selected = selected;
             i.pick = pick;
             return i;

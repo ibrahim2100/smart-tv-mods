@@ -35,8 +35,15 @@ final class Panel {
     private Panel() { }
 
     private static final int COLS = 3;
+    private static Runnable current;          // redraws the panel that is on screen (used when a dialog opened from it finishes)
 
-    static void show(final Context c, String title, String subtitle, List<Sheet.Item> items, View footer, final Runnable onClose) {
+    /** Redraws the open panel from its builder (e.g. after a name was typed in a dialog). */
+    static void refresh() { if (current != null) current.run(); }
+
+    /** Produces the rows each time the panel draws itself (so switches and values always show the current state). */
+    interface Builder { List<Sheet.Item> items(); }
+
+    static void show(final Context c, String title, String subtitle, final Builder builder, View footer, final Runnable onClose) {
         final float dn = c.getResources().getDisplayMetrics().density;
         final DisplayMetrics dm = c.getResources().getDisplayMetrics();
         final Dialog d = new Dialog(c);
@@ -45,15 +52,9 @@ final class Panel {
         final LinearLayout panel = new LinearLayout(c);
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
-        GradientDrawable pb = new GradientDrawable();
-        pb.setColor(blend(Theme.base, 0xFFFFFFFF, 0.06f) & 0x00FFFFFF | 0xF5000000);
-        pb.setCornerRadius(26 * dn);
-        pb.setStroke(Math.max(1, Math.round(dn)), 0x14FFFFFF);
-        panel.setBackground(pb);
         panel.setElevation(28 * dn);
         panel.setPadding(Math.round(22 * dn), Math.round(20 * dn), Math.round(22 * dn), Math.round(16 * dn));
 
-        // header: title and a muted line
         TextView t = Sheet.text(c, title, 22, WHITE, false);
         t.setTypeface(Fonts.medium);
         t.setSingleLine(true);
@@ -67,61 +68,92 @@ final class Panel {
             panel.addView(st, sp);
         }
 
-        // body
         final LinearLayout list = new LinearLayout(c);
         list.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout gridRow = null;
-        int inRow = 0;
-        View first = null;
-        for (final Sheet.Item it : items) {
-            if (it.tile) {
-                if (gridRow == null || inRow == COLS) {
-                    gridRow = new LinearLayout(c);
-                    gridRow.setOrientation(LinearLayout.HORIZONTAL);
-                    LinearLayout.LayoutParams gp = new LinearLayout.LayoutParams(-1, -2);
-                    gp.topMargin = Math.round(8 * dn);
-                    list.addView(gridRow, gp);
-                    inRow = 0;
-                }
-                View tv = tile(c, it, dn, d);
-                LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(0, Math.round(98 * dn), 1f);
-                tp.setMargins(inRow == 0 ? 0 : Math.round(4 * dn), 0, inRow == COLS - 1 ? 0 : Math.round(4 * dn), 0);
-                gridRow.addView(tv, tp);
-                inRow++;
-                if (first == null) first = tv;
-                continue;
-            }
-            boolean afterGrid = gridRow != null;
-            gridRow = null;
-            if (it.header) {
-                TextView h = Sheet.text(c, it.title, 12.5f, 0xFF7F8AA3, true);
-                h.setPadding(Math.round(4 * dn), Math.round(18 * dn), 0, Math.round(4 * dn));
-                list.addView(h, new LinearLayout.LayoutParams(-2, -2));
-                continue;
-            }
-            View v = it.swatches ? swatches(c, it, dn, d) : row(c, it, dn, d);
-            LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-1, -2);
-            rp.topMargin = Math.round((afterGrid ? 16 : 5) * dn);
-            list.addView(v, rp);
-            if (first == null) first = v;
-        }
-
         int w = Math.round(430 * dn);
         int topMargin = Safe.v(c) + Math.round(6 * dn);
         int reserve = Math.round((36 + 34 + (subtitle != null ? 22 : 0) + (footer != null ? 58 : 0) + 10) * dn);
-        int maxList = dm.heightPixels - topMargin * 2 - reserve;
+        final int maxList = dm.heightPixels - topMargin * 2 - reserve;
         ScrollView sv = new ScrollView(c);
         sv.setVerticalScrollBarEnabled(false);
         sv.setClipToPadding(false);
         sv.setPadding(0, 0, 0, Math.round(2 * dn));
         sv.addView(list);
         panel.addView(new Sheet.Capped(c, sv, maxList), new LinearLayout.LayoutParams(-1, -2));
-
         if (footer != null) {
             LinearLayout.LayoutParams fp = new LinearLayout.LayoutParams(-1, -2);
             fp.topMargin = Math.round(14 * dn);
             panel.addView(footer, fp);
         }
+
+        // (re)draws every row from the builder and puts the focus back on the same row
+        final Runnable[] render = new Runnable[1];
+        final int[] focusAt = {0};
+        render[0] = new Runnable() {
+            public void run() {
+                GradientDrawable pb = new GradientDrawable();
+                pb.setColor(blend(Theme.base, 0xFFFFFFFF, 0.06f) & 0x00FFFFFF | 0xF5000000);
+                pb.setCornerRadius(26 * dn);
+                pb.setStroke(Math.max(1, Math.round(dn)), 0x14FFFFFF);
+                panel.setBackground(pb);
+                list.removeAllViews();
+                LinearLayout gridRow = null;
+                int inRow = 0, n = 0;
+                View focusView = null, firstView = null;
+                final List<Sheet.Item> all = builder.items();
+                final int tileH = tileHeight(all, maxList / dn);
+                for (final Sheet.Item it : all) {
+                    if (it.tile) {
+                        if (gridRow == null || inRow == COLS) {
+                            gridRow = new LinearLayout(c);
+                            gridRow.setOrientation(LinearLayout.HORIZONTAL);
+                            LinearLayout.LayoutParams gp = new LinearLayout.LayoutParams(-1, -2);
+                            gp.topMargin = Math.round(8 * dn);
+                            list.addView(gridRow, gp);
+                            inRow = 0;
+                        }
+                        View tv = tile(c, it, dn, d, render[0], tileH < 90);
+                        LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(0, Math.round(tileH * dn), 1f);
+                        tp.setMargins(inRow == 0 ? 0 : Math.round(4 * dn), 0, inRow == COLS - 1 ? 0 : Math.round(4 * dn), 0);
+                        gridRow.addView(tv, tp);
+                        inRow++;
+                        if (firstView == null) firstView = tv;
+                        if (n == focusAt[0]) focusView = tv;
+                        tv.setTag(Integer.valueOf(n++));
+                        continue;
+                    }
+                    boolean afterGrid = gridRow != null;
+                    gridRow = null;
+                    if (it.header) {
+                        TextView h = Sheet.text(c, it.title, 12.5f, 0xFF7F8AA3, true);
+                        h.setPadding(Math.round(4 * dn), Math.round(18 * dn), 0, Math.round(4 * dn));
+                        list.addView(h, new LinearLayout.LayoutParams(-2, -2));
+                        continue;
+                    }
+                    View v = it.swatches ? swatches(c, it, dn, d, render[0]) : row(c, it, dn, d, render[0]);
+                    LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-1, -2);
+                    rp.topMargin = Math.round((afterGrid ? 16 : 5) * dn);
+                    list.addView(v, rp);
+                    if (firstView == null) firstView = v;
+                    if (n == focusAt[0]) focusView = v;
+                    v.setTag(Integer.valueOf(n++));
+                }
+                View target = focusView != null ? focusView : firstView;
+                if (target != null) target.requestFocus();
+            }
+        };
+        // remember which row is focused, so a redraw keeps your place
+        list.getViewTreeObserver().addOnGlobalFocusChangeListener(new android.view.ViewTreeObserver.OnGlobalFocusChangeListener() {
+            @Override public void onGlobalFocusChanged(View oldFocus, View newFocus) {
+                View v = newFocus;
+                while (v != null && v != list) {
+                    if (v.getTag() instanceof Integer) { focusAt[0] = (Integer) v.getTag(); return; }
+                    v = v.getParent() instanceof View ? (View) v.getParent() : null;
+                }
+            }
+        });
+        render[0].run();
+        current = render[0];
 
         FrameLayout root = new FrameLayout(c);
         FrameLayout.LayoutParams pl = new FrameLayout.LayoutParams(w, -2, Gravity.RIGHT | Gravity.TOP);
@@ -137,6 +169,7 @@ final class Panel {
         }
         d.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override public void onDismiss(DialogInterface x) {
+                if (current == render[0]) current = null;
                 if (Sheet.chained) { Sheet.chained = false; return; }
                 if (onClose != null) onClose.run();
             }
@@ -145,7 +178,22 @@ final class Panel {
         panel.setAlpha(0f);
         panel.setTranslationX(36 * dn);
         panel.animate().alpha(1f).translationX(0f).setDuration(220).setInterpolator(new DecelerateInterpolator(1.6f)).start();
-        if (first != null) first.requestFocus();
+    }
+
+    /** Tile height in dp: 98 when there is room, down to 76 so the page fits without scrolling when the screen margins are large. */
+    private static int tileHeight(List<Sheet.Item> items, float availDp) {
+        int tiles = 0;
+        float other = 0;
+        boolean after = false;
+        for (Sheet.Item it : items) {
+            if (it.tile) { tiles++; continue; }
+            if (tiles > 0) after = true;
+            other += it.header ? 34 : it.swatches ? 62 : it.subtitle != null ? 56 : 51;
+        }
+        if (tiles == 0) return 98;
+        int rows = (tiles + COLS - 1) / COLS;
+        float fit = (availDp - other - (after ? 16 : 0)) / rows - 8;
+        return Math.round(Math.max(76, Math.min(98, fit)));
     }
 
     private static int blend(int a, int b, float k) {
@@ -163,28 +211,29 @@ final class Panel {
         return g;
     }
 
-    private static View tile(final Context c, final Sheet.Item it, final float dn, final Dialog d) {
+    private static View tile(final Context c, final Sheet.Item it, final float dn, final Dialog d, final Runnable render, boolean compact) {
         final LinearLayout t = new LinearLayout(c);
         t.setOrientation(LinearLayout.VERTICAL);
         t.setGravity(Gravity.CENTER);
         t.setFocusable(true);
         t.setClickable(true);
-        t.setPadding(Math.round(6 * dn), Math.round(8 * dn), Math.round(6 * dn), Math.round(8 * dn));
+        int vp0 = Math.round((compact ? 5 : 8) * dn);
+        t.setPadding(Math.round(6 * dn), vp0, Math.round(6 * dn), vp0);
         t.setBackground(fill(dn, false, 18));
         final ImageView ic = new ImageView(c);
         ic.setImageResource(it.icon);
         Sheet.tint(ic, 0xFFB9C4DD);
-        t.addView(ic, new LinearLayout.LayoutParams(Math.round(28 * dn), Math.round(28 * dn)));
-        TextView name = Sheet.text(c, it.title, 14, WHITE, true);
+        t.addView(ic, new LinearLayout.LayoutParams(Math.round((compact ? 22 : 28) * dn), Math.round((compact ? 22 : 28) * dn)));
+        TextView name = Sheet.text(c, it.title, compact ? 13 : 14, WHITE, true);
         name.setSingleLine(true);
         name.setEllipsize(TextUtils.TruncateAt.END);
         name.setGravity(Gravity.CENTER);
         name.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         LinearLayout.LayoutParams np = new LinearLayout.LayoutParams(-1, -2);
-        np.topMargin = Math.round(7 * dn);
+        np.topMargin = Math.round((compact ? 4 : 7) * dn);
         t.addView(name, np);
         if (it.value != null) {
-            TextView v = Sheet.text(c, it.value, 11.5f, MUTED, false);
+            TextView v = Sheet.text(c, it.value, compact ? 11 : 11.5f, MUTED, false);
             v.setSingleLine(true);
             v.setEllipsize(TextUtils.TruncateAt.END);
             v.setGravity(Gravity.CENTER);
@@ -202,13 +251,13 @@ final class Panel {
         t.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
                 if (it.action != null) it.action.run();
-                d.dismiss();
+                if (it.stay) render.run(); else d.dismiss();
             }
         });
         return t;
     }
 
-    private static View row(final Context c, final Sheet.Item it, final float dn, final Dialog d) {
+    private static View row(final Context c, final Sheet.Item it, final float dn, final Dialog d, final Runnable render) {
         final LinearLayout r = new LinearLayout(c);
         r.setGravity(Gravity.CENTER_VERTICAL);
         r.setFocusable(true);
@@ -263,14 +312,14 @@ final class Panel {
         r.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
                 if (it.action != null) it.action.run();
-                d.dismiss();
+                if (it.stay) render.run(); else d.dismiss();
             }
         });
         return r;
     }
 
     /** A row of round colour choices; OK picks the focused one. */
-    private static View swatches(final Context c, final Sheet.Item it, final float dn, final Dialog d) {
+    private static View swatches(final Context c, final Sheet.Item it, final float dn, final Dialog d, final Runnable render) {
         LinearLayout box = new LinearLayout(c);
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(Math.round(4 * dn), Math.round(4 * dn), 0, Math.round(4 * dn));
@@ -283,7 +332,7 @@ final class Panel {
             dot.setFocusable(true);
             dot.setClickable(true);
             dot.setOnClickListener(new View.OnClickListener() {
-                @Override public void onClick(View v) { if (it.pick != null) it.pick.pick(idx); d.dismiss(); }
+                @Override public void onClick(View v) { if (it.pick != null) it.pick.pick(idx); render.run(); }
             });
             LinearLayout.LayoutParams dp = new LinearLayout.LayoutParams(Math.round(52 * dn), Math.round(52 * dn));
             dp.setMarginEnd(Math.round(6 * dn));

@@ -25,6 +25,11 @@ final class RenameDialog {
     interface Callback { void onName(String nameOrNullForOriginal); }
 
     static void show(Context c, String current, String original, final Callback cb) {
+        show(c, "اسم جديد للتطبيق", current, original, true, cb);
+    }
+
+    /** @param original shown as the hint; @param allowOriginal false hides the "original name" button (e.g. for the greeting name). */
+    static void show(Context c, String title, String current, String original, boolean allowOriginal, final Callback cb) {
         final float dn = c.getResources().getDisplayMetrics().density;
         final Dialog d = new Dialog(c);
         d.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -40,7 +45,7 @@ final class RenameDialog {
         box.setPadding(Math.round(20 * dn), Math.round(16 * dn), Math.round(20 * dn), Math.round(14 * dn));
 
         TextView t = new TextView(c);
-        t.setText("اسم جديد للتطبيق");
+        t.setText(title);
         t.setTextColor(GOLD);
         t.setTypeface(Fonts.bold);
         t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
@@ -72,7 +77,7 @@ final class RenameDialog {
         row.addView(save, new LinearLayout.LayoutParams(0, -2, 1f));
         LinearLayout.LayoutParams m1 = new LinearLayout.LayoutParams(0, -2, 1.3f);
         m1.setMarginStart(Math.round(8 * dn));
-        row.addView(orig, m1);
+        if (allowOriginal) row.addView(orig, m1);
         LinearLayout.LayoutParams m2 = new LinearLayout.LayoutParams(0, -2, 1f);
         m2.setMarginStart(Math.round(8 * dn));
         row.addView(cancel, m2);

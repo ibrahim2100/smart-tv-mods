@@ -104,6 +104,12 @@ public class HomeActivity extends Activity {
     private int appliedSafe;
     private String appliedLook;
 
+    /** Called when quick settings closes: if the look or screen edges changed, rebuild the screen once. */
+    void applyLookIfChanged() {
+        Theme.load(this);
+        if (header != null && (Safe.level(this) != appliedSafe || !look().equals(appliedLook))) recreate();
+    }
+
     private static String look() { return Theme.index + "|" + Theme.sports + Theme.hijri + Theme.weather + Theme.clock24 + Theme.follow + "|" + Theme.name; }
     private float dn;
     private boolean loading, showHidden, moving;
