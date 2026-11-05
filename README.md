@@ -47,6 +47,7 @@ Two open-source projects: **a home screen for LG webOS** and **a launcher for Go
 
 ### 🆕 آخر التحديثات
 - 🟢 **Google TV / Android TV:** يعمل الآن على عدة تلفزيونات (Haier وTCL وSony وغيرها) · لوحة **التطبيقات المفتوحة** · **إعدادات سريعة** بشبكة أزرار دائرية · وضع أسود نظيف بصفّين · **شاشة توقف** كبيرة · صف خاص بأدوات الشركة المصنّعة · **حزمة استرجاع لكل تلفزيون** (`tcl-install.sh` / `tcl-restore.sh`) لتعود للأصل بأمان وبدون المساس بالضمان.
+- 👑 **يوتيوب لـ LG (Albrhi The KING):** فورك مطوَّر من [youtube-webos](https://github.com/ibrahim2100/youtube-webos) بواجهة عربية جديدة، إحصائيات الفيديو، إزالة Shorts، وضع صوت فقط بصورة وعنوان، DeArrow، وإحصائيات SponsorBlock. **[حمّل الـ IPK من هنا](https://github.com/ibrahim2100/youtube-webos/releases/latest)** (رخصة GPL-3.0، مستودع منفصل).
 - 🔴 **LG webOS:** إقلاع أسرع بكثير (من نحو 148 ثانية إلى نحو 57 ثانية حتى ظهور الواجهة) · `scripts/simplink.sh` لإيقاف قفز LG لمدخل جهاز (PS5) تلقائياً عبر HDMI-CEC.
 
 مستودع واحد لمشروعين **منفصلين تماماً** (لا كود مشترك ولا سكربتات مشتركة). عندك **LG** ← ادخل `lg-webos/`. عندك **Google TV / Android TV** ← ادخل `google-tv/`. شغّل أي سكربت من داخل مجلد مشروعه فقط: سكربتات `adb` لـGoogle TV وسكربتات telnet لـLG.
@@ -221,6 +222,7 @@ MIT (انظر [`LICENSE`](LICENSE) و[`lg-webos/LICENSE`](lg-webos/LICENSE)). ا
 
 ### 🆕 Latest updates
 - 🟢 **Google TV / Android TV:** now runs on several TVs (Haier, TCL, Sony and more) · **open-apps** panel · **quick settings** with a round-button grid · clean black two-row mode · bigger **screensaver** · a row for the TV maker's own tools · a **per-TV restore kit** (`tcl-install.sh` / `tcl-restore.sh`) to go back to stock safely, without touching the warranty.
+- 👑 **YouTube for LG (Albrhi The KING):** a redesigned fork of [youtube-webos](https://github.com/ibrahim2100/youtube-webos) with a new Arabic/English interface, video stats, Shorts removal, an audio-only screen with thumbnail and title, DeArrow, and SponsorBlock stats. **[Download the IPK](https://github.com/ibrahim2100/youtube-webos/releases/latest)** (GPL-3.0, separate repository).
 - 🔴 **LG webOS:** much faster boot (about 148 s down to about 57 s until the home appears) · `scripts/simplink.sh` stops LG from jumping to a console's input (PS5) through HDMI-CEC.
 
 One repository, two **completely separate** projects (no shared code or scripts). You own an **LG** → go to `lg-webos/`. You own a **Google TV / Android TV** → go to `google-tv/`. Run scripts only from inside their own project: `adb` scripts are for Google TV, telnet scripts for LG.
