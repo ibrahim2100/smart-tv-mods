@@ -29,7 +29,8 @@ final class Lights {
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
     private static final long DISCOVER_EVERY_MS = 60000L;
 
-    static final class Gang { String dp, code, name; }
+    /** {@code manual}: only ever switched from the lights panel, never by a routine, the TV-off hook or a remote button. */
+    static final class Gang { String dp, code, name; boolean manual; }
 
     static final class Dev { String id, name, key; List<Gang> gangs = new ArrayList<Gang>(); }
 
@@ -75,6 +76,7 @@ final class Lights {
                     n.dp = x.optString("dp", "1");
                     n.code = x.optString("code", "switch_" + n.dp);
                     n.name = x.optString("name", d.name + " " + n.dp);
+                    n.manual = x.optBoolean("manual", false);
                     d.gangs.add(n);
                 }
                 out.add(d);
@@ -99,12 +101,15 @@ final class Lights {
         Routine off = new Routine(), on = new Routine();
         off.name = "إطفاء كل الإضاءة";
         on.name = "تشغيل كل الإضاءة";
+        boolean skipped = false;
         for (Dev d : devs) {
             for (Gang g : d.gangs) {
+                if (g.manual) { skipped = true; continue; }
                 Action a = new Action(); a.dev = d.id; a.dp = g.dp; a.on = false; off.actions.add(a);
                 Action b = new Action(); b.dev = d.id; b.dp = g.dp; b.on = true; on.actions.add(b);
             }
         }
+        if (skipped) { off.name += " (عدا اليدوية)"; on.name += " (عدا اليدوية)"; }
         if (!off.actions.isEmpty()) { out.add(off); out.add(on); }
         try {
             JSONArray a = new JSONArray(prefs(c).getString("routines", "[]"));
@@ -117,6 +122,8 @@ final class Lights {
                     JSONObject x = acts.getJSONObject(j);
                     Action ac = new Action();
                     ac.dev = x.getString("dev"); ac.dp = x.optString("dp", "1"); ac.on = x.optBoolean("on", true);
+                    Gang gg = gang(dev(c, ac.dev), ac.dp);
+                    if (gg != null && gg.manual) continue;          // manual lights stay out of every routine
                     r.actions.add(ac);
                 }
                 if (!r.actions.isEmpty()) out.add(r);
@@ -333,6 +340,7 @@ final class Lights {
         List<Target> out = new ArrayList<Target>();
         for (Dev d : devices(c)) {
             for (Gang g : d.gangs) {
+                if (g.manual) continue;                             // not offered for remote buttons
                 Target t = new Target();
                 t.token = d.id + ":" + g.dp;
                 t.title = g.name;
