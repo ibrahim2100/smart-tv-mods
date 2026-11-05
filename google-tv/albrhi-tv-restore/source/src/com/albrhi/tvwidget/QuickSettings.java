@@ -245,6 +245,10 @@ final class QuickSettings {
                 } }).sub("ينفّذ كل أزراره معًا").stay());
             }
             items.add(Sheet.Item.header("إدارة"));
+            items.add(Sheet.Item.of("مع إطفاء التلفزيون", R.drawable.ic_power, new Runnable() { public void run() {
+                Lights.setOffWithTv(c, !Lights.offWithTv(c));
+                Panel.refresh();
+            } }).value(Lights.offWithTv(c) ? "تنطفئ الإضاءة" : "متوقف").sub("يطفئ كل اللمبات لما يدخل التلفزيون في السكون").stay());
             items.add(Sheet.Item.of("تحديث الحالة", R.drawable.ic_refresh, new Runnable() { public void run() {
                 Lights.refresh(c, new Lights.Done() { public void onDone(String error) {
                     if (error.length() > 0) Toast.makeText(c, "الإضاءة: " + error, Toast.LENGTH_LONG).show();

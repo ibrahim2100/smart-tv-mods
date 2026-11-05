@@ -37,13 +37,22 @@ public class ControlService extends AccessibilityService {
 
     static ControlService get() { return inst; }
 
+    private android.content.BroadcastReceiver screenOff;
+
     @Override protected void onServiceConnected() {
         super.onServiceConnected();
         inst = this;
+        if (screenOff == null) {        // the TV went to standby: switch the lights off too (see Lights.onTvOff)
+            screenOff = new android.content.BroadcastReceiver() {
+                @Override public void onReceive(android.content.Context c, Intent i) { Lights.onTvOff(c); }
+            };
+            try { registerReceiver(screenOff, new android.content.IntentFilter(Intent.ACTION_SCREEN_OFF)); } catch (Throwable ignored) { }
+        }
     }
 
     @Override public boolean onUnbind(android.content.Intent i) {
         inst = null;
+        if (screenOff != null) { try { unregisterReceiver(screenOff); } catch (Throwable ignored) { } screenOff = null; }
         return super.onUnbind(i);
     }
 

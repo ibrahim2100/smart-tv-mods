@@ -297,9 +297,12 @@ final class Lights {
     }
 
     /** Runs a routine: every action at the same time (one thread each), one summary card at the end. */
-    static void run(final Context c, final Routine r, final Done done) {
+    static void run(final Context c, final Routine r, final Done done) { run(c, r, done, false); }
+
+    /** {@code quiet}: no status cards (used when the TV is turning off and nobody is looking). */
+    static void run(final Context c, final Routine r, final Done done, final boolean quiet) {
         final Context app = c.getApplicationContext();
-        Notice.show(app, Notice.WORKING, R.drawable.ic_bulb, WidgetView.GOLD, "الإضاءة", r.name, "جاري التنفيذ…", null);
+        if (!quiet) Notice.show(app, Notice.WORKING, R.drawable.ic_bulb, WidgetView.GOLD, "الإضاءة", r.name, "جاري التنفيذ…", null);
         new Thread(new Runnable() { public void run() {
             final List<String> errors = java.util.Collections.synchronizedList(new ArrayList<String>());
             List<Thread> ts = new ArrayList<Thread>();
@@ -315,8 +318,10 @@ final class Lights {
             }
             for (Thread t : ts) { try { t.join(20000); } catch (InterruptedException ignored) { } }
             final String err = errors.isEmpty() ? "" : errors.get(0);
-            if (err.length() > 0) Notice.show(app, Notice.FAIL, R.drawable.ic_bulb, 0xFFFF6B6B, "الإضاءة", r.name, err, null);
-            else Notice.show(app, Notice.DONE, R.drawable.ic_bulb, WidgetView.GOLD, "الإضاءة", r.name, "تم", null);
+            if (!quiet) {
+                if (err.length() > 0) Notice.show(app, Notice.FAIL, R.drawable.ic_bulb, 0xFFFF6B6B, "الإضاءة", r.name, err, null);
+                else Notice.show(app, Notice.DONE, R.drawable.ic_bulb, WidgetView.GOLD, "الإضاءة", r.name, "تم", null);
+            }
             MAIN.post(new Runnable() { public void run() { if (done != null) done.onDone(err); } });
         } }, "lights-run").start();
     }
@@ -357,6 +362,30 @@ final class Lights {
     }
 
     private static long lastScene = 0;
+    private static long lastTvOff = 0;
+
+    /** "Turn the lights off when the TV turns off" (on by default). */
+    static boolean offWithTv(Context c) { return prefs(c).getBoolean("offWithTv", true); }
+
+    static void setOffWithTv(Context c, boolean on) { prefs(c).edit().putBoolean("offWithTv", on).apply(); }
+
+    /**
+     * The TV's screen switched off (standby): turn every light off. A wake lock keeps the CPU awake for a few seconds so
+     * the commands can leave before the TV sleeps. Ignored when set off, not configured, or repeated within 20 s.
+     */
+    static void onTvOff(Context c) {
+        final Context app = c.getApplicationContext();
+        if (!configured(app) || !offWithTv(app)) return;
+        if (System.currentTimeMillis() - lastTvOff < 20000L) return;
+        lastTvOff = System.currentTimeMillis();
+        List<Routine> rs = routines(app);
+        if (rs.isEmpty()) return;
+        android.util.Log.i("AlbrhiPower", "TV off: turning the lights off");
+        final android.os.PowerManager.WakeLock wl = ((android.os.PowerManager) app.getSystemService(Context.POWER_SERVICE))
+                .newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "albrhi:lights");
+        wl.acquire(25000L);
+        run(app, rs.get(0), new Done() { public void onDone(String error) { try { if (wl.isHeld()) wl.release(); } catch (Throwable ignored) { } } }, true);
+    }
 
     /**
      * An HDMI input was opened from the launcher. If it is the PS5, run the routine whose name starts with "PS5"
