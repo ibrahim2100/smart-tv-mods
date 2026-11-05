@@ -142,9 +142,16 @@ final class TopPills extends LinearLayout {
         addView(block, wrap());
 
         // ---- next-match card (focusable): league and day on top, the two teams with the time between them, the countdown under
-        View sp1 = new View(getContext());
-        addView(sp1, new LinearLayout.LayoutParams(0, 1, 1f));            // centres the card in the free space beside the clock
-        matchFrame = new FrameLayout(getContext());
+        matchFrame = new FrameLayout(getContext()) {
+            @Override protected void onMeasure(int w, int h) {
+                View card = getChildAt(0);
+                int avail = MeasureSpec.getSize(w);       // this frame takes all the free space beside the clock (weight 1), so this is exactly that space
+                if (card != null && avail > 0) {
+                    ((FrameLayout.LayoutParams) card.getLayoutParams()).width = Math.max(px(280), Math.min(px(450), avail - px(24)));   // never wider than that space: it used to run under the network pill
+                }
+                super.onMeasure(w, h);
+            }
+        };
         matchFrame.setFocusable(true);
         matchFrame.setClickable(true);
         final LinearLayout cardBox = new LinearLayout(getContext());
@@ -178,7 +185,7 @@ final class TopPills extends LinearLayout {
         LinearLayout.LayoutParams an = new LinearLayout.LayoutParams(0, -2, 1f);
         an.setMarginStart(px(10));
         row.addView(mAway, an);
-        LinearLayout.LayoutParams tm = new LinearLayout.LayoutParams(px(104), -2);
+        LinearLayout.LayoutParams tm = new LinearLayout.LayoutParams(px(92), -2);
         row.addView(mTime, tm);
         LinearLayout.LayoutParams hn = new LinearLayout.LayoutParams(0, -2, 1f);
         hn.setMarginEnd(px(10));
@@ -194,7 +201,7 @@ final class TopPills extends LinearLayout {
         LinearLayout.LayoutParams cl = new LinearLayout.LayoutParams(-1, -2);
         cl.topMargin = px(4);
         cardBox.addView(mCount, cl);
-        matchFrame.addView(cardBox, new FrameLayout.LayoutParams(px(450), -2));
+        matchFrame.addView(cardBox, new FrameLayout.LayoutParams(px(450), -2, Gravity.CENTER_HORIZONTAL));
 
         matchFrame.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override public void onFocusChange(View v, boolean f) { cardBox.setBackground(cardBg(f, mSoon)); }
@@ -202,9 +209,7 @@ final class TopPills extends LinearLayout {
         matchFrame.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) { MatchesPanel.show(getContext(), null); }
         });
-        addView(matchFrame, wrap());
-        View sp2 = new View(getContext());
-        addView(sp2, new LinearLayout.LayoutParams(0, 1, 1f));
+        addView(matchFrame, new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f));      // centres the card in the free space beside the clock
         applySports();
     }
 

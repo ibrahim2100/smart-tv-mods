@@ -27,6 +27,12 @@ final class Cleaner {
             "com.google.android.katniss", "com.google.android.permissioncontroller", "com.mediatek.", "com.haier", "com.mstar.",
             "com.google.android.packageinstaller", "com.google.android.webview", "com.google.android.trichromelibrary"};
 
+    /** Apps and services that must never be ended (this launcher, the system, keyboards, the TV\'s own apps). */
+    static boolean keepAlways(String pkg) {
+        for (String s : NEVER) if (pkg.startsWith(s)) return true;
+        return false;
+    }
+
     private static long availMb(Context c) {
         ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
         ((ActivityManager) c.getSystemService(Context.ACTIVITY_SERVICE)).getMemoryInfo(mi);

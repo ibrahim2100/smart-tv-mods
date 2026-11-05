@@ -47,7 +47,11 @@ public class ControlService extends AccessibilityService {
         return super.onUnbind(i);
     }
 
-    @Override public void onAccessibilityEvent(AccessibilityEvent e) { }
+    @Override public void onAccessibilityEvent(AccessibilityEvent e) {
+        if (e.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED && e.getPackageName() != null) {
+            try { KeyMap.onWindow(this, e.getPackageName().toString()); } catch (Throwable ignored) { }
+        }
+    }
 
     /**
      * The remote's Settings (gear) button opens our short settings menu instead of the TV's full Settings app.
@@ -70,6 +74,104 @@ public class ControlService extends AccessibilityService {
     }
 
     @Override public void onInterrupt() { }
+
+    // ---- force stop through the system's own app-info screen ---------------------------------
+    // Some TVs refuse ActivityManager.killBackgroundProcesses from an ordinary app ("Invalid packageName"). The one thing
+    // that always ends an app is the "Force stop" button in Settings > Apps, so we press it for you, one app at a time.
+
+    private static final String[] FORCE_STOP = {"force stop", "إيقاف إجباري", "فرض الإيقاف", "فرض الإغلاق", "إيقاف التطبيق"};
+    private static final String[] CONFIRM = {"ok", "force stop", "موافق", "حسنًا", "حسناً", "نعم", "إيقاف إجباري", "فرض الإيقاف"};
+    private final android.os.Handler fsHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private java.util.ArrayList<String> fsQueue;
+    private Runnable fsDone;
+    private int fsStage;
+    private long fsDeadline;
+
+    /** @return false if the service is not running (nothing was started). {@code done} runs on the main thread when the queue is finished. */
+    static boolean forceStop(java.util.List<String> pkgs, Runnable done) {
+        ControlService s = inst;
+        if (s == null || pkgs.isEmpty()) return false;
+        s.fsQueue = new java.util.ArrayList<String>(pkgs);
+        s.fsDone = done;
+        s.fsNext();
+        return true;
+    }
+
+    private void fsNext() {
+        fsHandler.removeCallbacksAndMessages(null);
+        if (fsQueue == null || fsQueue.isEmpty()) {
+            fsQueue = null;
+            performGlobalAction(GLOBAL_ACTION_HOME);
+            Runnable d = fsDone;
+            fsDone = null;
+            if (d != null) d.run();
+            return;
+        }
+        String pkg = fsQueue.remove(0);
+        fsStage = 0;
+        fsDeadline = android.os.SystemClock.uptimeMillis() + 9000;
+        try {
+            startActivity(new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:" + pkg))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
+        } catch (Throwable t) { fsHandler.post(new Runnable() { public void run() { fsNext(); } }); return; }
+        fsHandler.postDelayed(fsPoll, 900);
+    }
+
+    private final Runnable fsPoll = new Runnable() {
+        public void run() {
+            if (android.os.SystemClock.uptimeMillis() > fsDeadline) { fsNext(); return; }
+            AccessibilityNodeInfo root = null;
+            try {
+                root = getRootInActiveWindow();
+                if (root != null) {
+                    if (fsStage == 0) {
+                        AccessibilityNodeInfo hit = findText(root, FORCE_STOP, false);
+                        if (hit != null) {
+                            if (!hit.isEnabled() && !parentEnabled(hit)) { fsNext(); return; }        // already stopped: the button is greyed out
+                            if (clickUp(hit)) { fsStage = 1; fsHandler.postDelayed(this, 600); return; }
+                        }
+                    } else {
+                        AccessibilityNodeInfo ok = findText(root, CONFIRM, true);
+                        if (ok != null && clickUp(ok)) { fsHandler.postDelayed(new Runnable() { public void run() { fsNext(); } }, 700); return; }
+                    }
+                }
+            } catch (Throwable ignored) {
+            } finally {
+                if (root != null) root.recycle();
+            }
+            fsHandler.postDelayed(this, 350);
+        }
+    };
+
+    private static boolean parentEnabled(AccessibilityNodeInfo n) {
+        AccessibilityNodeInfo p = n.getParent();
+        return p != null && p.isEnabled();
+    }
+
+    /** First node whose text matches one of the labels (exact match when {@code exact}, otherwise "contains"). */
+    private static AccessibilityNodeInfo findText(AccessibilityNodeInfo root, String[] labels, boolean exact) {
+        for (String l : labels) {
+            java.util.List<AccessibilityNodeInfo> hits = root.findAccessibilityNodeInfosByText(l);
+            if (hits == null) continue;
+            for (AccessibilityNodeInfo h : hits) {
+                CharSequence t = h.getText();
+                if (t == null) continue;
+                String s = t.toString().trim().toLowerCase(java.util.Locale.ROOT);
+                if (exact ? s.equals(l) : (s.equals(l) || s.startsWith(l))) return h;
+            }
+        }
+        return null;
+    }
+
+    /** Presses the node, or the nearest clickable parent of it (leanback rows are clickable containers around a text). */
+    private static boolean clickUp(AccessibilityNodeInfo n) {
+        AccessibilityNodeInfo cur = n;
+        for (int i = 0; i < 5 && cur != null; i++) {
+            if (cur.isClickable() && cur.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return true;
+            cur = cur.getParent();
+        }
+        return n.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+    }
 
     // ---- actions ----------------------------------------------------------------------------
 

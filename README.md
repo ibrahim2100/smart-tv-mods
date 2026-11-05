@@ -45,6 +45,10 @@ Two open-source projects: **a home screen for LG webOS** and **a launcher for Go
 | **التفاصيل** | [lg-webos/README.md](lg-webos/README.md) و[`docs/`](lg-webos/docs) | [google-tv/README.md](google-tv/README.md) |
 | **الحالة** | قيد التطوير | مستقر |
 
+### 🆕 آخر التحديثات
+- 🟢 **Google TV / Android TV:** يعمل الآن على عدة تلفزيونات (Haier وTCL وSony وغيرها) · لوحة **التطبيقات المفتوحة** · **إعدادات سريعة** بشبكة أزرار دائرية · وضع أسود نظيف بصفّين · **شاشة توقف** كبيرة · صف خاص بأدوات الشركة المصنّعة · **حزمة استرجاع لكل تلفزيون** (`tcl-install.sh` / `tcl-restore.sh`) لتعود للأصل بأمان وبدون المساس بالضمان.
+- 🔴 **LG webOS:** إقلاع أسرع بكثير (من نحو 148 ثانية إلى نحو 57 ثانية حتى ظهور الواجهة) · `scripts/simplink.sh` لإيقاف قفز LG لمدخل جهاز (PS5) تلقائياً عبر HDMI-CEC.
+
 مستودع واحد لمشروعين **منفصلين تماماً** (لا كود مشترك ولا سكربتات مشتركة). عندك **LG** ← ادخل `lg-webos/`. عندك **Google TV / Android TV** ← ادخل `google-tv/`. شغّل أي سكربت من داخل مجلد مشروعه فقط: سكربتات `adb` لـGoogle TV وسكربتات telnet لـLG.
 
 ### 🟢 Google TV (Albrhi Home): كل الميزات
@@ -214,6 +218,10 @@ MIT (انظر [`LICENSE`](LICENSE) و[`lg-webos/LICENSE`](lg-webos/LICENSE)). ا
 | **Tooling** | telnet port 23, `scripts/*.sh`, `npm test` | `adb`, `build.sh`, `restore.sh` |
 | **Docs** | [lg-webos/README.md](lg-webos/README.md) and [`docs/`](lg-webos/docs) | [google-tv/README.md](google-tv/README.md) |
 | **Status** | active | stable |
+
+### 🆕 Latest updates
+- 🟢 **Google TV / Android TV:** now runs on several TVs (Haier, TCL, Sony and more) · **open-apps** panel · **quick settings** with a round-button grid · clean black two-row mode · bigger **screensaver** · a row for the TV maker's own tools · a **per-TV restore kit** (`tcl-install.sh` / `tcl-restore.sh`) to go back to stock safely, without touching the warranty.
+- 🔴 **LG webOS:** much faster boot (about 148 s down to about 57 s until the home appears) · `scripts/simplink.sh` stops LG from jumping to a console's input (PS5) through HDMI-CEC.
 
 One repository, two **completely separate** projects (no shared code or scripts). You own an **LG** → go to `lg-webos/`. You own a **Google TV / Android TV** → go to `google-tv/`. Run scripts only from inside their own project: `adb` scripts are for Google TV, telnet scripts for LG.
 

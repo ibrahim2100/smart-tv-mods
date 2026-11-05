@@ -51,6 +51,18 @@ final class KeyMap {
     private static volatile Map<Integer, Entry> cache;
     private static final Set<Integer> swallowUp = new HashSet<Integer>();
 
+    /**
+     * Some remotes (IR ones on Realtek TVs) send their app buttons as events with no Android key code at all
+     * (code 0) and only a hardware scan code. Those are stored under SCAN_BASE + scan code.
+     */
+    static final int SCAN_BASE = 100000;
+
+    /** The code a key is stored under: its Android key code, or SCAN_BASE + scan code when it has none. */
+    static int codeOf(KeyEvent e) {
+        int k = e.getKeyCode();
+        return k == KeyEvent.KEYCODE_UNKNOWN && e.getScanCode() > 0 ? SCAN_BASE + e.getScanCode() : k;
+    }
+
     private static final int[] PROTECTED = {
             KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT,
             KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER, KeyEvent.KEYCODE_BACK,
@@ -134,6 +146,7 @@ final class KeyMap {
 
     /** A readable name for a key code (the TV's own names like STEM_1 mean nothing to most people). */
     static String defaultName(int code) {
+        if (code >= SCAN_BASE) return "زر خاص (" + (code - SCAN_BASE) + ")";
         String n = KeyEvent.keyCodeToString(code);
         n = n.startsWith("KEYCODE_") ? n.substring(8) : n;
         if (n.startsWith("STEM_")) return "زر خاص " + n.substring(5);
@@ -155,7 +168,7 @@ final class KeyMap {
 
     /** @return true if the key was used here (the TV's own software must not see it). */
     static boolean onKey(Context c, KeyEvent e) {
-        int code = e.getKeyCode();
+        int code = codeOf(e);
         if (isProtected(code)) return false;
         boolean down = e.getAction() == KeyEvent.ACTION_DOWN;
         if (!down) {                                              // the key-up of a key we used is swallowed too
@@ -172,9 +185,45 @@ final class KeyMap {
         if (m == null) return false;
         synchronized (swallowUp) { swallowUp.add(code); }
         if (e.getRepeatCount() == 0) {
-            if (isAc(m.pkg)) Ac.send(c, m.pkg.substring(3)); else launch(c, m.pkg);
+            if (isAc(m.pkg)) Ac.send(c, m.pkg.substring(3));
+            else if (ACT_SAVER.equals(m.pkg)) PreviewActivity.toggle(c);
+            else if (isAct(m.pkg)) openRecents(c);
+            else { arm(m.pkg); launch(c, m.pkg); }
         }
         return true;
+    }
+
+    /** Pops the open-apps panel up over whatever is on screen. */
+    static void openRecents(Context c) {
+        try {
+            c.startActivity(new Intent(c, QuickSettingsActivity.class).putExtra("page", "recents")
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP));
+        } catch (Throwable ignored) { }
+    }
+
+    // ---- taking the screen back from the TV's own app launch -----------------------------------
+    // On some TVs (e.g. Realtek ones) the system starts the button's own app from deep inside the framework, before our
+    // key filter and whatever we do with the key. We can't stop that launch, but it lands a moment after ours, so for a
+    // short while after a mapped button is pressed we bring our app back whenever another app takes the screen.
+
+    private static volatile String armedPkg;
+    private static volatile long armedUntil;
+    private static volatile int armedTries;
+
+    private static void arm(String pkg) {
+        armedPkg = pkg;
+        armedUntil = android.os.SystemClock.uptimeMillis() + 2500;
+        armedTries = 0;
+    }
+
+    /** Called when another window comes to the front (accessibility service). */
+    static void onWindow(Context c, String pkg) {
+        String want = armedPkg;
+        if (want == null || pkg == null) return;
+        if (android.os.SystemClock.uptimeMillis() > armedUntil) { armedPkg = null; return; }
+        if (pkg.equals(want) || pkg.equals(c.getPackageName()) || pkg.equals("com.android.systemui") || pkg.equals("android")) return;
+        if (++armedTries > 3) { armedPkg = null; return; }
+        launch(c, want);
     }
 
     // ---- apps -------------------------------------------------------------------------------
@@ -203,6 +252,14 @@ final class KeyMap {
     /** A button can send an air-conditioner command instead of opening an app: its target is "ac:" + the command id. */
     static boolean isAc(String target) { return target != null && target.startsWith("ac:"); }
 
+    /** A button can also open one of our own screens: "act:recents" is the open-apps switcher. */
+    static final String ACT_RECENTS = "act:recents";
+
+    /** "act:saver" shows the screensaver right now. */
+    static final String ACT_SAVER = "act:saver";
+
+    static boolean isAct(String target) { return ACT_RECENTS.equals(target) || ACT_SAVER.equals(target); }
+
     /** "يفتح: Netflix" or "يرسل للمكيف: AC On". */
     static String actionText(Context c, String target) {
         return isAc(target) ? "يرسل للمكيف: " + Ac.nameOf(c, target.substring(3)) : "يفتح: " + labelOf(c, target);
@@ -210,6 +267,8 @@ final class KeyMap {
 
     static String labelOf(Context c, String pkg) {
         if (isAc(pkg)) return "المكيف · " + Ac.nameOf(c, pkg.substring(3));
+        if (ACT_SAVER.equals(pkg)) return "شاشة الانتظار";
+        if (isAct(pkg)) return "التطبيقات المفتوحة";
         try {
             PackageManager pm = c.getPackageManager();
             return String.valueOf(pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)));
@@ -217,7 +276,7 @@ final class KeyMap {
     }
 
     static Drawable iconOf(Context c, String pkg) {
-        if (isAc(pkg)) return null;
+        if (isAc(pkg) || isAct(pkg)) return null;
         try { return c.getPackageManager().getApplicationIcon(pkg); } catch (Throwable t) { return null; }
     }
 
@@ -230,7 +289,7 @@ final class KeyMap {
                     : new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
                             .setComponent(new ComponentName(pkg, l.get(0).activityInfo.name));
             if (i == null) { Toast.makeText(c, "التطبيق غير مثبّت", Toast.LENGTH_SHORT).show(); return; }
-            c.startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED));
+            c.startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));      // no RESET_TASK_IF_NEEDED: it would send an open app back to its first screen
         } catch (Throwable t) {
             Toast.makeText(c, "تعذّر فتح التطبيق", Toast.LENGTH_SHORT).show();
         }

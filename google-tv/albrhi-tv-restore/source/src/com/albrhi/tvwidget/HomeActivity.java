@@ -85,10 +85,15 @@ public class HomeActivity extends Activity {
     private ContextMenu ctxMenu;
     private Ambient ambient;
     private ImageView watermark;
-    private TextView heroGreet, heroName, heroSub, appsCount, toolsLabel;
-    private View heroBox, btnOpen, btnOpts;
-    private HorizontalScrollView rowApps, rowTools;
-    private LinearLayout listApps, listTools;
+    private TextView heroGreet, heroName, heroSub, appsCount, toolsLabel, vendorLabel;
+    private View heroBox, btnOpen, btnOpts, heroBtns;
+    private boolean appliedClean;
+    private HorizontalScrollView rowApps, rowTools, rowVendor;
+    private TileGrid listApps;
+    private LinearLayout listTools, listVendor;
+    /** A third row for the maker's own apps (on a TCL TV: every com.tcl.* app, under the title "TCL"); null on other brands. */
+    private String vendorTitle, vendorPrefix;
+    private int appliedRows = 1;
     static String perf = "";            // debug only: comma list of effects to switch off while measuring (am start --es perf nowm,noamb,nozoom,notext)
     private long lastKeyAt;
     private int lastKeyCode;
@@ -107,7 +112,7 @@ public class HomeActivity extends Activity {
     /** A setting changed while the home is on screen (Quick settings > Appearance): update the screen right now, no rebuild. */
     private void applyLookLive() {
         if (header == null) return;
-        boolean edges = Safe.level(this) != appliedSafe;
+        boolean edges = Safe.level(this) != appliedSafe || Theme.rows != appliedRows || Theme.clean != appliedClean;
         appliedLook = look();
         ambient.retheme(current != null && !HIDDEN.equals(current.pkg) ? current.pkg : null,
                 current == null ? null : (current.banner != null ? current.banner : current.icon));
@@ -115,6 +120,7 @@ public class HomeActivity extends Activity {
         refreshGreeting();
         if (edges) {                                         // screen margins: padding, name size and tile size all follow
             appliedSafe = Safe.level(this);
+            applyRows();
             contentCol.setPadding(Safe.h(this), Safe.v(this), Safe.h(this), Safe.v(this));
             heroName.setTextSize(TypedValue.COMPLEX_UNIT_SP, new int[]{38, 35, 32}[Safe.level(this)]);
             sigApps = "";                                    // tile pictures are sized per level: build them again
@@ -124,14 +130,31 @@ public class HomeActivity extends Activity {
         }
     }
 
+    /** One row of apps or two; with two the line under the name goes, to make room. */
+    private void applyRows() {
+        appliedRows = Theme.rows;
+        appliedClean = Theme.clean;
+        listApps.setRows(Theme.rows);
+        heroSub.setVisibility(Theme.rows == 2 || Theme.clean ? View.GONE : View.VISIBLE);
+        heroName.setVisibility(Theme.clean ? View.GONE : View.VISIBLE);       // the clean layout drops the name, the two buttons and the artwork
+        heroBtns.setVisibility(Theme.clean ? View.GONE : View.VISIBLE);
+    }
+
     /** Fallback (settings changed while the home was not on screen): rebuild once. */
     void applyLookIfChanged() {
         Theme.load(this);
         if (header != null && (Safe.level(this) != appliedSafe || !look().equals(appliedLook))) recreate();
     }
 
-    private static String look() { return Theme.index + "|" + Theme.sports + Theme.hijri + Theme.weather + Theme.clock24 + Theme.follow + "|" + Theme.name; }
+    private static String look() { return Theme.index + "|" + Theme.rows + "|" + Theme.clean + "|" + Theme.sports + Theme.hijri + Theme.weather + Theme.clock24 + Theme.follow + "|" + Theme.name; }
     private float dn;
+
+    /** Tile width in dp: smaller with larger screen margins, and smaller again with two rows so both fit. */
+    private int tileDp(Context c) {
+        int base = 116 - 14 * Safe.level(c);
+        float k = (Theme.rows == 2 ? 0.84f : 1f) * (Theme.clean ? (vendorPrefix != null ? 1.12f : 1.3f) : 1f);       // a third row (the maker's) needs smaller tiles to fit
+        return Math.round(base * k);
+    }
     private boolean loading, showHidden, moving;
     private String movingPkg, lastFocusPkg;
     private List<App> all = new ArrayList<App>();          // every launchable app, in your order
@@ -146,8 +169,10 @@ public class HomeActivity extends Activity {
         if (CrashGuard.tripped(this)) { showEmergency(); return; }
         appliedSafe = Safe.level(this);
         Theme.load(this);
+        if ("TCL".equalsIgnoreCase(android.os.Build.MANUFACTURER)) { vendorTitle = "TCL"; vendorPrefix = "com.tcl."; }
         appliedLook = look();
         prefs = getSharedPreferences("layout", MODE_PRIVATE);
+        LayoutBackup.ensureImportDir(this);
         LayoutBackup.importPending(this);     // a layout.json pushed from the Mac (see restore.sh)
         loadHidden();
         loadNames();
@@ -232,6 +257,7 @@ public class HomeActivity extends Activity {
         LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(-2, -2);
         bl.topMargin = px(8);
         hero.addView(btns, bl);
+        heroBtns = btns;
         col.addView(hero, new LinearLayout.LayoutParams(-1, -2));
         col.addView(new View(this), new LinearLayout.LayoutParams(-1, 0, 1f));      // spring: pushes the rows to the bottom
 
@@ -251,7 +277,8 @@ public class HomeActivity extends Activity {
         col.addView(appsHead, lab);
         appsHeadView = appsHead;
 
-        listApps = new LinearLayout(this);
+        listApps = new TileGrid(this);
+        listApps.setRows(Theme.rows);
         listApps.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         listApps.setClipChildren(false);
         rowApps = hscroll(listApps);
@@ -269,6 +296,20 @@ public class HomeActivity extends Activity {
         rowTools = hscroll(listTools);
         col.addView(rowTools, new LinearLayout.LayoutParams(-1, -2));
 
+        if (vendorPrefix != null) {                          // the maker's apps get a section of their own
+            vendorLabel = text(13, 0xFF8E9AB8, true);
+            vendorLabel.setText(vendorTitle);
+            LinearLayout.LayoutParams vlab = new LinearLayout.LayoutParams(-2, -2);
+            vlab.topMargin = px(2);
+            vlab.bottomMargin = px(2);
+            col.addView(vendorLabel, vlab);
+            listVendor = new LinearLayout(this);
+            listVendor.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+            listVendor.setClipChildren(false);
+            rowVendor = hscroll(listVendor);
+            col.addView(rowVendor, new LinearLayout.LayoutParams(-1, -2));
+        }
+
         statusBottom = new StatusBar(this, false);
         LinearLayout.LayoutParams sbl = new LinearLayout.LayoutParams(-1, -2);
         sbl.topMargin = px(4);
@@ -279,6 +320,7 @@ public class HomeActivity extends Activity {
         contentCol = col;
         ctxMenu = new ContextMenu(this, root, col);
         refreshGreeting();
+        applyRows();
 
         setContentView(root);
         getWindow().setBackgroundDrawable(null);          // the background view paints every pixel: no window background underneath (less overdraw)
@@ -363,7 +405,18 @@ public class HomeActivity extends Activity {
         appMenu(current);
     }
 
+    private volatile long resumedAt;
+
+    /** Only when we are the TV's Home does coming back to us mean "the Home button was just pressed". */
+    private boolean isDefaultHome() {
+        try {
+            android.content.pm.ResolveInfo ri = getPackageManager().resolveActivity(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0);
+            return ri != null && getPackageName().equals(ri.activityInfo.packageName);
+        } catch (Throwable t) { return false; }
+    }
+
     @Override protected void onResume() {
+        resumedAt = android.os.SystemClock.uptimeMillis();
         super.onResume();
         if (header == null) return;                          // emergency screen is showing
         Theme.load(this);
@@ -539,6 +592,8 @@ public class HomeActivity extends Activity {
         });
     }
 
+    private boolean isVendor(String pkg) { return vendorPrefix != null && pkg.startsWith(vendorPrefix); }
+
     private static boolean isTool(String pkg) {
         for (String p : TOOL_PREFIXES) if (pkg.startsWith(p)) return true;
         return false;
@@ -568,7 +623,7 @@ public class HomeActivity extends Activity {
                         list.add(a);
                     }
                     sortApps(list);
-                    int tw = 116 - 14 * Safe.level(c);
+                    int tw = tileDp(c);
                     for (App a : list) a.tile = makeTile(a, px(tw), px(tw * 9 / 16f));
                 } catch (Throwable ignored) { }
                 final StringBuilder sg = new StringBuilder();
@@ -596,7 +651,13 @@ public class HomeActivity extends Activity {
 
     private List<App> group(boolean tools) {
         List<App> g = new ArrayList<App>();
-        for (App a : visible()) if (isTool(a.pkg) == tools) g.add(a);
+        for (App a : visible()) if (!isVendor(a.pkg) && isTool(a.pkg) == tools) g.add(a);
+        return g;
+    }
+
+    private List<App> vendorGroup() {
+        List<App> g = new ArrayList<App>();
+        for (App a : visible()) if (isVendor(a.pkg)) g.add(a);
         return g;
     }
 
@@ -609,6 +670,7 @@ public class HomeActivity extends Activity {
 
         listApps.removeAllViews();
         listTools.removeAllViews();
+        if (listVendor != null) listVendor.removeAllViews();
         tiles.clear();
         List<App> mine = group(false);
         appsCount.setText(String.valueOf(mine.size()));
@@ -623,6 +685,12 @@ public class HomeActivity extends Activity {
         for (App a : tools) listTools.addView(tile(a));
         toolsLabel.setVisibility(tools.isEmpty() ? View.GONE : View.VISIBLE);
         rowTools.setVisibility(tools.isEmpty() ? View.GONE : View.VISIBLE);
+        if (listVendor != null) {
+            List<App> mk = vendorGroup();
+            for (App a : mk) listVendor.addView(tile(a));
+            vendorLabel.setVisibility(mk.isEmpty() ? View.GONE : View.VISIBLE);
+            rowVendor.setVisibility(mk.isEmpty() ? View.GONE : View.VISIBLE);
+        }
 
         View target = want == null ? null : tiles.get(want);
         if (target == null && listApps.getChildCount() > 0) target = ((ViewGroup) listApps.getChildAt(0)).getChildAt(0);
@@ -637,6 +705,10 @@ public class HomeActivity extends Activity {
             Canvas sc = new Canvas(src);
             sc.drawColor(0xFF1A1E2B);
             Drawable d = a.banner != null ? a.banner : a.icon;
+            if (isSettingsApp(a.pkg)) {                                  // the system's own picture is a flat grey slab: draw a tidy card instead
+                drawSettingsTile(sc, w, h, a.label);
+                d = null;
+            }
             if (d != null) {
                 int dw = d.getIntrinsicWidth(), dh = d.getIntrinsicHeight();
                 if (dw <= 0 || dh <= 0) { dw = w; dh = h; }
@@ -666,11 +738,32 @@ public class HomeActivity extends Activity {
         }
     }
 
+    private static boolean isSettingsApp(String pkg) { return "com.android.tv.settings".equals(pkg) || "com.android.settings".equals(pkg); }
+
+    /** A dark card with a clear gear in the theme's accent and the name under it. */
+    private void drawSettingsTile(Canvas c, int w, int h, String label) {
+        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+        p.setShader(new android.graphics.LinearGradient(0, 0, w, h, 0xFF2A3042, 0xFF171B27, Shader.TileMode.CLAMP));
+        c.drawRect(0, 0, w, h, p);
+        p.setShader(null);
+        Drawable gear = getResources().getDrawable(R.drawable.ic_gear, null).mutate();
+        gear.setColorFilter(Theme.accent, android.graphics.PorterDuff.Mode.SRC_IN);
+        int gs = Math.round(h * 0.40f);
+        int gl = (w - gs) / 2, gt = Math.round(h * 0.14f);
+        gear.setBounds(gl, gt, gl + gs, gt + gs);
+        gear.draw(c);
+        p.setColor(0xFFF4F6FB);
+        p.setTypeface(Fonts.bold);
+        p.setTextAlign(Paint.Align.CENTER);
+        p.setTextSize(Math.max(px(12), Math.round(h * 0.15f)));
+        c.drawText(label, w / 2f, h - Math.round(h * 0.16f), p);
+    }
+
     private View tile(final App a) {
         final boolean special = HIDDEN.equals(a.pkg);
         final boolean dim = !special && hidden.contains(a.pkg);
         final boolean isMoving = moving && a.pkg.equals(movingPkg);
-        final int tw = 116 - 14 * Safe.level(this);
+        final int tw = tileDp(this);
         final int w = px(tw), h = px(tw * 9 / 16f);
 
         LinearLayout cell = new LinearLayout(this);
@@ -678,7 +771,8 @@ public class HomeActivity extends Activity {
         cell.setGravity(Gravity.CENTER_HORIZONTAL);
         cell.setClipChildren(false);
         LinearLayout.LayoutParams cl = new LinearLayout.LayoutParams(-2, -2);
-        cl.setMargins(px(7), px(Safe.level(this) == 0 ? 2 : 0), px(7), px(Safe.level(this) == 0 ? 2 : 0));
+        if (Theme.clean) cl.setMargins(px(9), px(7), px(9), px(7));        // room for the focus frame between rows
+        else cl.setMargins(px(7), px(Safe.level(this) == 0 ? 2 : 0), px(7), px(Safe.level(this) == 0 ? 2 : 0));
         cell.setLayoutParams(cl);
 
         final FrameLayout t = new FrameLayout(this);
@@ -731,7 +825,10 @@ public class HomeActivity extends Activity {
         ring.setCornerRadius(px(14));
         ring.setStroke(px(2.5f), isMoving ? GOLD : 0xFFFFFFFF);
         ring.setAlpha(isMoving ? 255 : 0);
-        t.setForeground(new android.graphics.drawable.InsetDrawable(ring, Math.round(3 * getResources().getDisplayMetrics().density)));
+        final android.graphics.drawable.Drawable fgd = Theme.clean && !isMoving ? focusFrame()
+                : new android.graphics.drawable.InsetDrawable(ring, Math.round(3 * getResources().getDisplayMetrics().density));
+        fgd.setAlpha(isMoving ? 255 : 0);
+        t.setForeground(fgd);
         if (isMoving) { t.setScaleX(1.15f); t.setScaleY(1.15f); t.setElevation(px(12)); }
         cell.addView(t, new LinearLayout.LayoutParams(w, h));
 
@@ -747,8 +844,10 @@ public class HomeActivity extends Activity {
                     }
                 }
                 if (moving && a.pkg.equals(movingPkg)) return;
-                if (!perf.contains("nozoom")) t.animate().scaleX(f ? 1.08f : 1f).scaleY(f ? 1.08f : 1f).setDuration(140).start();
-                ring.setAlpha(f ? 255 : 0);
+                float zoom = Theme.clean ? 1.06f : 1.08f;
+                if (!perf.contains("nozoom")) t.animate().scaleX(f ? zoom : 1f).scaleY(f ? zoom : 1f).setDuration(140).start();
+                fgd.setAlpha(f ? 255 : 0);
+                if (Theme.clean) ((View) t.getParent()).setTranslationZ(f ? px(6) : 0);          // the framed tile draws above its neighbours
                 if (f) { showHero(a, special); reveal(t); }
             }
         });
@@ -769,6 +868,22 @@ public class HomeActivity extends Activity {
         }
         tiles.put(a.pkg, t);
         return cell;
+    }
+
+    /** The clean layout's focus frame: a crisp ring in the theme's accent, a few dp outside the tile, over a faint wider halo. */
+    private android.graphics.drawable.Drawable focusFrame() {
+        GradientDrawable halo = new GradientDrawable();
+        halo.setColor(0);
+        halo.setCornerRadius(px(22));
+        halo.setStroke(px(5), (Theme.accent & 0x00FFFFFF) | 0x38000000);
+        GradientDrawable crisp = new GradientDrawable();
+        crisp.setColor(0);
+        crisp.setCornerRadius(px(18));
+        crisp.setStroke(px(2.5f), (Theme.accent & 0x00FFFFFF) | 0xFF000000);
+        android.graphics.drawable.LayerDrawable l = new android.graphics.drawable.LayerDrawable(new android.graphics.drawable.Drawable[]{halo, crisp});
+        l.setLayerInset(0, -px(7), -px(7), -px(7), -px(7));
+        l.setLayerInset(1, -px(3.5f), -px(3.5f), -px(3.5f), -px(3.5f));
+        return l;
     }
 
     // ---- the hero ---------------------------------------------------------------------------
@@ -795,7 +910,7 @@ public class HomeActivity extends Activity {
         watermark.animate().cancel();
         final float travel = heroDir * px(26);
         Drawable art = a == null ? null : (a.banner != null ? a.banner : a.icon);
-        if (perf.contains("nowm")) art = null;
+        if (perf.contains("nowm") || Theme.clean) art = null;
         if (perf.contains("noamb") && a != null) { /* keep the colour still */ } else if (a != null) ambient.follow(a.pkg, art);
         if (art != null && art.getConstantState() != null) {
             positionWatermark();
@@ -984,7 +1099,7 @@ public class HomeActivity extends Activity {
             default: return true;
         }
         if (e.getAction() == KeyEvent.ACTION_DOWN) {
-            List<App> g = group(isTool(movingPkg));       // an app only moves inside its own row-group
+            List<App> g = isVendor(movingPkg) ? vendorGroup() : group(isTool(movingPkg));       // an app only moves inside its own row-group
             int i = -1;
             for (int n = 0; n < g.size(); n++) if (g.get(n).pkg.equals(movingPkg)) i = n;
             int j = i + delta;
@@ -1016,12 +1131,12 @@ public class HomeActivity extends Activity {
         try {                                              // remember it for the "last opened" line
             android.content.SharedPreferences st = getSharedPreferences("stats", MODE_PRIVATE);
             st.edit().putLong(a.pkg + "#t", System.currentTimeMillis()).putInt(a.pkg + "#n", st.getInt(a.pkg + "#n", 0) + 1).apply();
-            if (Health.read(this).ramFreeMb < 300) Cleaner.clean(this, a.pkg, null);   // low memory: free background apps first (never this one)
+            if (Theme.autoClean && Health.read(this).ramFreeMb < 300) Cleaner.clean(this, a.pkg, null);   // low memory: free background apps first (never this one)
         } catch (Throwable ignored) { }
-        try {
-            Intent i = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
-                    .setComponent(a.cn).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-            startActivity(i);
-        } catch (Throwable ignored) { }
+        if (isTool(a.pkg) || isSettingsApp(a.pkg)) { KeyMap.launch(this, a.pkg); return; }      // the system's own tools: open at once, there is no screen worth restoring
+        Recents.openOrLaunch(this, a.pkg, new Recents.Check() {
+            public boolean stillHere() { return hasWindowFocus(); }
+            public boolean justHome() { return isDefaultHome() && android.os.SystemClock.uptimeMillis() - resumedAt < 5500; }
+        });      // back to where you left it if the app is open, otherwise a normal launch
     }
 }

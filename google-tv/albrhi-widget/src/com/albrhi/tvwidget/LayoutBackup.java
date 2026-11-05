@@ -18,6 +18,17 @@ import java.io.InputStream;
 final class LayoutBackup {
     private LayoutBackup() { }
 
+    /**
+     * Makes the hand-over folder ourselves. A folder created by `adb` (owner: shell) is invisible to the app on newer
+     * Android, so a layout pushed into it is never read; one created by the app is fine.
+     */
+    static void ensureImportDir(Context c) {
+        try {
+            File dir = c.getExternalFilesDir(null);
+            if (dir != null) new File(dir, "import").mkdirs();
+        } catch (Throwable ignored) { }
+    }
+
     static File file(Context c) {
         File dir = c.getExternalFilesDir(null);
         return dir == null ? null : new File(dir, "layout.json");

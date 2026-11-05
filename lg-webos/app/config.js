@@ -4,7 +4,7 @@ window.CONFIG = {
   // Downloaded apps (LG Content Store / sideloaded)
   APPS: [
     {id: 'netflix', title: 'Netflix', icon: 'netflix.png', color: '#000000'},
-    {id: 'youtube.leanback.v4', title: 'YouTube', icon: 'youtube.leanback.v4.png', color: '#ffffff'},
+    {id: 'youtube.leanback.v4', title: 'Albrhi The KING', icon: 'youtube.leanback.v4.png', color: '#ffffff'},
     {id: 'net.mbc.shahid-lgapp', title: 'شاهد', icon: 'net.mbc.shahid-lgapp.png', color: '#0a8f6b'},
     {id: 'amazon', title: 'Prime Video', icon: 'amazon.png', color: '#00a8e1'},
     {id: 'com.intigral.webtv', title: 'stc tv', icon: 'com.intigral.webtv.png', color: '#4b2e83'},

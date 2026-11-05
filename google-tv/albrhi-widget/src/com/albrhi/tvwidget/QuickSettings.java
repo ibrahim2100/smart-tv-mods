@@ -66,8 +66,10 @@ final class QuickSettings {
                     .value(Theme.NAMES[Theme.index]).tile());
             items.add(Sheet.Item.of("الذاكرة", R.drawable.ic_refresh, new Runnable() { public void run() { cleanMemory(c); } }).value(ram).tile());
             // the rest, as quiet rows
+            items.add(Sheet.Item.of("المفتوحة", R.drawable.ic_refresh, new Runnable() { public void run() { Sheet.chained = true; recents(c, anchor, onClose); } })
+                    .value("التطبيقات").tile());
             items.add(Sheet.Item.of("المكيف", R.drawable.ic_snow, new Runnable() { public void run() { Sheet.chained = true; ac(c, anchor, onClose); } })
-                    .value(!Ac.hasToken(c) ? "غير مربوط" : Ac.list(c).size() + " أوامر"));
+                    .value(!Ac.hasToken(c) ? "غير مربوط" : Ac.list(c).size() + " أوامر").tile());
             items.add(Sheet.Item.of("أزرار الريموت", R.drawable.ic_apps, new Runnable() { public void run() { Sheet.chained = true; remoteKeys(c, anchor, onClose); } })
                     .value(keyCount == 0 ? "غير مخصصة" : keyCount + " مخصّصة"));
             items.add(Sheet.Item.of("كل إعدادات التلفزيون", R.drawable.ic_gear, open(c, Settings.ACTION_SETTINGS)));
@@ -92,11 +94,15 @@ final class QuickSettings {
             items.add(Sheet.Item.swatches(Theme.NAMES[Theme.index], Theme.index, new Sheet.IntPick() { public void pick(int i) {
                 Theme.set(c, "theme", i);
             } }));
-            items.add(flag(c, "لون الخلفية يتبع التطبيق", "follow", Theme.follow, "الخلفية تتلوّن بلون التطبيق المحدد"));
+            if (!Theme.black) items.add(flag(c, "لون الخلفية يتبع التطبيق", "follow", Theme.follow, "الخلفية تتلوّن بلون التطبيق المحدد"));
             items.add(Sheet.Item.header("الشاشة"));
             items.add(Sheet.Item.of("حواف الشاشة", R.drawable.ic_tv, new Runnable() { public void run() {
                 Safe.setLevel(c, (Safe.level(c) + 1) % 3);
             } }).value(Safe.NAMES[Safe.level(c)]).sub("لو التلفزيون يقص أطراف الصورة").stay());
+            items.add(Sheet.Item.of("صفوف التطبيقات", R.drawable.ic_apps, new Runnable() { public void run() {
+                Theme.set(c, "rows", Theme.rows == 2 ? 1 : 2);
+            } }).value(Theme.rows == 2 ? "صفّان" : "صف واحد").sub("رتّب التطبيقات على صف أو على صفين").stay());
+            items.add(flag(c, "تخطيط مبسّط", "clean", Theme.clean, "بدون اسم التطبيق وأزرار فتح وخيارات وصورة الخلفية، وبلاطات أكبر بإطار أنيق"));
             items.add(Sheet.Item.header("الشريط العلوي"));
             items.add(flag(c, "الوقت بنظام 24 ساعة", "clock24", Theme.clock24, null));
             items.add(flag(c, "التاريخ الهجري", "hijri", Theme.hijri, null));
@@ -137,6 +143,8 @@ final class QuickSettings {
                 items.add(Sheet.Item.of("تجربة تنبيه المباراة", R.drawable.ic_bell, new Runnable() { public void run() { AppService.testAlert(c); } })
                         .sub("يعرض الإشعار كما سيظهر قبل المباراة"));
             }
+            items.add(Sheet.Item.header("الذاكرة"));
+            items.add(flag(c, "تنظيف تلقائي قبل فتح التطبيق", "autoclean", Theme.autoClean, "ينهي تطبيقات الخلفية لو الرام قليلة. أوقفه كي لا يُغلق تطبيق خرجت منه بالغلط"));
             items.add(Sheet.Item.header("النظام"));
             items.add(Sheet.Item.of("التطبيقات", R.drawable.ic_apps, open(c, Settings.ACTION_APPLICATION_SETTINGS)).sub("إدارة التطبيقات المثبتة"));
             items.add(Sheet.Item.of("الموقع", R.drawable.ic_pin, open(c, Settings.ACTION_LOCATION_SOURCE_SETTINGS)).sub("لازم يكون شغّال لإظهار اسم الواي فاي"));
@@ -153,6 +161,59 @@ final class QuickSettings {
         } }, null, closer(c, onClose));
     }
 
+
+    // ---- open apps (like a phone's app switcher) --------------------------------------------
+
+    /** Apps you used recently: OK goes back to one, "close" ends its background process, and one row closes them all. */
+    static void recents(final Context c, final View anchor, final Runnable onClose) {
+        final Recents.Result[] res = new Recents.Result[1];
+        Panel.show(c, "التطبيقات المفتوحة", "ارجع لتطبيق تركته، أو أغلقه", new Panel.Builder() { public List<Sheet.Item> items() {
+            List<Sheet.Item> items = Sheet.list();
+            if (anchor != null || c instanceof HomeActivity) items.add(back(c, anchor, onClose));
+            final Recents.Result r = res[0];
+            if (r == null) { items.add(Sheet.Item.header("جاري القراءة…")); return items; }
+            if (!r.allowed) {
+                items.add(Sheet.Item.header("ما قدرت أقرأ التطبيقات المفتوحة: يحتاج إذناً يُمنح مرة وحدة بـadb (pm grant … android.permission.DUMP)"));
+                return items;
+            }
+            if (r.apps.isEmpty()) { items.add(Sheet.Item.header("ما في تطبيقات مفتوحة")); return items; }
+            items.add(Sheet.Item.header("ارجع إلى"));
+            for (final Recents.Entry e : r.apps) {
+                items.add(Sheet.Item.of(e.label, R.drawable.ic_apps, new Runnable() { public void run() {
+                    Recents.open(c, e);
+                    if (c instanceof android.app.Activity && !(c instanceof HomeActivity)) ((android.app.Activity) c).finish();
+                } }).sub(e.running ? "مفتوح في الخلفية" : "سيفتح من جديد").icon(e.icon));
+            }
+            boolean any = false;
+            for (Recents.Entry e : r.apps) if (e.running && !Cleaner.keepAlways(e.pkg)) any = true;
+            if (any) {
+                items.add(Sheet.Item.header("إغلاق"));
+                items.add(Sheet.Item.of("إغلاق الكل", R.drawable.ic_trash, new Runnable() { public void run() {
+                    List<String> all = new java.util.ArrayList<String>();
+                    for (Recents.Entry e : r.apps) if (e.running && !Cleaner.keepAlways(e.pkg)) all.add(e.pkg);
+                    closeThese(c, all);
+                } }).sub("ينهي كل التطبيقات المفتوحة في الخلفية").danger());
+                for (final Recents.Entry e : r.apps) {
+                    if (!e.running || Cleaner.keepAlways(e.pkg)) continue;
+                    items.add(Sheet.Item.of(e.label, R.drawable.ic_trash, new Runnable() { public void run() {
+                        closeThese(c, java.util.Arrays.asList(e.pkg));
+                    } }).sub("إغلاق").icon(e.icon));
+                }
+            }
+            return items;
+        } }, null, closer(c, onClose));
+        Recents.load(c, new Recents.Done() { public void onDone(Recents.Result r) { res[0] = r; Panel.refresh(); } });
+    }
+
+    /** Ends the apps and shows a status card; the screen may flash Settings for a moment per app that needed a force stop. */
+    private static void closeThese(final Context c, final List<String> pkgs) {
+        if (pkgs.isEmpty()) return;
+        Notice.show(c, Notice.WORKING, R.drawable.ic_trash, 0xFFFF9A5C, "التطبيقات المفتوحة", "جاري الإغلاق…", pkgs.size() + (pkgs.size() == 1 ? " تطبيق" : " تطبيقات"), null);
+        final int n = pkgs.size();
+        Recents.closeApps(c, pkgs, new Runnable() { public void run() {
+            Notice.show(c, Notice.DONE, R.drawable.ic_trash, 0xFFFF9A5C, "التطبيقات المفتوحة", "تم الإغلاق", n + (n == 1 ? " تطبيق" : " تطبيقات"), null);
+        } });
+    }
 
     // ---- air conditioner (through Alexa) ----------------------------------------------------
 
@@ -241,6 +302,11 @@ final class QuickSettings {
         Panel.show(c, title, "التطبيقات المثبتة", new Panel.Builder() { public List<Sheet.Item> items() {
             List<Sheet.Item> items = Sheet.list();
             items.add(Sheet.Item.of("رجوع", R.drawable.ic_back, new Runnable() { public void run() { Sheet.chained = true; onBack.run(); } }));
+            items.add(Sheet.Item.header("أدوات"));
+            items.add(Sheet.Item.of("التطبيقات المفتوحة", R.drawable.ic_refresh, new Runnable() { public void run() { Sheet.chained = true; cb.pick(KeyMap.ACT_RECENTS); } })
+                    .sub("يفتح لوحة الرجوع للتطبيقات وإغلاقها"));
+            items.add(Sheet.Item.of("شاشة الانتظار", R.drawable.ic_eye, new Runnable() { public void run() { Sheet.chained = true; cb.pick(KeyMap.ACT_SAVER); } })
+                    .sub("تشغّل شاشة الانتظار فوراً (اضغط أي زر لتخرج)"));
             List<Ac.Cmd> acs = Ac.hasToken(c) ? Ac.list(c) : new java.util.ArrayList<Ac.Cmd>();
             if (!acs.isEmpty()) {
                 items.add(Sheet.Item.header("المكيف"));

@@ -23,7 +23,9 @@ import java.util.List;
  * Same view is used small on top of the home screen and large as the screensaver.
  */
 final class WidgetView extends LinearLayout {
-    static final int WHITE = 0xFFF4F6FB, MUTED = 0xFF9AA5C0, CARD = 0xFF121B38, BOX = 0xFF1B2547;
+    static final int WHITE = 0xFFF4F6FB, MUTED = 0xFF9AA5C0;
+    /** Chip and box fills: navy normally, neutral grey on the black theme (set by {@link Theme#load}). */
+    static int CARD = 0xFF121B38, BOX = 0xFF1B2547;
     /** Theme colours (see Theme.load): the accent, a second accent for gradients, and the theme's glow. */
     static int GOLD = 0xFF7FA8FF, GARNET = 0xFF7FA8FF, BLUE = 0xFF2A4A8C;
     static final String GREG = "ar_SA@calendar=gregorian;numbers=latn";
@@ -38,7 +40,7 @@ final class WidgetView extends LinearLayout {
     };
     private final Runnable onData = new Runnable() { public void run() { update(); } };
 
-    private TextView weather, clock, ampm, greet, date, hijri, league, nHome, nAway, mTime, mDay, venue, listHead, lastRes;
+    private TextView dateEn, weather, clock, ampm, greet, date, hijri, league, nHome, nAway, mTime, mDay, venue, listHead, lastRes;
     private ImageView bHome, bAway;
     private final TextView[] cdNum = new TextView[3];
     private LinearLayout cdRow, listBox, card;
@@ -112,38 +114,53 @@ final class WidgetView extends LinearLayout {
         clockRow.setOrientation(HORIZONTAL);
         clockRow.setGravity(Gravity.BOTTOM);
         clockRow.setLayoutDirection(LAYOUT_DIRECTION_LTR);
-        clock = tv(full ? (Theme.sports ? 76 : 92) : 40, WHITE, true);
+        clock = tv(full ? (Theme.sports ? 76 : 165) : 40, WHITE, true);        // the saver is read from across a big living room: ~22% of the screen height
         clock.setTypeface((full ? Fonts.medium : Fonts.bold));
-        ampm = tv(full ? 24 : 16, GOLD, true);
+        ampm = tv(full ? (Theme.sports ? 24 : 40) : 16, GOLD, true);
         clockRow.addView(clock);
         LinearLayout.LayoutParams ap = lp(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         ap.leftMargin = px(6);
-        ap.bottomMargin = px(full ? 10 : 6);
+        ap.bottomMargin = px(full ? (Theme.sports ? 10 : 26) : 6);
         clockRow.addView(ampm, ap);
 
         LinearLayout dateCol = new LinearLayout(getContext());
         dateCol.setOrientation(VERTICAL);
-        greet = tv(full ? 17 : 13, MUTED, false);
-        weather = tv(full ? 17 : 13, MUTED, false);
-        date = tv(full ? 24 : 16, WHITE, true);
-        hijri = tv(full ? 16 : 13, MUTED, false);
+        boolean big = full && !Theme.sports;
+        greet = tv(big ? 26 : full ? 17 : 13, MUTED, false);
+        weather = tv(big ? 28 : full ? 17 : 13, MUTED, false);
+        date = tv(big ? 32 : full ? 24 : 16, big ? MUTED : WHITE, big ? false : true);         // the Arabic date
+        hijri = tv(big ? 26 : full ? 16 : 13, MUTED, false);
+        dateEn = tv(big ? 44 : 24, WHITE, true);                                                 // the English date, above the Arabic one (the saver only)
         dateCol.addView(greet);                                 // only shown when you gave a name (Appearance > name)
         LinearLayout.LayoutParams dp = lp(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        dp.topMargin = px(full ? 8 : 3);
-        dateCol.addView(date, dp);
-        LinearLayout.LayoutParams wp = lp(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        wp.topMargin = px(full ? 6 : 2);
-        dateCol.addView(weather, wp);
-        LinearLayout.LayoutParams hp0 = lp(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        hp0.topMargin = px(3);
-        dateCol.addView(hijri, hp0);
+        dp.topMargin = px(big ? 6 : full ? 8 : 3);
+        if (big) {                                              // the plain saver: English date, Arabic date, (Hijri), weather last
+            LinearLayout.LayoutParams ep = lp(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+            ep.topMargin = px(8);
+            dateCol.addView(dateEn, ep);
+            dateCol.addView(date, dp);
+            LinearLayout.LayoutParams hp1 = lp(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+            hp1.topMargin = px(4);
+            dateCol.addView(hijri, hp1);
+            LinearLayout.LayoutParams wp1 = lp(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+            wp1.topMargin = px(16);
+            dateCol.addView(weather, wp1);
+        } else {
+            dateCol.addView(date, dp);
+            LinearLayout.LayoutParams wp = lp(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+            wp.topMargin = px(full ? 6 : 2);
+            dateCol.addView(weather, wp);
+            LinearLayout.LayoutParams hp0 = lp(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+            hp0.topMargin = px(3);
+            dateCol.addView(hijri, hp0);
+        }
 
         if (full) {
             setGravity(Gravity.CENTER_HORIZONTAL);
             addView(clockRow, lp(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
             dateCol.setGravity(Gravity.CENTER_HORIZONTAL);
             LinearLayout.LayoutParams dc = lp(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-            dc.topMargin = px(6);
+            dc.topMargin = px(big ? -24 : 6);                          // the big clock's line box leaves a wide gap under the digits
             addView(dateCol, dc);
         } else {
             LinearLayout head = new LinearLayout(getContext());
@@ -312,6 +329,8 @@ final class WidgetView extends LinearLayout {
         weather.setText(wx ? Weather.text : "");
         weather.setVisibility(wx ? VISIBLE : GONE);
         date.setText(fmt("EEEE d MMMM", GREG, now));
+        dateEn.setText(fmt("EEEE, d MMMM", "en_US@calendar=gregorian", now));
+        dateEn.setVisibility(full && !Theme.sports ? VISIBLE : GONE);
         hijri.setText(fmt("d MMMM y", HIJRI, now) + " هـ");
         hijri.setVisibility(Theme.hijri ? VISIBLE : GONE);
         int sp = Theme.sports ? VISIBLE : GONE;               // the match card, list and last result only with sports on

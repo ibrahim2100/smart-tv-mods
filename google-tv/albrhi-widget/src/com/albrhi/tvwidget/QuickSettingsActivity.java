@@ -10,7 +10,9 @@ import android.os.Bundle;
 public class QuickSettingsActivity extends Activity {
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
-        QuickSettings.show(this, null, new Runnable() { public void run() { finish(); } });
+        Runnable close = new Runnable() { public void run() { finish(); } };
+        if ("recents".equals(getIntent().getStringExtra("page"))) QuickSettings.recents(this, null, close);
+        else QuickSettings.show(this, null, close);
     }
 
     @Override protected void onStop() {

@@ -54,11 +54,11 @@ final class Ambient extends FrameLayout {
     int currentColor() { return color; }
 
     /** Fades the glow to the colour of this app. */
-    void follow(String key, Drawable art) { setGlow(Theme.follow ? colorOf(key, art) : Theme.glow); }
+    void follow(String key, Drawable art) { setGlow(Theme.follow && !Theme.black ? colorOf(key, art) : Theme.glow); }
 
     /** The theme changed: repaint with the new base colour and fade to the colour the glow should have now. */
     void retheme(String key, Drawable art) {
-        int target = Theme.follow && key != null ? colorOf(key, art) : Theme.glow;
+        int target = Theme.follow && !Theme.black && key != null ? colorOf(key, art) : Theme.glow;
         setGlow(target, true);
     }
 

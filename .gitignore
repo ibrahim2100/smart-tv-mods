@@ -13,3 +13,6 @@ google-tv/albrhi-tv-restore/backups/
 # personal / machine-local files (any project)
 .DS_Store
 google-tv/albrhi-tv-restore/device.conf
+
+# third project: a GPL-3.0 fork of webosbrew/youtube-webos (has its own git history and licence; never commit it into this MIT repo)
+lg-youtube/

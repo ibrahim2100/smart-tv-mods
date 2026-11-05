@@ -56,16 +56,21 @@ final class StatusBar extends LinearLayout {
     private TextView netTitle, netSub, healthText;
     private View healthFrame;
     private volatile int pingMs = -2;      // -2 unknown yet, -1 failed
+    private volatile int measuredMbps;     // a cable shows no link speed, so we time a small download now and then
+    private boolean measuring;
     private boolean pinging;
 
     private final Runnable tick = new Runnable() {
         public void run() {
-            if (top) refreshHealth(); else refreshNet();
+            if (top) { refreshHealth(); refreshNet(); }
             h.postDelayed(this, 10000);
         }
     };
     private final Runnable pingTick = new Runnable() {
         public void run() { ping(); h.postDelayed(this, 30000); }
+    };
+    private final Runnable speedTick = new Runnable() {
+        public void run() { measureSpeed(); h.postDelayed(this, 15 * 60 * 1000L); }
     };
     private final TvInputManager.TvInputCallback inputCb = new TvInputManager.TvInputCallback() {
         @Override public void onInputStateChanged(String id, int state) { refreshInputs(); }
@@ -94,12 +99,13 @@ final class StatusBar extends LinearLayout {
         h.removeCallbacks(tick);
         h.removeCallbacks(pingTick);
         tick.run();
-        if (!top) pingTick.run();
+        if (top) { pingTick.run(); h.removeCallbacks(speedTick); h.postDelayed(speedTick, 4000); }
     }
 
     void stop() {
         h.removeCallbacks(tick);
         h.removeCallbacks(pingTick);
+        h.removeCallbacks(speedTick);
         if (!top) { try { if (tim != null) tim.unregisterCallback(inputCb); } catch (Throwable ignored) { } }
     }
 
@@ -154,11 +160,31 @@ final class StatusBar extends LinearLayout {
         hfl.setMarginStart(px(12));
         addView(healthFrame, hfl);
 
+        // internet status, next to the settings button
+        netPill = new LinearLayout(getContext());
+        netPill.setGravity(Gravity.CENTER_VERTICAL);
+        netPill.setBackground(round(Theme.black ? 0x99161616 : 0x990E1530, 20));
+        netPill.setPadding(px(12), px(6), px(14), px(6));
+        bars = new Bars(getContext());
+        netPill.addView(bars, new LinearLayout.LayoutParams(px(20), px(16)));
+        LinearLayout txt = new LinearLayout(getContext());
+        txt.setOrientation(VERTICAL);
+        netTitle = tv(14, WHITE, true);
+        netSub = tv(12.5f, MUTED, false);
+        txt.addView(netTitle, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+        txt.addView(netSub, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+        LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        tp.setMarginStart(px(10));
+        netPill.addView(txt, tp);
+        LinearLayout.LayoutParams npl = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        npl.setMarginStart(px(12));
+        addView(focusable(netPill, 20, new Runnable() { public void run() { openSettings(Settings.ACTION_WIFI_SETTINGS); } }), npl);
+
         // quick settings: a round button
         FrameLayout gear = new FrameLayout(getContext());
         GradientDrawable gb = new GradientDrawable();
         gb.setShape(GradientDrawable.OVAL);
-        gb.setColor(0xB30E1530);
+        gb.setColor(Theme.black ? 0xB3161616 : 0xB30E1530);
         gb.setStroke(Math.max(1, px(1)), 0x33FFFFFF);
         gear.setBackground(gb);
         ImageView gi = new ImageView(getContext());
@@ -187,24 +213,6 @@ final class StatusBar extends LinearLayout {
         addView(hdmiBox, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 
         addView(new View(getContext()), new LinearLayout.LayoutParams(0, 1, 1f));
-
-        netPill = new LinearLayout(getContext());
-        netPill.setGravity(Gravity.CENTER_VERTICAL);
-        netPill.setBackground(round(0x990E1530, 20));
-        netPill.setPadding(px(12), px(6), px(14), px(6));
-        bars = new Bars(getContext());
-        netPill.addView(bars, new LinearLayout.LayoutParams(px(20), px(16)));
-        LinearLayout txt = new LinearLayout(getContext());
-        txt.setOrientation(VERTICAL);
-        netTitle = tv(14, WHITE, true);
-        netSub = tv(12.5f, MUTED, false);
-        txt.addView(netTitle, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
-        txt.addView(netSub, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
-        LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        tp.setMarginStart(px(10));
-        netPill.addView(txt, tp);
-        addView(focusable(netPill, 20, new Runnable() { public void run() { openSettings(Settings.ACTION_WIFI_SETTINGS); } }),
-                new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
     }
 
     /** Wraps a pill so the remote can focus it (white ring + slight zoom) and press OK. */
@@ -335,7 +343,7 @@ final class StatusBar extends LinearLayout {
         final FrameLayout f = new FrameLayout(getContext());
         f.setFocusable(true);
         f.setClickable(true);
-        f.setBackground(round(0xFF0F1730, 10));
+        f.setBackground(round(Theme.black ? 0xFF1A1A1A : 0xFF0F1730, 10));
         LinearLayout row = new LinearLayout(getContext());
         row.setGravity(Gravity.CENTER_VERTICAL);
         row.setPadding(px(10), px(6), px(12), px(6));
@@ -415,9 +423,12 @@ final class StatusBar extends LinearLayout {
                 WifiInfo wi = wm.getConnectionInfo();
                 String s = wi.getSSID();
                 if (s != null && !s.contains("unknown ssid")) name = s.replace("\"", "");
-                level = wm.calculateSignalLevel(wi.getRssi());
-                mbps = wi.getLinkSpeed();
+                mbps = wi.getLinkSpeed();                       // read first: nothing below may stop it
+                int rssi = wi.getRssi();                        // WifiManager.calculateSignalLevel throws on some TVs, so the bars are worked out here
+                level = rssi >= 0 || rssi <= -127 ? 0 : rssi >= -55 ? 4 : rssi >= -65 ? 3 : rssi >= -75 ? 2 : rssi >= -85 ? 1 : 0;
             }
+            if (eth && mbps <= 0) mbps = ethernetMbps();
+            if (eth && mbps <= 0) mbps = measuredMbps;
         } catch (Throwable ignored) { }
 
         int color;
@@ -430,10 +441,10 @@ final class StatusBar extends LinearLayout {
         } else {
             title = eth ? "إيثرنت" : (name != null ? "Wi-Fi · " + name : "Wi-Fi");
             StringBuilder sb = new StringBuilder();
-            if (internet) { sb.append("متصل بالإنترنت"); color = GOOD; }
-            else { sb.append("شبكة بدون إنترنت"); color = WARN; }
-            if (mbps > 0) sb.append(" · \u2066").append(mbps).append(" Mbps\u2069");
-            if (internet && pingMs >= 0) sb.append(" · \u2066").append(pingMs).append(" ms\u2069");
+            if (internet) color = GOOD; else { sb.append("بدون إنترنت"); color = WARN; }
+            if (mbps > 0) sb.append(sb.length() > 0 ? " · " : "").append("\u2066").append(mbps).append(" Mbps\u2069");
+            if (internet && pingMs >= 0) sb.append(sb.length() > 0 ? " · " : "").append("\u2066").append(pingMs).append(" ms\u2069");
+            if (sb.length() == 0) sb.append("متصل");
             sub = sb.toString();
             if (eth) level = 4;
         }
@@ -441,6 +452,50 @@ final class StatusBar extends LinearLayout {
         netSub.setText(sub);
         netSub.setTextColor(color);
         bars.set(level, color);
+    }
+
+    /** The cable's negotiated speed (100 or 1000 Mbps), or 0 if the TV does not say. */
+    private static int ethernetMbps() {
+        for (String f : new String[]{"/sys/class/net/eth0/speed", "/sys/class/net/eth1/speed"}) {
+            try {
+                java.io.BufferedReader r = new java.io.BufferedReader(new java.io.FileReader(f));
+                try {
+                    int v = Integer.parseInt(r.readLine().trim());
+                    if (v > 0) return v;
+                } finally { r.close(); }
+            } catch (Throwable ignored) { }
+        }
+        return 0;
+    }
+
+    /** Downloads about 3 MB once and works out the speed in Mbps (only used on a cable, where the system gives no link speed). */
+    private void measureSpeed() {
+        if (measuring) return;
+        measuring = true;
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL("https://speed.cloudflare.com/__down?bytes=3000000").openConnection();
+                    c.setConnectTimeout(5000);
+                    c.setReadTimeout(8000);
+                    java.io.InputStream in = c.getInputStream();
+                    byte[] b = new byte[32768];
+                    int n = in.read(b);
+                    long t0 = System.nanoTime(), total = 0;
+                    while (n > 0) { total += n; n = in.read(b); }
+                    in.close();
+                    c.disconnect();
+                    double sec = (System.nanoTime() - t0) / 1e9;
+                    if (total > 500000 && sec > 0.05) {
+                        measuredMbps = (int) Math.round(total * 8 / sec / 1e6);
+                        h.post(new Runnable() { public void run() { refreshNet(); } });
+                    }
+                } catch (Throwable ignored) {
+                } finally {
+                    measuring = false;
+                }
+            }
+        }, "speed").start();
     }
 
     private void ping() {
