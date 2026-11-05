@@ -380,7 +380,7 @@ final class QuickSettings {
     private static void keyDetail(final Context c, final View anchor, final Runnable onClose, final int code) {
         final KeyMap.Entry e0 = KeyMap.get(c, code);
         if (e0 == null) { remoteKeys(c, anchor, onClose); return; }
-        Panel.show(c, KeyMap.titleOf(e0), KeyMap.actionText(c, e0.pkg), new Panel.Builder() { public List<Sheet.Item> items() {
+        Panel.show(c, KeyMap.titleOf(e0), KeyMap.actionText(c, e0.pkg) + (e0.pkg2 != null && e0.pkg2.length() > 0 ? "  ·  ضغطتان: " + KeyMap.labelOf(c, e0.pkg2) : ""), new Panel.Builder() { public List<Sheet.Item> items() {
             final KeyMap.Entry e = KeyMap.get(c, code);
             List<Sheet.Item> items = Sheet.list();
             items.add(Sheet.Item.of("رجوع", R.drawable.ic_back, new Runnable() { public void run() { Sheet.chained = true; remoteKeys(c, anchor, onClose); } }));
@@ -390,6 +390,18 @@ final class QuickSettings {
                 pickApp(c, anchor, onClose, "اختر التطبيق لـ" + KeyMap.titleOf(e), new Runnable() { public void run() { keyDetail(c, anchor, onClose, code); } },
                         new PickApp() { public void pick(String pkg) { KeyMap.put(c, code, pkg, null); keyDetail(c, anchor, onClose, code); } });
             } }).value(KeyMap.labelOf(c, e.pkg)).icon(KeyMap.iconOf(c, e.pkg)));
+            items.add(Sheet.Item.of("ضغطتان سريعتان", R.drawable.ic_apps, new Runnable() { public void run() {
+                Sheet.chained = true;
+                pickApp(c, anchor, onClose, "ماذا تفعل الضغطتان؟", new Runnable() { public void run() { keyDetail(c, anchor, onClose, code); } },
+                        new PickApp() { public void pick(String pkg) { KeyMap.setDouble(c, code, pkg); keyDetail(c, anchor, onClose, code); } });
+            } }).value(e.pkg2 == null || e.pkg2.length() == 0 ? "غير محدد" : KeyMap.labelOf(c, e.pkg2))
+                    .sub("الضغطة الواحدة تنتظر لحظة لترى هل تأتي ثانية"));
+            if (e.pkg2 != null && e.pkg2.length() > 0) {
+                items.add(Sheet.Item.of("إلغاء الضغطتين", R.drawable.ic_trash, new Runnable() { public void run() {
+                    KeyMap.setDouble(c, code, null);
+                    Panel.refresh();
+                } }).stay());
+            }
             items.add(Sheet.Item.of("إعادة تسمية الزر", R.drawable.ic_edit, new Runnable() { public void run() {
                 RenameDialog.show(c, "اسم الزر", e.name == null ? "" : e.name, KeyMap.defaultName(code), false, new RenameDialog.Callback() {
                     @Override public void onName(String n) { KeyMap.rename(c, code, n); Panel.refresh(); }

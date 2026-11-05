@@ -35,6 +35,8 @@ final class KeyMap {
     static final class Entry {
         int code;
         String pkg, name;
+        /** Optional: what a quick double press does (then {@code pkg} is the single press). */
+        String pkg2;
     }
 
     /** One installed app you can pick. */
@@ -91,6 +93,7 @@ final class KeyMap {
                 e.code = o.getInt("code");
                 e.pkg = o.getString("pkg");
                 e.name = o.optString("name", "");
+                e.pkg2 = o.optString("pkg2", "");
                 if (e.name.equals(oldDefault(e.code))) e.name = "";          // an automatic name from an earlier build: use the friendly one
                 m.put(e.code, e);
             }
@@ -102,7 +105,7 @@ final class KeyMap {
     private static void save(Context c) {
         JSONArray a = new JSONArray();
         try {
-            for (Entry e : load(c).values()) a.put(new JSONObject().put("code", e.code).put("pkg", e.pkg).put("name", e.name));
+            for (Entry e : load(c).values()) a.put(new JSONObject().put("code", e.code).put("pkg", e.pkg).put("name", e.name).put("pkg2", e.pkg2 == null ? "" : e.pkg2));
         } catch (Throwable ignored) { }
         prefs(c).edit().putString("map", a.toString()).apply();
         LayoutBackup.export(c);
@@ -126,6 +129,14 @@ final class KeyMap {
         Entry e = load(c).get(code);
         if (e == null) return;
         e.name = name == null ? "" : name.trim();           // empty = back to the automatic name
+        save(c);
+    }
+
+    /** Sets (or clears, with null/empty) what a double press of this button does. */
+    static void setDouble(Context c, int code, String pkg2) {
+        Entry e = load(c).get(code);
+        if (e == null) return;
+        e.pkg2 = pkg2 == null ? "" : pkg2;
         save(c);
     }
 
@@ -185,13 +196,38 @@ final class KeyMap {
         if (m == null) return false;
         synchronized (swallowUp) { swallowUp.add(code); }
         if (e.getRepeatCount() == 0) {
-            if (isAc(m.pkg)) Ac.send(c, m.pkg.substring(3));
-            else if (isLt(m.pkg)) Lights.runToken(c, m.pkg.substring(3));
-            else if (ACT_SAVER.equals(m.pkg)) PreviewActivity.toggle(c);
-            else if (isAct(m.pkg)) openRecents(c);
-            else { arm(m.pkg); launch(c, m.pkg); }
+            if (m.pkg2 != null && m.pkg2.length() > 0) press(c, code, m);
+            else fire(c, m.pkg);
         }
         return true;
+    }
+
+    private static final android.os.Handler PRESS_H = new android.os.Handler(android.os.Looper.getMainLooper());
+    private static final Map<Integer, Runnable> pendingSingle = new java.util.HashMap<Integer, Runnable>();
+    private static final long DOUBLE_MS = 380;
+
+    /** A button with a double-press action: the single press waits a moment to see whether a second one follows. */
+    private static void press(Context c, final int code, Entry m) {
+        final Context app = c.getApplicationContext();
+        Runnable waiting = pendingSingle.remove(code);
+        if (waiting != null) {                                    // second press in time: the double-press action
+            PRESS_H.removeCallbacks(waiting);
+            fire(app, m.pkg2);
+            return;
+        }
+        final String single = m.pkg;
+        Runnable r = new Runnable() { public void run() { pendingSingle.remove(code); fire(app, single); } };
+        pendingSingle.put(code, r);
+        PRESS_H.postDelayed(r, DOUBLE_MS);
+    }
+
+    /** Does what a target says: send an AC command, flip a light, show a screen, or open an app. */
+    static void fire(Context c, String pkg) {
+        if (isAc(pkg)) Ac.send(c, pkg.substring(3));
+        else if (isLt(pkg)) Lights.runToken(c, pkg.substring(3));
+        else if (ACT_SAVER.equals(pkg)) PreviewActivity.toggle(c);
+        else if (isAct(pkg)) openRecents(c);
+        else { arm(pkg); launch(c, pkg); }
     }
 
     /** Pops the open-apps panel up over whatever is on screen. */

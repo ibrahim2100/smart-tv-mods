@@ -340,6 +340,7 @@ final class StatusBar extends LinearLayout {
     }
 
     private View chip(final TvInputInfo info, final int n, int state, String cec) {
+        final String cecName = cec;
         final FrameLayout f = new FrameLayout(getContext());
         f.setFocusable(true);
         f.setClickable(true);
@@ -378,7 +379,10 @@ final class StatusBar extends LinearLayout {
             }
         });
         f.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) { switchTo(info.getId()); }
+            @Override public void onClick(View v) {
+                Lights.onInputOpened(getContext(), label(info, n, cecName));     // e.g. the PS5 lights scene
+                switchTo(info.getId());
+            }
         });
         f.setOnLongClickListener(new View.OnLongClickListener() {
             @Override public boolean onLongClick(View v) { lastHdmiChip = v; renameMenu(info, n); return true; }

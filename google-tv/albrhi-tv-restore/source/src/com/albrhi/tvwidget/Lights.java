@@ -333,6 +333,16 @@ final class Lights {
                 t.title = g.name;
                 t.sub = "يقلب الإضاءة (تشغيل/إطفاء)";
                 out.add(t);
+                Target on = new Target();
+                on.token = "on:" + d.id + ":" + g.dp;
+                on.title = "تشغيل " + g.name;
+                on.sub = "يشغّلها دائمًا";
+                out.add(on);
+                Target off = new Target();
+                off.token = "off:" + d.id + ":" + g.dp;
+                off.title = "إطفاء " + g.name;
+                off.sub = "يطفئها دائمًا";
+                out.add(off);
             }
         }
         List<Routine> rs = routines(c);
@@ -344,6 +354,20 @@ final class Lights {
             out.add(t);
         }
         return out;
+    }
+
+    private static long lastScene = 0;
+
+    /**
+     * An HDMI input was opened from the launcher. If it is the PS5, run the routine whose name starts with "PS5"
+     * (for example: everything off, only the small lights on). Ignored within 15 s of the last run.
+     */
+    static void onInputOpened(Context c, String label) {
+        if (label == null || !label.trim().equalsIgnoreCase("PS5") || !configured(c)) return;
+        if (System.currentTimeMillis() - lastScene < 15000L) return;
+        for (Routine r : routines(c)) {
+            if (r.name.startsWith("PS5")) { lastScene = System.currentTimeMillis(); run(c, r, null); return; }
+        }
     }
 
     static String nameOfToken(Context c, String token) {
@@ -360,8 +384,11 @@ final class Lights {
             } catch (Throwable ignored) { }
             return;
         }
+        Boolean force = null;
+        if (token.startsWith("on:")) { force = Boolean.TRUE; token = token.substring(3); }
+        else if (token.startsWith("off:")) { force = Boolean.FALSE; token = token.substring(4); }
         int i = token.lastIndexOf(':');
-        if (i > 0) set(c, token.substring(0, i), token.substring(i + 1), null, null);
+        if (i > 0) set(c, token.substring(0, i), token.substring(i + 1), force, null);
     }
 
     private static String readable(Throwable t, String what) {
