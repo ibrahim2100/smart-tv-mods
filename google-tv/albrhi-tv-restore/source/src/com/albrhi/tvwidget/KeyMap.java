@@ -186,6 +186,7 @@ final class KeyMap {
         synchronized (swallowUp) { swallowUp.add(code); }
         if (e.getRepeatCount() == 0) {
             if (isAc(m.pkg)) Ac.send(c, m.pkg.substring(3));
+            else if (isLt(m.pkg)) Lights.runToken(c, m.pkg.substring(3));
             else if (ACT_SAVER.equals(m.pkg)) PreviewActivity.toggle(c);
             else if (isAct(m.pkg)) openRecents(c);
             else { arm(m.pkg); launch(c, m.pkg); }
@@ -252,6 +253,9 @@ final class KeyMap {
     /** A button can send an air-conditioner command instead of opening an app: its target is "ac:" + the command id. */
     static boolean isAc(String target) { return target != null && target.startsWith("ac:"); }
 
+    /** "lt:<switch id>:<button>" flips a light button; "lt:r:<n>" runs a lights routine. */
+    static boolean isLt(String target) { return target != null && target.startsWith("lt:"); }
+
     /** A button can also open one of our own screens: "act:recents" is the open-apps switcher. */
     static final String ACT_RECENTS = "act:recents";
 
@@ -262,11 +266,13 @@ final class KeyMap {
 
     /** "يفتح: Netflix" or "يرسل للمكيف: AC On". */
     static String actionText(Context c, String target) {
+        if (isLt(target)) return "الإضاءة: " + Lights.nameOfToken(c, target.substring(3));
         return isAc(target) ? "يرسل للمكيف: " + Ac.nameOf(c, target.substring(3)) : "يفتح: " + labelOf(c, target);
     }
 
     static String labelOf(Context c, String pkg) {
         if (isAc(pkg)) return "المكيف · " + Ac.nameOf(c, pkg.substring(3));
+        if (isLt(pkg)) return "الإضاءة · " + Lights.nameOfToken(c, pkg.substring(3));
         if (ACT_SAVER.equals(pkg)) return "شاشة الانتظار";
         if (isAct(pkg)) return "التطبيقات المفتوحة";
         try {
@@ -276,7 +282,7 @@ final class KeyMap {
     }
 
     static Drawable iconOf(Context c, String pkg) {
-        if (isAc(pkg) || isAct(pkg)) return null;
+        if (isAc(pkg) || isLt(pkg) || isAct(pkg)) return null;
         try { return c.getPackageManager().getApplicationIcon(pkg); } catch (Throwable t) { return null; }
     }
 

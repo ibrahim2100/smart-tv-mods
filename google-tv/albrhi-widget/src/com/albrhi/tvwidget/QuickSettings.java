@@ -70,6 +70,8 @@ final class QuickSettings {
                     .value("التطبيقات").tile());
             items.add(Sheet.Item.of("المكيف", R.drawable.ic_snow, new Runnable() { public void run() { Sheet.chained = true; ac(c, anchor, onClose); } })
                     .value(!Ac.hasToken(c) ? "غير مربوط" : Ac.list(c).size() + " أوامر").tile());
+            items.add(Sheet.Item.of("الإضاءة", R.drawable.ic_bulb, new Runnable() { public void run() { Sheet.chained = true; lights(c, anchor, onClose); } })
+                    .value(!Lights.configured(c) ? "غير مربوط" : Lights.targets(c).size() + " عناصر").tile());
             items.add(Sheet.Item.of("أزرار الريموت", R.drawable.ic_apps, new Runnable() { public void run() { Sheet.chained = true; remoteKeys(c, anchor, onClose); } })
                     .value(keyCount == 0 ? "غير مخصصة" : keyCount + " مخصّصة"));
             items.add(Sheet.Item.of("كل إعدادات التلفزيون", R.drawable.ic_gear, open(c, Settings.ACTION_SETTINGS)));
@@ -215,6 +217,48 @@ final class QuickSettings {
         } });
     }
 
+    // ---- light switches (Smart Life / Tuya) -------------------------------------------------
+
+    /** Each button of your switches as a tile (OK flips it, the panel stays open), then the routines. */
+    private static void lights(final Context c, final View anchor, final Runnable onClose) {
+        if (Lights.configured(c)) Lights.refresh(c, new Lights.Done() { public void onDone(String error) { Panel.refresh(); } });
+        Panel.show(c, "الإضاءة", "محلي أولًا، وبالسحابة عند الحاجة", new Panel.Builder() { public List<Sheet.Item> items() {
+            List<Sheet.Item> items = Sheet.list();
+            items.add(back(c, anchor, onClose));
+            if (!Lights.configured(c)) {
+                items.add(Sheet.Item.header("ما في أجهزة بعد: على الماك شغّل tools/tuya-keys.py ثم أرسل الملف للتلفزيون (انظر README)"));
+                return items;
+            }
+            items.add(Sheet.Item.header("الأزرار"));
+            for (final Lights.Dev d : Lights.devices(c)) {
+                for (final Lights.Gang g : d.gangs) {
+                    Boolean st = Lights.stateOf(d.id, g.dp);
+                    items.add(Sheet.Item.of(g.name, R.drawable.ic_bulb, new Runnable() { public void run() {
+                        Lights.set(c, d.id, g.dp, null, new Lights.Done() { public void onDone(String error) { Panel.refresh(); } });
+                    } }).value(st == null ? "…" : st ? "شغّالة" : "مطفأة").tile().stay());
+                }
+            }
+            items.add(Sheet.Item.header("الروتين"));
+            for (final Lights.Routine r : Lights.routines(c)) {
+                items.add(Sheet.Item.of(r.name, R.drawable.ic_power, new Runnable() { public void run() {
+                    Lights.run(c, r, new Lights.Done() { public void onDone(String error) { Panel.refresh(); } });
+                } }).sub("ينفّذ كل أزراره معًا").stay());
+            }
+            items.add(Sheet.Item.header("إدارة"));
+            items.add(Sheet.Item.of("تحديث الحالة", R.drawable.ic_refresh, new Runnable() { public void run() {
+                Lights.refresh(c, new Lights.Done() { public void onDone(String error) {
+                    if (error.length() > 0) Toast.makeText(c, "الإضاءة: " + error, Toast.LENGTH_LONG).show();
+                    Panel.refresh();
+                } });
+            } }).sub("يقرأ حالة كل زر من السويتشات").stay());
+            items.add(Sheet.Item.of("فصل الإضاءة", R.drawable.ic_trash, new Runnable() { public void run() {
+                Lights.disconnect(c);
+                Panel.refresh();
+            } }).sub("يمسح الأجهزة والمفاتيح من التلفزيون").danger().stay());
+            return items;
+        } }, null, closer(c, onClose));
+    }
+
     // ---- air conditioner (through Alexa) ----------------------------------------------------
 
     /** The commands you made in Voice Monkey: OK sends one, the panel stays open so you can send another. */
@@ -308,6 +352,15 @@ final class QuickSettings {
             items.add(Sheet.Item.of("شاشة الانتظار", R.drawable.ic_eye, new Runnable() { public void run() { Sheet.chained = true; cb.pick(KeyMap.ACT_SAVER); } })
                     .sub("تشغّل شاشة الانتظار فوراً (اضغط أي زر لتخرج)"));
             List<Ac.Cmd> acs = Ac.hasToken(c) ? Ac.list(c) : new java.util.ArrayList<Ac.Cmd>();
+            List<Lights.Target> lts = Lights.configured(c) ? Lights.targets(c) : new java.util.ArrayList<Lights.Target>();
+            if (!lts.isEmpty()) {
+                items.add(Sheet.Item.header("الإضاءة"));
+                for (final Lights.Target t : lts) {
+                    items.add(Sheet.Item.of(t.title, R.drawable.ic_bulb, new Runnable() { public void run() { Sheet.chained = true; cb.pick("lt:" + t.token); } })
+                            .sub(t.sub));
+                }
+                if (acs.isEmpty()) items.add(Sheet.Item.header("التطبيقات"));
+            }
             if (!acs.isEmpty()) {
                 items.add(Sheet.Item.header("المكيف"));
                 for (final Ac.Cmd m : acs) {

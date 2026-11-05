@@ -62,6 +62,7 @@ final class LayoutBackup {
 
     /** If a layout.json was pushed into files/import/, apply it once and remove it. Returns true if applied. */
     static boolean importPending(Context c) {
+        Lights.importPending(c);                                            // lights.json (Tuya devices and keys), see tools/tuya-keys.py
         try {
             File dir = c.getExternalFilesDir(null);
             if (dir == null) return false;
