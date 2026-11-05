@@ -330,10 +330,10 @@ final class KeyMap {
             Intent i = l.isEmpty() ? pm.getLaunchIntentForPackage(pkg)
                     : new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
                             .setComponent(new ComponentName(pkg, l.get(0).activityInfo.name));
-            if (i == null) { Toast.makeText(c, "التطبيق غير مثبّت", Toast.LENGTH_SHORT).show(); return; }
+            if (i == null) { Notice.toast(c, "التطبيق غير مثبّت"); return; }
             c.startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));      // no RESET_TASK_IF_NEEDED: it would send an open app back to its first screen
         } catch (Throwable t) {
-            Toast.makeText(c, "تعذّر فتح التطبيق", Toast.LENGTH_SHORT).show();
+            Notice.toast(c, "تعذّر فتح التطبيق");
         }
     }
 }

@@ -60,7 +60,7 @@ final class MatchesPanel {
             items.add(Sheet.Item.header("التحديث"));
             long upd = Fixtures.updatedAt();
             items.add(Sheet.Item.of("تحديث الآن", R.drawable.ic_refresh, new Runnable() { public void run() {
-                Toast.makeText(c, "جاري تحديث المباريات…", Toast.LENGTH_SHORT).show();
+                Notice.toast(c, "جاري تحديث المباريات…");
                 Fixtures.refresh(c, true);
             } }).sub(Fixtures.lastError != null ? "⚠ " + Fixtures.lastError
                     : upd == 0 ? "ما تحمّلت بعد" : "آخر تحديث " + dayLabel(upd) + " " + fmt(Theme.clock24 ? "HH:mm" : "h:mm a", GREG, upd) + " · يتحدث كل 12 ساعة").stay());

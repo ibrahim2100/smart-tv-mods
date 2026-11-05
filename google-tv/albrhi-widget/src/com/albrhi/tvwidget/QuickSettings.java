@@ -139,7 +139,7 @@ final class QuickSettings {
             if (Theme.sports) {
                 items.add(Sheet.Item.header("المباريات"));
                 items.add(Sheet.Item.of("تحديث المباريات الآن", R.drawable.ic_refresh, new Runnable() { public void run() {
-                    Toast.makeText(c, "جاري تحديث المباريات…", Toast.LENGTH_SHORT).show();
+                    Notice.toast(c, "جاري تحديث المباريات…");
                     Fixtures.refresh(c, true);
                 } }).sub("إعادة تحميل المواعيد والنتائج"));
                 items.add(Sheet.Item.of("تجربة تنبيه المباراة", R.drawable.ic_bell, new Runnable() { public void run() { AppService.testAlert(c); } })
@@ -251,7 +251,7 @@ final class QuickSettings {
             } }).value(Lights.offWithTv(c) ? "تنطفئ الإضاءة" : "متوقف").sub("يطفئ كل اللمبات لما يدخل التلفزيون في السكون").stay());
             items.add(Sheet.Item.of("تحديث الحالة", R.drawable.ic_refresh, new Runnable() { public void run() {
                 Lights.refresh(c, new Lights.Done() { public void onDone(String error) {
-                    if (error.length() > 0) Toast.makeText(c, "الإضاءة: " + error, Toast.LENGTH_LONG).show();
+                    if (error.length() > 0) Notice.toast(c, "الإضاءة: " + error);
                     Panel.refresh();
                 } });
             } }).sub("يقرأ حالة كل زر من السويتشات").stay());
@@ -282,9 +282,9 @@ final class QuickSettings {
             }
             items.add(Sheet.Item.header("إدارة"));
             items.add(Sheet.Item.of("تحديث الأوامر", R.drawable.ic_refresh, new Runnable() { public void run() {
-                Toast.makeText(c, "جاري التحديث…", Toast.LENGTH_SHORT).show();
+                Notice.toast(c, "جاري التحديث…");
                 Ac.refresh(c, new Ac.Done() { public void onDone(String error) {
-                    if (error.length() > 0) Toast.makeText(c, "المكيف: " + error, Toast.LENGTH_LONG).show();
+                    if (error.length() > 0) Notice.toast(c, "المكيف: " + error);
                     Panel.refresh();
                 } });
             } }).sub("يجلب الأوامر الجديدة من Voice Monkey").stay());
@@ -327,7 +327,7 @@ final class QuickSettings {
             pickApp(c, anchor, onClose, "اختر التطبيق لـ" + KeyMap.titleOf(code0(c, code)), new Runnable() { public void run() { remoteKeys(c, anchor, onClose); } },
                     new PickApp() { public void pick(String pkg) {
                         KeyMap.put(c, code, pkg, null);
-                        Toast.makeText(c, "تم: " + KeyMap.titleOf(code0(c, code)) + " ← " + KeyMap.labelOf(c, pkg), Toast.LENGTH_SHORT).show();                        remoteKeys(c, anchor, onClose);
+                        Notice.toast(c, "تم: " + KeyMap.titleOf(code0(c, code)) + " ← " + KeyMap.labelOf(c, pkg));                        remoteKeys(c, anchor, onClose);
                     } });
         } }, new Runnable() { public void run() { remoteKeys(c, anchor, onClose); } });
     }
@@ -429,7 +429,7 @@ final class QuickSettings {
 
     /** Ends background apps (never the one on screen) and tells you how much memory came back. */
     static void cleanMemory(final Context c) {
-        Toast.makeText(c, "جاري تنظيف الذاكرة…", Toast.LENGTH_SHORT).show();
+        Notice.toast(c, "جاري تنظيف الذاكرة…");
         Cleaner.clean(c, new Cleaner.Done() {
             public void onDone(int freedMb, int apps) {
                 Banner.show(c, "تنظيف الذاكرة", freedMb > 0 ? "تحرّر " + freedMb + " MB" : "الذاكرة نظيفة أصلًا",

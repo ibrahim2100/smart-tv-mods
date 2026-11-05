@@ -51,6 +51,7 @@ Two open-source projects: **a home screen for LG webOS** and **a launcher for Go
 - 💡 **الإضاءة (Smart Life / Tuya) من التلفزيون:** لوحة بأزرار لكل سويتش وروتينات («إطفاء الكل» و«تشغيل الكل») وأزرار ريموت. التحكم **محلي** سريع بدون إنترنت، وإن تعذّر الوصول (مثل جهاز خلف mesh) يتحول تلقائيًا لسحابة Tuya. المفاتيح تُجلب مرة واحدة بـ`google-tv/tools/tuya-keys.py` وتبقى في ملف خاص خارج المستودع.
 - 🎛️ **أزرار الريموت بضغطة وضغطتين:** كل زر يمكنه فعلين (ضغطة واحدة وضغطتان سريعتان)، وأهداف «تشغيل/إطفاء» صريحة للإضاءة، وروتين يُشغَّل عند فتح مدخل PS5.
 - 🌙 **إطفاء الإضاءة مع إطفاء التلفزيون:** عند دخول التلفزيون في السكون تُطفأ كل اللمبات تلقائيًا (خيار يُشغَّل ويُوقف من لوحة الإضاءة).
+- 🔔 **إشعارات بتصميم جديد:** بطاقات صغيرة وهادئة تنزلق من جانب الشاشة اليمين (في الزاوية السفلية) بدل البطاقات الكبيرة في المنتصف، وكل الرسائل موحّدة بنفس الشكل (حالة الأوامر، الملاحظات، تنبيهات المباريات). لا تأخذ تركيزًا ولا تُزعج، ونغمة التنبيه لتنبيهات المباريات فقط.
 - 🔴 **LG webOS:** إقلاع أسرع بكثير (من نحو 148 ثانية إلى نحو 57 ثانية حتى ظهور الواجهة) · `scripts/simplink.sh` لإيقاف قفز LG لمدخل جهاز (PS5) تلقائياً عبر HDMI-CEC.
 
 مستودع واحد لمشروعين **منفصلين تماماً** (لا كود مشترك ولا سكربتات مشتركة). عندك **LG** ← ادخل `lg-webos/`. عندك **Google TV / Android TV** ← ادخل `google-tv/`. شغّل أي سكربت من داخل مجلد مشروعه فقط: سكربتات `adb` لـGoogle TV وسكربتات telnet لـLG.
@@ -229,6 +230,7 @@ MIT (انظر [`LICENSE`](LICENSE) و[`lg-webos/LICENSE`](lg-webos/LICENSE)). ا
 - 💡 **Lights (Smart Life / Tuya) from the TV:** a panel with a tile per switch button, routines ("all off" / "all on") and remote-button shortcuts. Control is **local** (fast, no internet) and automatically falls back to Tuya's cloud when a switch cannot be reached (for example behind a mesh node). Keys are fetched once with `google-tv/tools/tuya-keys.py` and stay in a private file outside the repository.
 - 🎛️ **Single and double press on remote buttons:** every button can do two things (one press, two quick presses), explicit light "on/off" targets, and a routine that runs when the PS5 input is opened.
 - 🌙 **Lights off with the TV:** when the TV goes to standby all lights are switched off automatically (a switch in the lights panel turns it on or off).
+- 🔔 **Redesigned notifications:** small, quiet cards that slide in from the right edge (bottom corner) instead of big cards in the middle, and every message now shares one look (command status, plain notes, match alerts). They never take focus, and the chime plays only for match alerts.
 - 🔴 **LG webOS:** much faster boot (about 148 s down to about 57 s until the home appears) · `scripts/simplink.sh` stops LG from jumping to a console's input (PS5) through HDMI-CEC.
 
 One repository, two **completely separate** projects (no shared code or scripts). You own an **LG** → go to `lg-webos/`. You own a **Google TV / Android TV** → go to `google-tv/`. Run scripts only from inside their own project: `adb` scripts are for Google TV, telnet scripts for LG.

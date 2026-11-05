@@ -1073,7 +1073,7 @@ public class HomeActivity extends Activity {
         if (hidden.contains(a.pkg) && !showHidden) return;
         moving = true;
         movingPkg = a.pkg;
-        Toast.makeText(this, "حرّك بالأسهم، وOK لتثبيت المكان", Toast.LENGTH_LONG).show();
+        Notice.toast(this, "حرّك بالأسهم، وOK لتثبيت المكان");
         fill();
     }
 

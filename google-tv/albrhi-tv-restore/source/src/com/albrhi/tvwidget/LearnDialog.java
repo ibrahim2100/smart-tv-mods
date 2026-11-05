@@ -107,7 +107,7 @@ final class LearnDialog {
                 if (done[0]) return;
                 left[0]--;
                 if (left[0] <= 0) {
-                    Toast.makeText(c, "ما وصل أي زر. جرّب زر ثاني، أو تأكد أن الريموت متصل", Toast.LENGTH_LONG).show();
+                    Notice.toast(c, "ما وصل أي زر. جرّب زر ثاني، أو تأكد أن الريموت متصل");
                     d.dismiss();
                     return;
                 }
